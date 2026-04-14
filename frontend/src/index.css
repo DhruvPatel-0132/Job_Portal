@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+/* Add in global CSS */
+.input {
+  @apply w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 
+  focus:bg-white focus:border-black focus:ring-2 focus:ring-black/10 
+  outline-none transition;
+}
+
+.btn-primary {
+  @apply px-5 py-3 rounded-xl bg-black text-white font-medium 
+  hover:bg-gray-900 transition active:scale-[0.98];
+}
+
+.card {
+  @apply p-4 rounded-xl border border-gray-200 cursor-pointer transition 
+  hover:border-black hover:shadow-sm;
+}
+
+.card.active {
+  @apply border-black bg-gray-50 shadow-sm;
+}
