@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -34,17 +35,36 @@ export default function Login() {
     return newErrors;
   };
 
-  const handleLogin = () => {
-    const validationErrors = validate();
+  const handleLogin = async () => {
+  const validationErrors = validate();
 
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
+  if (Object.keys(validationErrors).length > 0) {
+    setErrors(validationErrors);
+    return;
+  }
 
-    // 🔐 Fake success (replace with API)
+  try {
+    const res = await axios.post("http://localhost:5000/api/auth/login", {
+      emailOrPhone: form.identifier,
+      password: form.password,
+    });
+
+    console.log("LOGIN SUCCESS:", res.data);
+
+    // store token
+    localStorage.setItem("token", res.data.token);
+
+    // redirect after login
     navigate("/auth");
-  };
+
+  } catch (err) {
+    console.log("LOGIN ERROR:", err.response?.data || err.message);
+
+    setErrors({
+      identifier: err.response?.data?.message || "Login failed",
+    });
+  }
+};
 
   const handleGoogleLogin = () => {
     navigate("/google");

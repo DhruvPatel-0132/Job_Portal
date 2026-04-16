@@ -20,7 +20,7 @@ export default function Register() {
   const [role, setRole] = useState("");
   const [hireType, setHireType] = useState("");
 
-  const [skills, setSkills] = useState("");
+  const [skills, setSkills] = useState([]); // ✅ FIXED (array)
   const [experience, setExperience] = useState("");
   const [project, setProject] = useState("");
 
@@ -40,10 +40,13 @@ export default function Register() {
   const [lastName, setLastName] = useState("");
 
   const [errors, setErrors] = useState({});
+
   const steps = getFlowSteps(role, hireType);
   const currentStep = steps[stepIndex];
 
-  // 🔥 NEXT WITH VALIDATION
+  // =========================
+  // NEXT STEP VALIDATION
+  // =========================
   const next = () => {
     const result = validateStep(currentStep, {
       role,
@@ -65,7 +68,9 @@ export default function Register() {
 
   const back = () => setStepIndex((i) => i - 1);
 
-  // 🔥 SUBMIT WITH VALIDATION
+  // =========================
+  // SUBMIT API CALL
+  // =========================
   const handleSubmit = async () => {
     const result = validateStep(currentStep, {
       role,
@@ -92,31 +97,39 @@ export default function Register() {
           password,
           firstName,
           lastName,
-          skills,
+
+          // ✅ normalize skills for backend
+          skills: typeof skills === "string"
+            ? skills.split(",").map((s) => s.trim())
+            : skills,
+
           experience,
           project,
+
           companyName,
           year,
           about,
-          search,
+
           selectedCompany,
           newCompany,
-        },
+        }
       );
 
       console.log("REGISTER SUCCESS:", data);
-
       alert("Registration Successful!");
     } catch (error) {
       console.error(
         "REGISTER ERROR:",
-        error?.response?.data?.message || error.message,
+        error?.response?.data?.message || error.message
       );
     }
   };
 
   const progress = ((stepIndex + 1) / steps.length) * 100;
 
+  // =========================
+  // STEP RENDERER
+  // =========================
   const renderStep = () => {
     switch (currentStep) {
       case "auth":
@@ -214,7 +227,9 @@ export default function Register() {
       <div className="w-full max-w-md bg-white/80 backdrop-blur-xl border border-gray-200 shadow-xl rounded-3xl p-8">
         <StepDots step={stepIndex + 1} totalSteps={steps.length} />
         <ProgressBar progress={progress} />
+
         {renderStep()}
+
         {/* LOGIN */}
         <div className="mt-8 pt-6 border-t text-center">
           <p className="text-sm text-gray-500">
