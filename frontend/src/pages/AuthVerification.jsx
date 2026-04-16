@@ -5,14 +5,31 @@ export default function Auth() {
   const [method, setMethod] = useState("email");
   const [otp, setOtp] = useState(Array(6).fill(""));
   const inputsRef = useRef([]);
-  const [timer, setTimer] = useState(30);
+
+  const [timer, setTimer] = useState(0);
+  const [isTimerActive, setIsTimerActive] = useState(false);
 
   /* Timer */
   useEffect(() => {
-    if (timer === 0) return;
-    const interval = setInterval(() => setTimer((t) => t - 1), 1000);
+    if (!isTimerActive || timer === 0) return;
+
+    const interval = setInterval(() => {
+      setTimer((t) => t - 1);
+    }, 1000);
+
     return () => clearInterval(interval);
-  }, [timer]);
+  }, [isTimerActive, timer]);
+
+  const handleSendOtp = () => {
+    // 🔥 Here you will call backend API later
+    setTimer(30);
+    setIsTimerActive(true);
+  };
+
+  const handleResend = () => {
+    setTimer(30);
+    setIsTimerActive(true);
+  };
 
   const handleChange = (value, index) => {
     if (!/^[0-9]?$/.test(value)) return;
@@ -57,7 +74,9 @@ export default function Auth() {
       >
         {/* Header */}
         <div className="mb-8 text-center">
-          <h2 className="text-2xl font-semibold text-gray-900">Verification</h2>
+          <h2 className="text-2xl font-semibold text-gray-900">
+            Verification
+          </h2>
           <p className="text-sm text-gray-500 mt-1">
             Enter the OTP to continue
           </p>
@@ -103,7 +122,8 @@ export default function Auth() {
               <PhoneInput />
             )}
 
-            <PrimaryButton text="Send OTP" />
+            {/* Send OTP */}
+            <PrimaryButton text="Send OTP" onClick={handleSendOtp} />
 
             {/* OTP BOXES */}
             <div>
@@ -129,12 +149,14 @@ export default function Auth() {
               {/* Resend */}
               <div className="flex justify-between mt-3 text-xs text-gray-500">
                 <span>
-                  {timer > 0 ? `Resend in ${timer}s` : "Didn't receive code?"}
+                  {timer > 0
+                    ? `Resend in ${timer}s`
+                    : "Didn't receive code?"}
                 </span>
 
-                {timer === 0 && (
+                {timer === 0 && isTimerActive && (
                   <button
-                    onClick={() => setTimer(30)}
+                    onClick={handleResend}
                     className="text-gray-900 font-medium"
                   >
                     Resend
@@ -180,7 +202,9 @@ function Input({ label, placeholder }) {
 function PhoneInput() {
   return (
     <div>
-      <label className="text-sm text-gray-700 font-medium">Phone Number</label>
+      <label className="text-sm text-gray-700 font-medium">
+        Phone Number
+      </label>
       <div className="flex gap-2 mt-1">
         <span className="px-3 py-2.5 bg-gray-100 border border-gray-300 rounded-lg text-sm">
           +91
@@ -195,9 +219,10 @@ function PhoneInput() {
   );
 }
 
-function PrimaryButton({ text }) {
+function PrimaryButton({ text, onClick }) {
   return (
     <motion.button
+      onClick={onClick}
       whileTap={{ scale: 0.97 }}
       whileHover={{ scale: 1.02 }}
       className="w-full py-2.5 rounded-lg bg-gray-900 text-white text-sm font-medium"

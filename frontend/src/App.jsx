@@ -1,6 +1,5 @@
 import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
-// import Register from "./pages/Register";
 import AuthVerification from "./pages/AuthVerification";
 import Register from "./components/Register/Register";
 import ForgotPassword from "./pages/ForgotPassword";

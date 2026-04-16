@@ -33,8 +33,12 @@ const userSchema = new mongoose.Schema(
       type: Object,
       default: {},
     },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("User", userSchema);

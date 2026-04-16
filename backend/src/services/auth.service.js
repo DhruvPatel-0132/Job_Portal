@@ -1,80 +1,120 @@
-const bcrypt = require("bcryptjs");
 const User = require("../models/User");
-const Company = require("../models/Company");
+const Token = require("../models/Token");
+const bcrypt = require("bcryptjs");
 
-const registerUser = async (data) => {
-  const {
-    emailOrPhone,
-    password,
-    firstName,
-    lastName,
-    role,
-    hireType,
-    skills,
-    experience,
-    project,
-    companyName,
-    year,
-    about,
-    selectedCompany,
-  } = data;
+const {
+  generateAccessToken,
+  generateRefreshToken,
+  hashToken,
+  REFRESH_TOKEN_EXPIRY_MS,
+} = require("../utils/generateTokens");
 
-  const hashedPassword = await bcrypt.hash(
-    password,
-    Number(process.env.BCRYPT_SALT),
-  );
-  let email = null;
-  let phone = null;
-
-  if (emailOrPhone && emailOrPhone.includes("@")) {
-    email = emailOrPhone;
-  } else {
-    phone = emailOrPhone;
-  }
-  // 🔥 Prevent duplicate users
-  const existing = await User.findOne({
-    $or: [{ email }, { phone }],
+// LOGIN SERVICE
+const loginUser = async ({ emailOrPhone, password }) => {
+  const user = await User.findOne({
+    emailOrPhone: emailOrPhone.trim(),
   });
 
-  if (existing) {
-    throw new Error("User already exists");
+  if (!user || !user.password) {
+    return { status: 401, response: { success: false, message: "Invalid credentials" } };
   }
 
-  let companyId = null;
+  const isMatch = await bcrypt.compare(password, user.password);
 
-  // Create company
-  if (role === "company") {
-    const company = await Company.create({
-      name: companyName,
-      year,
-      about,
-    });
-    companyId = company._id;
+  if (!isMatch) {
+    return { status: 401, response: { success: false, message: "Invalid credentials" } };
   }
 
-  // Select company
-  if (role === "hire" && hireType === "company") {
-    const existingCompany = await Company.findOne({
-      name: selectedCompany,
-    });
-    if (existingCompany) companyId = existingCompany._id;
+  if (!user.isVerified) {
+    return {
+      status: 200,
+      response: {
+        success: true,
+        requireOTP: true,
+        type: "user_verification",
+        userId: user._id,
+        message: "User not verified",
+      },
+    };
   }
+
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken();
+
+  await Token.create({
+    userId: user._id,
+    emailOrPhone: user.emailOrPhone,
+    refreshToken: hashToken(refreshToken),
+    expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY_MS),
+  });
+
+  return {
+    status: 200,
+    response: {
+      success: true,
+      accessToken,
+      refreshToken,
+      isVerified: true,
+      message: "Login successful",
+    },
+  };
+};
+
+// REGISTER SERVICE
+const registerUser = async (data) => {
+  const { emailOrPhone, password, firstName, lastName, role } = data;
+
+  const exists = await User.findOne({
+    emailOrPhone: emailOrPhone.trim(),
+  });
+
+  if (exists) {
+    return {
+      status: 409,
+      response: { success: false, message: "User already exists" },
+    };
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
 
   const user = await User.create({
-    email,
-    phone,
+    emailOrPhone: emailOrPhone.trim(),
     password: hashedPassword,
     firstName,
     lastName,
     role,
-    hireType,
-    skills,
-    experience,
-    project,
-    company: companyId,
   });
 
-  return user;
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken();
+
+  await Token.create({
+    userId: user._id,
+    emailOrPhone: user.emailOrPhone,
+    refreshToken: hashToken(refreshToken),
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  });
+
+  return {
+    status: 201,
+    response: {
+      success: true,
+      message: "User registered successfully",
+      accessToken,
+      refreshToken,
+      userId: user._id,
+      user: {
+        id: user._id,
+        emailOrPhone: user.emailOrPhone,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+      },
+    },
+  };
 };
 
-module.exports = { registerUser };
+module.exports = {
+  loginUser,
+  registerUser,
+};

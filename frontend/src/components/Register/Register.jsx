@@ -13,7 +13,7 @@ import CompanyFormStep from "./steps/CompanyFormStep";
 
 import StepDots from "./components/StepDots";
 import ProgressBar from "./components/ProgressBar";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 export default function Register() {
   const [stepIndex, setStepIndex] = useState(0);
@@ -43,6 +43,8 @@ export default function Register() {
 
   const steps = getFlowSteps(role, hireType);
   const currentStep = steps[stepIndex];
+  // inside component
+  const navigate = useNavigate();
 
   // =========================
   // NEXT STEP VALIDATION
@@ -99,9 +101,10 @@ export default function Register() {
           lastName,
 
           // ✅ normalize skills for backend
-          skills: typeof skills === "string"
-            ? skills.split(",").map((s) => s.trim())
-            : skills,
+          skills:
+            typeof skills === "string"
+              ? skills.split(",").map((s) => s.trim())
+              : skills,
 
           experience,
           project,
@@ -112,15 +115,20 @@ export default function Register() {
 
           selectedCompany,
           newCompany,
-        }
+        },
       );
 
       console.log("REGISTER SUCCESS:", data);
-      alert("Registration Successful!");
+      // alert("Registration Successful!");
+
+      localStorage.setItem("token", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
+      localStorage.setItem("userId", data.userId); // ✅ ADD THIS
+      navigate("/auth");
     } catch (error) {
       console.error(
         "REGISTER ERROR:",
-        error?.response?.data?.message || error.message
+        error?.response?.data?.message || error.message,
       );
     }
   };

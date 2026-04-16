@@ -36,35 +36,48 @@ export default function Login() {
   };
 
   const handleLogin = async () => {
-  const validationErrors = validate();
+    const validationErrors = validate();
 
-  if (Object.keys(validationErrors).length > 0) {
-    setErrors(validationErrors);
-    return;
-  }
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
 
-  try {
-    const res = await axios.post("http://localhost:5000/api/auth/login", {
-      emailOrPhone: form.identifier,
-      password: form.password,
-    });
+    try {
+      const res = await axios.post("http://localhost:5000/api/auth/login", {
+        emailOrPhone: form.identifier,
+        password: form.password,
+      });
 
-    console.log("LOGIN SUCCESS:", res.data);
+      console.log("LOGIN SUCCESS:", res.data);
 
-    // store token
-    localStorage.setItem("token", res.data.token);
+      const data = res.data;
 
-    // redirect after login
-    navigate("/auth");
+      // 🚨 HANDLE OTP FIRST
+      if (data.requireOTP) {
+        localStorage.setItem("userId", data.userId);
+        navigate("/auth");
+        return;
+      }
 
-  } catch (err) {
-    console.log("LOGIN ERROR:", err.response?.data || err.message);
+      // ✅ store tokens ONLY if login success
+      localStorage.setItem("token", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
 
-    setErrors({
-      identifier: err.response?.data?.message || "Login failed",
-    });
-  }
-};
+      // normal flow
+      if (!data.isVerified) {
+        navigate("/auth");
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      console.log("LOGIN ERROR:", err.response?.data || err.message);
+
+      setErrors({
+        identifier: err.response?.data?.message || "Login failed",
+      });
+    }
+  };
 
   const handleGoogleLogin = () => {
     navigate("/google");
@@ -72,17 +85,11 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      
       <div className="w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
-        
         {/* Header */}
         <div className="mb-8 text-center">
-          <h2 className="text-2xl font-semibold text-gray-900">
-            Welcome back
-          </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Sign in to continue
-          </p>
+          <h2 className="text-2xl font-semibold text-gray-900">Welcome back</h2>
+          <p className="text-sm text-gray-500 mt-1">Sign in to continue</p>
         </div>
 
         {/* Identifier */}
@@ -101,17 +108,13 @@ export default function Login() {
             } bg-gray-50 focus:bg-white focus:ring-1 focus:ring-gray-900 outline-none`}
           />
           {errors.identifier && (
-            <p className="text-red-500 text-xs mt-1">
-              {errors.identifier}
-            </p>
+            <p className="text-red-500 text-xs mt-1">{errors.identifier}</p>
           )}
         </div>
 
         {/* Password */}
         <div className="mb-3">
-          <label className="text-sm font-medium text-gray-700">
-            Password
-          </label>
+          <label className="text-sm font-medium text-gray-700">Password</label>
           <input
             type="password"
             name="password"
@@ -123,15 +126,16 @@ export default function Login() {
             } bg-gray-50 focus:bg-white focus:ring-1 focus:ring-gray-900 outline-none`}
           />
           {errors.password && (
-            <p className="text-red-500 text-xs mt-1">
-              {errors.password}
-            </p>
+            <p className="text-red-500 text-xs mt-1">{errors.password}</p>
           )}
         </div>
 
         {/* Forgot */}
         <div className="text-right mb-6">
-          <NavLink to="forgot-password" className="text-sm text-gray-500 hover:text-gray-900 cursor-pointer">
+          <NavLink
+            to="forgot-password"
+            className="text-sm text-gray-500 hover:text-gray-900 cursor-pointer"
+          >
             Forgot password?
           </NavLink>
         </div>
@@ -176,7 +180,6 @@ export default function Login() {
             Continue with Google
           </span>
         </button>
-
       </div>
     </div>
   );
