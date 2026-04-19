@@ -8,6 +8,10 @@ export default function Auth() {
 
   const [timer, setTimer] = useState(0);
   const [isTimerActive, setIsTimerActive] = useState(false);
+  const [form, setForm] = useState({
+    email: "",
+    phone: "",
+  });
 
   /* Timer */
   useEffect(() => {
@@ -20,10 +24,44 @@ export default function Auth() {
     return () => clearInterval(interval);
   }, [isTimerActive, timer]);
 
-  const handleSendOtp = () => {
-    // 🔥 Here you will call backend API later
-    setTimer(30);
-    setIsTimerActive(true);
+  const handleSendOtp = async () => {
+    try {
+      await fetch("http://localhost:5000/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email }),
+      });
+
+      setTimer(30);
+      setIsTimerActive(true);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const handleVerify = async () => {
+    const otpValue = otp.join("");
+
+    const res = await fetch("http://localhost:5000/api/auth/verify-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: form.email,
+        otp: otpValue,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      // ✅ SAVE USER
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      // ✅ REDIRECT
+      window.location.href = "/dashboard";
+    } else {
+      alert(data.message);
+    }
   };
 
   const handleResend = () => {
@@ -74,9 +112,7 @@ export default function Auth() {
       >
         {/* Header */}
         <div className="mb-8 text-center">
-          <h2 className="text-2xl font-semibold text-gray-900">
-            Verification
-          </h2>
+          <h2 className="text-2xl font-semibold text-gray-900">Verification</h2>
           <p className="text-sm text-gray-500 mt-1">
             Enter the OTP to continue
           </p>
@@ -117,7 +153,12 @@ export default function Auth() {
           >
             {/* Input */}
             {method === "email" ? (
-              <Input label="Email Address" placeholder="Enter your email" />
+              <Input
+                label="Email Address"
+                placeholder="Enter your email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+              />
             ) : (
               <PhoneInput />
             )}
@@ -149,9 +190,7 @@ export default function Auth() {
               {/* Resend */}
               <div className="flex justify-between mt-3 text-xs text-gray-500">
                 <span>
-                  {timer > 0
-                    ? `Resend in ${timer}s`
-                    : "Didn't receive code?"}
+                  {timer > 0 ? `Resend in ${timer}s` : "Didn't receive code?"}
                 </span>
 
                 {timer === 0 && isTimerActive && (
@@ -169,6 +208,7 @@ export default function Auth() {
 
         {/* Verify */}
         <motion.button
+          onClick={handleVerify}
           disabled={!isComplete}
           whileTap={{ scale: isComplete ? 0.97 : 1 }}
           className={`w-full mt-6 py-3 rounded-lg font-medium transition ${
@@ -186,13 +226,15 @@ export default function Auth() {
 
 /* Components */
 
-function Input({ label, placeholder }) {
+function Input({ label, placeholder, value, onChange }) {
   return (
     <div>
       <label className="text-sm text-gray-700 font-medium">{label}</label>
       <input
         type="text"
         placeholder={placeholder}
+        value={value}
+        onChange={onChange}
         className="w-full mt-1 px-4 py-2.5 rounded-lg border border-gray-300 bg-gray-50 focus:bg-white focus:ring-1 focus:ring-gray-900 outline-none"
       />
     </div>
@@ -202,9 +244,7 @@ function Input({ label, placeholder }) {
 function PhoneInput() {
   return (
     <div>
-      <label className="text-sm text-gray-700 font-medium">
-        Phone Number
-      </label>
+      <label className="text-sm text-gray-700 font-medium">Phone Number</label>
       <div className="flex gap-2 mt-1">
         <span className="px-3 py-2.5 bg-gray-100 border border-gray-300 rounded-lg text-sm">
           +91
