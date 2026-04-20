@@ -8,10 +8,11 @@ export default function Auth() {
 
   const [timer, setTimer] = useState(0);
   const [isTimerActive, setIsTimerActive] = useState(false);
-  const [form, setForm] = useState({
-    email: "",
-    phone: "",
-  });
+const [form, setForm] = useState({
+  email: "",
+  phone: "",
+  countryCode: "+91",
+});
 
   /* Timer */
   useEffect(() => {
@@ -25,65 +26,92 @@ export default function Auth() {
   }, [isTimerActive, timer]);
 
   const handleSendOtp = async () => {
-    try {
-      await fetch("http://localhost:5000/api/otp/send-email-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email }),
-      });
+  try {
+    const url =
+      method === "email"
+        ? "http://localhost:5000/api/otp/email/send-email-otp"
+        : "http://localhost:5000/api/otp/phone/send";
 
-      setTimer(30);
-      setIsTimerActive(true);
-    } catch (err) {
-      console.log(err);
-    }
-  };
+    const body =
+      method === "email"
+        ? { email: form.email }
+        : { countryCode: form.countryCode, mobile: form.phone };
 
-  const handleVerify = async () => {
-    const otpValue = otp.join("");
-
-    const res = await fetch("http://localhost:5000/api/otp/verify-email-otp", {
+    await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: form.email,
-        otp: otpValue,
-      }),
+      body: JSON.stringify(body),
     });
 
-    const data = await res.json();
+    setTimer(30);
+    setIsTimerActive(true);
+  } catch (err) {
+    console.log(err);
+  }
+};
 
-    if (data.success) {
-      // ✅ SAVE USER
-      localStorage.setItem("user", JSON.stringify(data.user));
+  const handleVerify = async () => {
+  const otpValue = otp.join("");
 
-      // ✅ REDIRECT
-      window.location.href = "/dashboard";
-    } else {
-      alert(data.message);
-    }
-  };
+  const url =
+    method === "email"
+      ? "http://localhost:5000/api/otp/email/verify-email-otp"
+      : "http://localhost:5000/api/otp/phone/verify";
 
-  const handleResend = async () => {
-    try {
-      await fetch("http://localhost:5000/api/otp/send-email-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email }),
-      });
+  const body =
+    method === "email"
+      ? { email: form.email, otp: otpValue }
+      : {
+          countryCode: form.countryCode,
+          mobile: form.phone,
+          otp: otpValue,
+        };
 
-      // restart timer
-      setTimer(30);
-      setIsTimerActive(true);
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
 
-      // optional UX improvement: clear OTP fields
-      setOtp(Array(6).fill(""));
-      inputsRef.current[0]?.focus();
-    } catch (err) {
-      console.log(err);
-    }
-  };
+  const data = await res.json();
 
+  if (data.success) {
+    localStorage.setItem("user", JSON.stringify(data.user));
+    window.location.href = "/dashboard";
+  } else {
+    alert(data.message);
+  }
+};
+
+const handleResend = async () => {
+  try {
+    const url =
+      method === "email"
+        ? "http://localhost:5000/api/otp/email/send-email-otp"
+        : "http://localhost:5000/api/otp/phone/send";
+
+    const body =
+      method === "email"
+        ? { email: form.email }
+        : { mobile: form.phone };
+
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    // restart timer
+    setTimer(30);
+    setIsTimerActive(true);
+
+    // clear OTP fields
+    setOtp(Array(6).fill(""));
+    inputsRef.current[0]?.focus();
+  } catch (err) {
+    console.log(err);
+  }
+};
   const handleChange = (value, index) => {
     if (!/^[0-9]?$/.test(value)) return;
 
@@ -175,7 +203,7 @@ export default function Auth() {
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
               />
             ) : (
-              <PhoneInput />
+              <PhoneInput form={form} setForm={setForm} />
             )}
 
             {/* Send OTP */}
@@ -257,18 +285,26 @@ function Input({ label, placeholder, value, onChange }) {
   );
 }
 
-function PhoneInput() {
+function PhoneInput({ form, setForm }) {
   return (
     <div>
-      <label className="text-sm text-gray-700 font-medium">Phone Number</label>
+      <label className="text-sm text-gray-700 font-medium">
+        Phone Number
+      </label>
+
       <div className="flex gap-2 mt-1">
         <span className="px-3 py-2.5 bg-gray-100 border border-gray-300 rounded-lg text-sm">
-          +91
+          {form.countryCode}
         </span>
+
         <input
           type="text"
+          value={form.phone}
+          onChange={(e) =>
+            setForm({ ...form, phone: e.target.value })
+          }
           placeholder="Enter number"
-          className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 bg-gray-50 focus:bg-white focus:ring-1 focus:ring-gray-900 outline-none"
+          className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300"
         />
       </div>
     </div>
