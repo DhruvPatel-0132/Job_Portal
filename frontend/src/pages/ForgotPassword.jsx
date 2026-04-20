@@ -90,40 +90,65 @@ export default function ForgotPassword() {
   };
 
   const handleResetPassword = async () => {
-    if (!password || !confirmPassword) {
-      return setMessage("Fill all fields");
-    }
+  if (!password || !confirmPassword) {
+    return setMessage("Fill all fields");
+  }
 
-    if (password !== confirmPassword) {
-      return setMessage("Passwords do not match");
-    }
+  if (password !== confirmPassword) {
+    return setMessage("Passwords do not match");
+  }
 
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      const res = await fetch(`${BASE_URL}/reset-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          token,
-          password,
-        }),
-      });
+    let url = "";
+    let body = {};
 
-      const data = await res.json();
-      setMessage(data.msg);
-
-      if (res.ok) {
-        setTimeout(() => {
-          window.location.href = "/";
-        }, 1500);
+    /* ================= EMAIL FLOW ================= */
+    if (method === "email") {
+      if (!token) {
+        return setMessage("Invalid or expired reset link");
       }
-    } catch {
-      setMessage("Reset failed");
-    } finally {
-      setLoading(false);
+
+      url = `${BASE_URL}/reset-password`;
+
+      body = {
+        token,
+        password,
+      };
     }
-  };
+
+    /* ================= PHONE FLOW ================= */
+    else {
+      url = `${BASE_URL}/reset-password-otp`;
+
+      body = {
+        phone: emailOrPhone,
+        password,
+      };
+    }
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json();
+    setMessage(data.msg);
+
+    if (res.ok) {
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1500);
+    }
+
+  } catch {
+    setMessage("Reset failed");
+  } finally {
+    setLoading(false);
+  }
+};
 
   /* OTP handlers */
   const handleChange = (value, index) => {

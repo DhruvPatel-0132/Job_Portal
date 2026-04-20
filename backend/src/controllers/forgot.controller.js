@@ -7,7 +7,7 @@ const { isEmail, isPhone } = require("../utils/validators");
 const { generateResetToken, generateOTP } = require("../utils/token.utils");
 
 const { sendResetEmail, sendOTPEmail } = require("../services/email.service");
-const sendSMS = require("../services/phone.service");
+const sendSMS = require("../services/sms.service");
 
 /* =========================================
    1. FORGOT PASSWORD
@@ -127,6 +127,44 @@ exports.resetPassword = async (req, res) => {
     return res.json({ msg: "Password reset successful" });
 
   } catch (err) {
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+exports.resetPasswordWithOtp = async (req, res) => {
+  const { phone, password } = req.body;
+
+  try {
+    const user = await User.findOne({ emailOrPhone: phone });
+
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    // check if OTP was verified
+    const record = await PasswordResetToken.findOne({
+      userId: user._id,
+    });
+
+    if (!record) {
+      return res.status(400).json({
+        msg: "OTP not verified",
+      });
+    }
+
+    // 🔥 update password
+    user.password = await bcrypt.hash(password, 10);
+    await user.save();
+
+    // cleanup
+    await PasswordResetToken.deleteMany({ userId: user._id });
+
+    return res.json({
+      msg: "Password reset successful",
+    });
+
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ msg: "Server error" });
   }
 };
