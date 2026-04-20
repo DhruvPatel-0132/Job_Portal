@@ -26,7 +26,7 @@ export default function Auth() {
 
   const handleSendOtp = async () => {
     try {
-      await fetch("http://localhost:5000/api/auth/send-otp", {
+      await fetch("http://localhost:5000/api/otp/send-email-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: form.email }),
@@ -42,7 +42,7 @@ export default function Auth() {
   const handleVerify = async () => {
     const otpValue = otp.join("");
 
-    const res = await fetch("http://localhost:5000/api/auth/verify-otp", {
+    const res = await fetch("http://localhost:5000/api/otp/verify-email-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -66,7 +66,7 @@ export default function Auth() {
 
   const handleResend = async () => {
     try {
-      await fetch("http://localhost:5000/api/auth/send-otp", {
+      await fetch("http://localhost:5000/api/otp/send-email-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: form.email }),

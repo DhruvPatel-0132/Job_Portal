@@ -41,6 +41,9 @@ const loginUser = async ({ emailOrPhone, password }) => {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken();
 
+  // ✅ REMOVE OLD TOKENS
+  await Token.deleteMany({ userId: user._id });
+
   await Token.create({
     userId: user._id,
     emailOrPhone: user.emailOrPhone,
