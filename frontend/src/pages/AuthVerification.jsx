@@ -64,9 +64,24 @@ export default function Auth() {
     }
   };
 
-  const handleResend = () => {
-    setTimer(30);
-    setIsTimerActive(true);
+  const handleResend = async () => {
+    try {
+      await fetch("http://localhost:5000/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email }),
+      });
+
+      // restart timer
+      setTimer(30);
+      setIsTimerActive(true);
+
+      // optional UX improvement: clear OTP fields
+      setOtp(Array(6).fill(""));
+      inputsRef.current[0]?.focus();
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const handleChange = (value, index) => {
@@ -196,7 +211,8 @@ export default function Auth() {
                 {timer === 0 && isTimerActive && (
                   <button
                     onClick={handleResend}
-                    className="text-gray-900 font-medium"
+                    disabled={!form.email || timer > 0}
+                    className="text-gray-900 font-medium cursor-pointer"
                   >
                     Resend
                   </button>

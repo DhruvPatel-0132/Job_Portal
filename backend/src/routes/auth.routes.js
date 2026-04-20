@@ -15,13 +15,27 @@ router.post("/send-otp", async (req, res) => {
   try {
     const { email } = req.body;
 
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
+
+    // 🔥 generate new OTP every time (resend included)
     const otp = await setOTP(email);
 
     await sendOTPEmail(email, otp);
 
-    res.json({ success: true, message: "OTP sent" });
+    return res.json({
+      success: true,
+      message: "OTP sent successfully",
+    });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 });
 
