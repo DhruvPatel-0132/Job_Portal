@@ -1,6 +1,7 @@
 const {
   loginUser,
   registerUser,
+  googleLoginUser 
 } = require("../services/auth.service");
 
 const login = async (req, res) => {
@@ -21,5 +22,24 @@ const register = async (req, res) => {
   }
 };
 
+// GOOGLE LOGIN
+const googleLogin = async (req, res) => {
+  try {
+    const { token } = req.body;
 
-module.exports = { login, register };
+    const result = await googleLoginUser(token);
+
+    return res.status(result.status).json(result.response);
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Google login failed",
+    });
+  }
+};
+
+module.exports = {
+  login,
+  register,
+  googleLogin,
+};

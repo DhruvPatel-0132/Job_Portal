@@ -10,35 +10,34 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      required: true,
+      required: false,
+      default: null,
     },
 
-    firstName: {
-      type: String,
-      required: true,
-    },
-
-    lastName: {
-      type: String,
-      required: true,
-    },
+    firstName: String,
+    lastName: String,
 
     role: {
       type: String,
       enum: ["job_seeker", "hire", "company"],
-      required: true,
+      default: "job_seeker",
     },
 
-    profile: {
-      type: Object,
-      default: {},
+    provider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
     },
+
+    googleId: String,
+    avatar: String,
+
     isVerified: {
       type: Boolean,
       default: false,
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("User", userSchema);
