@@ -4,10 +4,7 @@ import AuthVerification from "./pages/AuthVerification";
 import Register from "./components/Register/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
-<<<<<<< HEAD
-=======
 import ResetPassword from "./pages/ResetPassword";
->>>>>>> dhruv-dev
 
 export default function App() {
   return (
@@ -18,11 +15,7 @@ export default function App() {
             {/* 🔥 ADD THIS */}
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/auth" element={<AuthVerification />} />
-<<<<<<< HEAD
-      <Route path="/dashboard" element={<Dashboard />} />
-=======
       <Route path="/dashboard" element={<Dashboard />} /> 
->>>>>>> dhruv-dev
     </Routes>
   );
 }
