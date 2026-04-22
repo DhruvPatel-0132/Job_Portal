@@ -1,6 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Home, Users, Briefcase, Search, Bell, MessageSquare, Grid } from "lucide-react";
+import {
+  Home,
+  Users,
+  Briefcase,
+  Search,
+  Bell,
+  MessageSquare,
+  Grid,
+} from "lucide-react";
 
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -27,7 +35,6 @@ const Navbar = () => {
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-8 lg:px-16">
         <div className="flex items-stretch h-14">
-
           {/* ── Left: Logo + Search ── */}
           <div className="flex items-center gap-2 mr-2">
             <Link to="/dashboard" className="flex-shrink-0">
@@ -47,11 +54,27 @@ const Navbar = () => {
 
           {/* ── Center / Right: Nav Items ── */}
           <div className="flex items-stretch ml-auto">
-            <NavItem icon={<Home className="h-5 w-5" />} label="Home" to="/dashboard" active />
-            <NavItem icon={<Users className="h-5 w-5" />} label="My Network" to="#" />
-            <NavItem icon={<Briefcase className="h-5 w-5" />} label="Jobs" to="#" />
-            <NavItem icon={<MessageSquare className="h-5 w-5" />} label="Messaging" to="#" />
-            <NavItem icon={<Bell className="h-5 w-5" />} label="Notifications" to="#" />
+            <NavItem
+              icon={<Home className="h-5 w-5" />}
+              label="Home"
+              to="/dashboard"
+              active
+            />
+            <NavItem
+              icon={<Users className="h-5 w-5" />}
+              label="My Network"
+              to="#"
+            />
+            <NavItem
+              icon={<Briefcase className="h-5 w-5" />}
+              label="Jobs"
+              to="#"
+            />
+            <NavItem
+              icon={<Bell className="h-5 w-5" />}
+              label="Notifications"
+              to="#"
+            />
 
             {/* Vertical divider */}
             <div className="self-center mx-1 w-px h-8 bg-gray-300" />
@@ -69,8 +92,16 @@ const Navbar = () => {
                 />
                 <div className="flex items-center mt-0.5">
                   <span className="text-xs hidden md:block">Me</span>
-                  <svg className="ml-0.5 h-3 w-3 hidden md:block" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  <svg
+                    className="ml-0.5 h-3 w-3 hidden md:block"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
               </button>
@@ -81,10 +112,18 @@ const Navbar = () => {
                   {/* Profile summary */}
                   <div className="p-4 border-b border-gray-100">
                     <div className="flex items-center gap-3">
-                      <img className="h-12 w-12 rounded-full object-cover border border-gray-200" src={user.avatar} alt="User Avatar" />
+                      <img
+                        className="h-12 w-12 rounded-full object-cover border border-gray-200"
+                        src={user.avatar}
+                        alt="User Avatar"
+                      />
                       <div>
-                        <p className="text-sm font-semibold text-gray-900">{user.name}</p>
-                        <p className="text-xs text-gray-500 truncate w-36">{user.headline}</p>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {user.name}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate w-36">
+                          {user.headline}
+                        </p>
                       </div>
                     </div>
                     <Link
@@ -95,10 +134,21 @@ const Navbar = () => {
                     </Link>
                   </div>
                   <div className="py-1">
-                    <p className="px-4 pt-2 pb-1 text-xs font-semibold text-gray-900">Account</p>
-                    <a href="#" className="block px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100">Settings &amp; Privacy</a>
-                    <a href="#" className="block px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100">Help</a>
-                    <a href="#" className="block px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100">Language</a>
+                    <p className="px-4 pt-2 pb-1 text-xs font-semibold text-gray-900">
+                      Account
+                    </p>
+                    <a
+                      href="#"
+                      className="block px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Settings &amp; Privacy
+                    </a>
+                    <a
+                      href="#"
+                      className="block px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Help
+                    </a>
                   </div>
                   <div className="py-1 border-t border-gray-100">
                     <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
@@ -108,22 +158,7 @@ const Navbar = () => {
                 </div>
               )}
             </div>
-
-            {/* For Business / Work */}
-            <button className="hidden lg:flex flex-col items-center justify-center px-3 text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-900 transition-colors">
-              <Grid className="h-5 w-5" />
-              <span className="text-xs mt-0.5">For Business</span>
-            </button>
-
-            {/* Try Premium */}
-            <a
-              href="#"
-              className="hidden lg:flex items-center self-center ml-2 px-3 py-1 rounded-full text-xs font-semibold border border-amber-500 text-amber-600 hover:bg-amber-50 transition-colors whitespace-nowrap"
-            >
-              Try Premium
-            </a>
           </div>
-
         </div>
       </div>
     </nav>
@@ -134,9 +169,10 @@ const NavItem = ({ icon, label, to, active }) => (
   <Link
     to={to}
     className={`flex flex-col items-center justify-center px-3 border-b-2 transition-colors
-      ${active
-        ? "border-gray-900 text-gray-900"
-        : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-900"
+      ${
+        active
+          ? "border-gray-900 text-gray-900"
+          : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-900"
       }`}
   >
     {icon}
