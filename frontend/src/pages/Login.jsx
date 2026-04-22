@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 
 export default function Login() {
@@ -167,19 +168,23 @@ export default function Login() {
         </div>
 
         {/* Google */}
-        <button
-          onClick={handleGoogleLogin}
-          className="w-full flex items-center justify-center gap-3 py-2.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50"
-        >
-          <img
-            src="https://www.svgrepo.com/show/475656/google-color.svg"
-            alt="Google"
-            className="w-5 h-5"
-          />
-          <span className="text-sm font-medium text-gray-700">
-            Continue with Google
-          </span>
-        </button>
+        <GoogleLogin
+          onSuccess={async (res) => {
+            const response = await axios.post(
+              "http://localhost:5000/api/auth/google",
+              {
+                token: res.credential,
+              },
+            );
+
+            const data = response.data;
+
+            localStorage.setItem("token", data.accessToken);
+            localStorage.setItem("refreshToken", data.refreshToken);
+
+            navigate("/dashboard");
+          }}
+        />
       </div>
     </div>
   );

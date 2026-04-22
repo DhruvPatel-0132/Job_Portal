@@ -12,11 +12,16 @@ oauth2Client.setCredentials({
   refresh_token: process.env.REFRESH_TOKEN,
 });
 
-async function sendOTPEmail(email, otp) {
+// 🔥 Create transporter ONCE (better performance)
+let transporter;
+
+const getTransporter = async () => {
+  if (transporter) return transporter;
+
   const accessTokenObj = await oauth2Client.getAccessToken();
   const accessToken = accessTokenObj?.token || accessTokenObj;
 
-  const transporter = nodemailer.createTransport({
+  transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
       type: "OAuth2",
@@ -27,6 +32,15 @@ async function sendOTPEmail(email, otp) {
       accessToken,
     },
   });
+
+  return transporter;
+};
+
+/* =========================================
+   1. SEND OTP EMAIL (YOUR EXISTING FLOW)
+========================================= */
+async function sendOTPEmail(email, otp) {
+  const transporter = await getTransporter();
 
   await transporter.sendMail({
     from: `OTP System <${process.env.SENDER_EMAIL}>`,
@@ -42,4 +56,31 @@ async function sendOTPEmail(email, otp) {
   });
 }
 
-module.exports = sendOTPEmail;
+/* =========================================
+   2. SEND RESET LINK (NEW)
+========================================= */
+async function sendResetEmail(email, link) {
+  const transporter = await getTransporter();
+
+  await transporter.sendMail({
+    from: `Support <${process.env.SENDER_EMAIL}>`,
+    to: email,
+    subject: "Reset Your Password",
+    html: `
+      <div style="font-family:Arial">
+        <h2>Password Reset</h2>
+        <p>Click the button below to reset your password:</p>
+        <a href="${link}" 
+           style="display:inline-block;padding:10px 20px;background:#000;color:#fff;text-decoration:none;border-radius:5px;">
+           Reset Password
+        </a>
+        <p>This link expires in 15 minutes.</p>
+      </div>
+    `,
+  });
+}
+
+module.exports = {
+  sendOTPEmail,
+  sendResetEmail,
+};

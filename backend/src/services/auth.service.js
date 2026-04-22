@@ -9,6 +9,10 @@ const {
   REFRESH_TOKEN_EXPIRY_MS,
 } = require("../utils/generateTokens");
 
+const { OAuth2Client } = require("google-auth-library");
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 // LOGIN SERVICE
 const loginUser = async ({ emailOrPhone, password }) => {
   const user = await User.findOne({
@@ -40,6 +44,9 @@ const loginUser = async ({ emailOrPhone, password }) => {
 
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken();
+
+  // ✅ REMOVE OLD TOKENS
+  await Token.deleteMany({ userId: user._id });
 
   await Token.create({
     userId: user._id,
@@ -114,7 +121,76 @@ const registerUser = async (data) => {
   };
 };
 
+// GOOGLE LOGIN LOGIC
+const googleLoginUser = async (idToken) => {
+  const ticket = await client.verifyIdToken({
+    idToken,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  });
+
+  const payload = ticket.getPayload();
+
+  const { email, name, sub, picture } = payload;
+
+  let user = await User.findOne({ emailOrPhone: email });
+
+  // 🟡 IF USER EXISTS
+  if (user) {
+    // if local account exists, block mixing (optional rule)
+    if (user.provider === "local" && user.password) {
+      return {
+        status: 400,
+        response: {
+          success: false,
+          message: "Account exists with password login. Use email/password.",
+        },
+      };
+    }
+  }
+
+  // 🟢 CREATE NEW USER
+  if (!user) {
+    user = await User.create({
+      emailOrPhone: email,
+      firstName: name,
+      lastName: "",
+      password: null,
+      role: null, // default role (change if needed)
+      provider: "google",
+      googleId: sub,
+      avatar: picture,
+      isVerified: true, // IMPORTANT: Google is already verified
+    });
+  }
+
+  // 🔐 TOKEN GENERATION
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken();
+
+  await Token.deleteMany({ userId: user._id });
+
+  await Token.create({
+    userId: user._id,
+    emailOrPhone: user.emailOrPhone,
+    refreshToken: hashToken(refreshToken),
+    expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY_MS),
+  });
+
+  return {
+    status: 200,
+    response: {
+      success: true,
+      accessToken,
+      refreshToken,
+      isVerified: true,
+      message: "Google login successful",
+      user,
+    },
+  };
+};
+
 module.exports = {
   loginUser,
   registerUser,
+  googleLoginUser
 };

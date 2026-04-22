@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { NavLink } from "react-router-dom";
+import { NavLink, useSearchParams } from "react-router-dom";
 
 export default function ForgotPassword() {
   const [method, setMethod] = useState("email");
@@ -9,6 +9,18 @@ export default function ForgotPassword() {
   const inputsRef = useRef([]);
   const [timer, setTimer] = useState(30);
 
+  // 🔥 NEW STATES
+  const [emailOrPhone, setEmailOrPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token");
+
+  const BASE_URL = "http://localhost:5000/api/forgot";
+
   /* Timer */
   useEffect(() => {
     if (timer === 0) return;
@@ -16,6 +28,129 @@ export default function ForgotPassword() {
     return () => clearInterval(interval);
   }, [timer]);
 
+  /* ================= API ================= */
+
+  const handleSend = async () => {
+    if (!emailOrPhone) return setMessage("Enter email or phone");
+
+    try {
+      setLoading(true);
+
+      const res = await fetch(`${BASE_URL}/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emailOrPhone }),
+      });
+
+      const data = await res.json();
+      setMessage(data.msg);
+
+      if (res.ok) {
+        if (method === "email") setStep(3);
+        else setStep(2);
+      }
+    } catch {
+      setMessage("Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    const enteredOtp = otp.join("");
+
+    if (enteredOtp.length !== 6) {
+      return setMessage("Enter valid OTP");
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await fetch(`${BASE_URL}/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: emailOrPhone,
+          otp: enteredOtp,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setStep(3);
+      } else {
+        setMessage(data.msg);
+      }
+    } catch {
+      setMessage("OTP verification failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+  if (!password || !confirmPassword) {
+    return setMessage("Fill all fields");
+  }
+
+  if (password !== confirmPassword) {
+    return setMessage("Passwords do not match");
+  }
+
+  try {
+    setLoading(true);
+
+    let url = "";
+    let body = {};
+
+    /* ================= EMAIL FLOW ================= */
+    if (method === "email") {
+      if (!token) {
+        return setMessage("Invalid or expired reset link");
+      }
+
+      url = `${BASE_URL}/reset-password`;
+
+      body = {
+        token,
+        password,
+      };
+    }
+
+    /* ================= PHONE FLOW ================= */
+    else {
+      url = `${BASE_URL}/reset-password-otp`;
+
+      body = {
+        phone: emailOrPhone,
+        password,
+      };
+    }
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json();
+    setMessage(data.msg);
+
+    if (res.ok) {
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1500);
+    }
+
+  } catch {
+    setMessage("Reset failed");
+  } finally {
+    setLoading(false);
+  }
+};
+
+  /* OTP handlers */
   const handleChange = (value, index) => {
     if (!/^[0-9]?$/.test(value)) return;
 
@@ -42,8 +177,6 @@ export default function ForgotPassword() {
     setOtp([...newOtp, ...Array(6 - newOtp.length).fill("")]);
   };
 
-  const isComplete = otp.every((digit) => digit !== "");
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
       <motion.div
@@ -60,6 +193,13 @@ export default function ForgotPassword() {
             Reset via Email or Phone
           </p>
         </div>
+
+        {/* MESSAGE */}
+        {message && (
+          <p className="text-sm text-center text-gray-600 mb-4">
+            {message}
+          </p>
+        )}
 
         {/* Tabs */}
         <div className="relative flex bg-gray-100 rounded-lg p-1 mb-6">
@@ -93,11 +233,9 @@ export default function ForgotPassword() {
         <AnimatePresence mode="wait">
           <motion.div
             key={method + step}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
             className="space-y-5"
           >
+
             {/* STEP 1 */}
             {step === 1 && (
               <>
@@ -105,19 +243,30 @@ export default function ForgotPassword() {
                   <Input
                     label="Email Address"
                     placeholder="Enter your email"
+                    value={emailOrPhone}
+                    onChange={(e) => setEmailOrPhone(e.target.value)}
                   />
                 ) : (
-                  <PhoneInput />
+                  <PhoneInput
+                    value={emailOrPhone}
+                    onChange={(e) => setEmailOrPhone(e.target.value)}
+                  />
                 )}
 
                 <PrimaryButton
-                  text={method === "email" ? "Send Reset Link" : "Send OTP"}
-                  onClick={() => setStep(method === "email" ? 3 : 2)}
+                  text={
+                    loading
+                      ? "Sending..."
+                      : method === "email"
+                      ? "Send Reset Link"
+                      : "Send OTP"
+                  }
+                  onClick={handleSend}
                 />
               </>
             )}
 
-            {/* STEP 2 - OTP */}
+            {/* STEP 2 */}
             {step === 2 && method === "phone" && (
               <>
                 <div>
@@ -164,8 +313,8 @@ export default function ForgotPassword() {
                 </div>
 
                 <PrimaryButton
-                  text="Verify OTP"
-                  onClick={() => setStep(3)}
+                  text={loading ? "Verifying..." : "Verify OTP"}
+                  onClick={handleVerifyOtp}
                 />
               </>
             )}
@@ -173,7 +322,7 @@ export default function ForgotPassword() {
             {/* STEP 3 */}
             {step === 3 && (
               <>
-                {method === "email" ? (
+                {method === "email" && !token ? (
                   <div className="text-center">
                     <div className="text-green-600 text-lg font-medium mb-2">
                       ✔ Link Sent
@@ -188,15 +337,24 @@ export default function ForgotPassword() {
                       label="New Password"
                       placeholder="Enter new password"
                       type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                     />
 
                     <Input
                       label="Confirm Password"
                       placeholder="Confirm password"
                       type="password"
+                      value={confirmPassword}
+                      onChange={(e) =>
+                        setConfirmPassword(e.target.value)
+                      }
                     />
 
-                    <PrimaryButton text="Reset Password" />
+                    <PrimaryButton
+                      text={loading ? "Resetting..." : "Reset Password"}
+                      onClick={handleResetPassword}
+                    />
                   </>
                 )}
               </>
@@ -204,7 +362,6 @@ export default function ForgotPassword() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Back */}
         <p className="text-center text-sm text-gray-600 mt-6">
           Remember your password?{" "}
           <NavLink
@@ -219,22 +376,24 @@ export default function ForgotPassword() {
   );
 }
 
-/* Components */
+/* COMPONENTS (UPDATED WITH PROPS ONLY) */
 
-function Input({ label, placeholder, type = "text" }) {
+function Input({ label, placeholder, type = "text", value, onChange }) {
   return (
     <div>
       <label className="text-sm text-gray-700 font-medium">{label}</label>
       <input
         type={type}
         placeholder={placeholder}
+        value={value}
+        onChange={onChange}
         className="w-full mt-1 px-4 py-2.5 rounded-lg border border-gray-300 bg-gray-50 focus:bg-white focus:ring-1 focus:ring-gray-900 outline-none"
       />
     </div>
   );
 }
 
-function PhoneInput() {
+function PhoneInput({ value, onChange }) {
   return (
     <div>
       <label className="text-sm text-gray-700 font-medium">
@@ -247,6 +406,8 @@ function PhoneInput() {
         <input
           type="text"
           placeholder="Enter number"
+          value={value}
+          onChange={onChange}
           className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 bg-gray-50 focus:bg-white focus:ring-1 focus:ring-gray-900 outline-none"
         />
       </div>
