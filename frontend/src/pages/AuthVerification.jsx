@@ -1,18 +1,20 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuthStore } from "../store/authStore";
 
 export default function Auth() {
+  const login = useAuthStore((state) => state.login);
   const [method, setMethod] = useState("email");
   const [otp, setOtp] = useState(Array(6).fill(""));
   const inputsRef = useRef([]);
 
   const [timer, setTimer] = useState(0);
   const [isTimerActive, setIsTimerActive] = useState(false);
-const [form, setForm] = useState({
-  email: "",
-  phone: "",
-  countryCode: "+91",
-});
+  const [form, setForm] = useState({
+    email: "",
+    phone: "",
+    countryCode: "+91",
+  });
 
   /* Timer */
   useEffect(() => {
@@ -26,92 +28,90 @@ const [form, setForm] = useState({
   }, [isTimerActive, timer]);
 
   const handleSendOtp = async () => {
-  try {
-    const url =
-      method === "email"
-        ? "http://localhost:5000/api/otp/email/send-email-otp"
-        : "http://localhost:5000/api/otp/phone/send";
+    try {
+      const url =
+        method === "email"
+          ? "http://localhost:5000/api/otp/send-email-otp"
+          : "http://localhost:5000/api/otp/phone/send";
 
-    const body =
-      method === "email"
-        ? { email: form.email }
-        : { countryCode: form.countryCode, mobile: form.phone };
+      const body =
+        method === "email"
+          ? { email: form.email }
+          : { countryCode: form.countryCode, mobile: form.phone };
 
-    await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+      await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
 
-    setTimer(30);
-    setIsTimerActive(true);
-  } catch (err) {
-    console.log(err);
-  }
-};
+      setTimer(30);
+      setIsTimerActive(true);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   const handleVerify = async () => {
-  const otpValue = otp.join("");
+    const otpValue = otp.join("");
 
-  const url =
-    method === "email"
-      ? "http://localhost:5000/api/otp/email/verify-email-otp"
-      : "http://localhost:5000/api/otp/phone/verify";
-
-  const body =
-    method === "email"
-      ? { email: form.email, otp: otpValue }
-      : {
-          countryCode: form.countryCode,
-          mobile: form.phone,
-          otp: otpValue,
-        };
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-
-  const data = await res.json();
-
-  if (data.success) {
-    localStorage.setItem("user", JSON.stringify(data.user));
-    window.location.href = "/dashboard";
-  } else {
-    alert(data.message);
-  }
-};
-
-const handleResend = async () => {
-  try {
     const url =
       method === "email"
-        ? "http://localhost:5000/api/otp/email/send-email-otp"
-        : "http://localhost:5000/api/otp/phone/send";
+        ? "http://localhost:5000/api/otp/verify-email-otp"
+        : "http://localhost:5000/api/otp/phone/verify";
 
     const body =
       method === "email"
-        ? { email: form.email }
-        : { mobile: form.phone };
+        ? { email: form.email, otp: otpValue }
+        : {
+            countryCode: form.countryCode,
+            mobile: form.phone,
+            otp: otpValue,
+          };
 
-    await fetch(url, {
+    const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
 
-    // restart timer
-    setTimer(30);
-    setIsTimerActive(true);
+    const data = await res.json();
 
-    // clear OTP fields
-    setOtp(Array(6).fill(""));
-    inputsRef.current[0]?.focus();
-  } catch (err) {
-    console.log(err);
-  }
-};
+    if (data.success) {
+      login(data);
+      window.location.href = "/dashboard";
+    } else {
+      alert(data.message);
+    }
+  };
+
+  const handleResend = async () => {
+    try {
+      const url =
+        method === "email"
+          ? "http://localhost:5000/api/otp/send-email-otp"
+          : "http://localhost:5000/api/otp/phone/send";
+
+      const body =
+        method === "email" ? { email: form.email } : { mobile: form.phone };
+
+      await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      // restart timer
+      setTimer(30);
+      setIsTimerActive(true);
+
+      // clear OTP fields
+      setOtp(Array(6).fill(""));
+      inputsRef.current[0]?.focus();
+    } catch (err) {
+      console.log(err);
+    }
+  };
   const handleChange = (value, index) => {
     if (!/^[0-9]?$/.test(value)) return;
 
@@ -288,9 +288,7 @@ function Input({ label, placeholder, value, onChange }) {
 function PhoneInput({ form, setForm }) {
   return (
     <div>
-      <label className="text-sm text-gray-700 font-medium">
-        Phone Number
-      </label>
+      <label className="text-sm text-gray-700 font-medium">Phone Number</label>
 
       <div className="flex gap-2 mt-1">
         <span className="px-3 py-2.5 bg-gray-100 border border-gray-300 rounded-lg text-sm">
@@ -300,9 +298,7 @@ function PhoneInput({ form, setForm }) {
         <input
           type="text"
           value={form.phone}
-          onChange={(e) =>
-            setForm({ ...form, phone: e.target.value })
-          }
+          onChange={(e) => setForm({ ...form, phone: e.target.value })}
           placeholder="Enter number"
           className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300"
         />
