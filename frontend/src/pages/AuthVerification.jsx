@@ -29,7 +29,7 @@ const [form, setForm] = useState({
   try {
     const url =
       method === "email"
-        ? "http://localhost:5000/api/otp/email/send-email-otp"
+        ? "http://localhost:5000/api/otp/send-email-otp"
         : "http://localhost:5000/api/otp/phone/send";
 
     const body =
@@ -55,7 +55,7 @@ const [form, setForm] = useState({
 
   const url =
     method === "email"
-      ? "http://localhost:5000/api/otp/email/verify-email-otp"
+      ? "http://localhost:5000/api/otp/verify-email-otp"
       : "http://localhost:5000/api/otp/phone/verify";
 
   const body =
@@ -87,7 +87,7 @@ const handleResend = async () => {
   try {
     const url =
       method === "email"
-        ? "http://localhost:5000/api/otp/email/send-email-otp"
+        ? "http://localhost:5000/api/otp/send-email-otp"
         : "http://localhost:5000/api/otp/phone/send";
 
     const body =

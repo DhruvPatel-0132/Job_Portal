@@ -1,4 +1,4 @@
-const sendOTPEmail = require("../services/email.service");
+const { sendOTPEmail } = require("../services/email.service");
 const { setOTP, verifyOTP, clearOTP } = require("../services/otp.service");
 const User = require("../models/User");
 
@@ -7,14 +7,8 @@ const sendOTP = async (req, res) => {
   try {
     const { email } = req.body;
 
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: "Email is required",
-      });
-    }
-
     const otp = await setOTP(email);
+
     await sendOTPEmail(email, otp);
 
     return res.json({
@@ -22,6 +16,8 @@ const sendOTP = async (req, res) => {
       message: "OTP sent successfully",
     });
   } catch (err) {
+    console.error("EMAIL ERROR:", err); // 👈 VERY IMPORTANT
+
     return res.status(500).json({
       success: false,
       message: err.message,
