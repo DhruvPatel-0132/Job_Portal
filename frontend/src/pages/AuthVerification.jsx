@@ -1,121 +1,9 @@
-import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+/* eslint-disable no-unused-vars */
+import { motion } from "framer-motion";
 
 export default function Auth() {
-  const [method, setMethod] = useState("email");
-  const [otp, setOtp] = useState(Array(6).fill(""));
-  const inputsRef = useRef([]);
-
-  const [timer, setTimer] = useState(0);
-  const [isTimerActive, setIsTimerActive] = useState(false);
-  const [form, setForm] = useState({
-    email: "",
-    phone: "",
-  });
-
-  /* Timer */
-  useEffect(() => {
-    if (!isTimerActive || timer === 0) return;
-
-    const interval = setInterval(() => {
-      setTimer((t) => t - 1);
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isTimerActive, timer]);
-
-  const handleSendOtp = async () => {
-    try {
-      await fetch("http://localhost:5000/api/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email }),
-      });
-
-      setTimer(30);
-      setIsTimerActive(true);
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  const handleVerify = async () => {
-    const otpValue = otp.join("");
-
-    const res = await fetch("http://localhost:5000/api/auth/verify-otp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: form.email,
-        otp: otpValue,
-      }),
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
-      // ✅ SAVE USER
-      localStorage.setItem("user", JSON.stringify(data.user));
-
-      // ✅ REDIRECT
-      window.location.href = "/dashboard";
-    } else {
-      alert(data.message);
-    }
-  };
-
-  const handleResend = async () => {
-    try {
-      await fetch("http://localhost:5000/api/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email }),
-      });
-
-      // restart timer
-      setTimer(30);
-      setIsTimerActive(true);
-
-      // optional UX improvement: clear OTP fields
-      setOtp(Array(6).fill(""));
-      inputsRef.current[0]?.focus();
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  const handleChange = (value, index) => {
-    if (!/^[0-9]?$/.test(value)) return;
-
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-
-    if (value && index < 5) {
-      inputsRef.current[index + 1].focus();
-    }
-  };
-
-  const handleKeyDown = (e, index) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputsRef.current[index - 1].focus();
-    }
-  };
-
-  const handlePaste = (e) => {
-    const paste = e.clipboardData.getData("text").slice(0, 6);
-    if (!/^\d+$/.test(paste)) return;
-
-    const newOtp = paste.split("");
-    setOtp([...newOtp, ...Array(6 - newOtp.length).fill("")]);
-  };
-
-  const isComplete = otp.every((digit) => digit !== "");
-
-  const contentVariants = {
-    initial: { opacity: 0, y: 15 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -10 },
+  const handleRedirect = () => {
+    window.location.href = "/dashboard";
   };
 
   return (
@@ -128,162 +16,68 @@ export default function Auth() {
         {/* Header */}
         <div className="mb-8 text-center">
           <h2 className="text-2xl font-semibold text-gray-900">Verification</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Enter the OTP to continue
-          </p>
+          <p className="text-sm text-gray-500 mt-1">Static demo page</p>
         </div>
 
-        {/* Tabs */}
-        <div className="relative flex bg-gray-100 rounded-lg p-1 mb-6">
-          <motion.div
-            layout
-            className="absolute top-1 bottom-1 w-1/2 bg-white rounded-md shadow"
-            style={{ left: method === "email" ? "0%" : "50%" }}
-          />
-
-          <button
-            onClick={() => setMethod("email")}
-            className="flex-1 py-2 text-sm font-medium z-10"
-          >
+        {/* Tabs (UI only) */}
+        <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
+          <div className="flex-1 py-2 text-sm font-medium text-center bg-white rounded-md shadow">
             Email OTP
-          </button>
-
-          <button
-            onClick={() => setMethod("phone")}
-            className="flex-1 py-2 text-sm font-medium z-10"
-          >
+          </div>
+          <div className="flex-1 py-2 text-sm font-medium text-center text-gray-500">
             Phone OTP
-          </button>
+          </div>
         </div>
 
-        {/* Content */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={method}
-            variants={contentVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="space-y-5"
-          >
-            {/* Input */}
-            {method === "email" ? (
-              <Input
-                label="Email Address"
-                placeholder="Enter your email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-              />
-            ) : (
-              <PhoneInput />
-            )}
+        {/* Static Input UI */}
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm text-gray-700 font-medium">
+              Email Address
+            </label>
+            <input
+              type="text"
+              placeholder="Enter your email"
+              className="w-full mt-1 px-4 py-2.5 rounded-lg border border-gray-300 bg-gray-50"
+              disabled
+            />
+          </div>
 
-            {/* Send OTP */}
-            <PrimaryButton text="Send OTP" onClick={handleSendOtp} />
+          <button className="w-full py-2.5 rounded-lg bg-gray-300 text-gray-600 text-sm font-medium cursor-not-allowed">
+            Send OTP
+          </button>
 
-            {/* OTP BOXES */}
-            <div>
-              <label className="text-sm text-gray-700 font-medium">
-                Enter OTP
-              </label>
+          {/* OTP Boxes (static only) */}
+          <div>
+            <label className="text-sm text-gray-700 font-medium">
+              Enter OTP
+            </label>
 
-              <div className="flex justify-between mt-2" onPaste={handlePaste}>
-                {otp.map((digit, index) => (
+            <div className="flex justify-between mt-2">
+              {Array(6)
+                .fill("")
+                .map((_, i) => (
                   <input
-                    key={index}
-                    ref={(el) => (inputsRef.current[index] = el)}
+                    key={i}
                     type="text"
                     maxLength="1"
-                    value={digit}
-                    onChange={(e) => handleChange(e.target.value, index)}
-                    onKeyDown={(e) => handleKeyDown(e, index)}
-                    className="w-12 h-12 text-center text-lg rounded-lg border border-gray-300 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-gray-900 outline-none"
+                    disabled
+                    className="w-12 h-12 text-center text-lg rounded-lg border border-gray-300 bg-gray-50"
                   />
                 ))}
-              </div>
-
-              {/* Resend */}
-              <div className="flex justify-between mt-3 text-xs text-gray-500">
-                <span>
-                  {timer > 0 ? `Resend in ${timer}s` : "Didn't receive code?"}
-                </span>
-
-                {timer === 0 && isTimerActive && (
-                  <button
-                    onClick={handleResend}
-                    disabled={!form.email || timer > 0}
-                    className="text-gray-900 font-medium cursor-pointer"
-                  >
-                    Resend
-                  </button>
-                )}
-              </div>
             </div>
-          </motion.div>
-        </AnimatePresence>
+          </div>
+        </div>
 
-        {/* Verify */}
+        {/* Verify Button */}
         <motion.button
-          onClick={handleVerify}
-          disabled={!isComplete}
-          whileTap={{ scale: isComplete ? 0.97 : 1 }}
-          className={`w-full mt-6 py-3 rounded-lg font-medium transition ${
-            isComplete
-              ? "bg-gray-900 text-white"
-              : "bg-gray-300 text-gray-500 cursor-not-allowed"
-          }`}
+          onClick={handleRedirect}
+          whileTap={{ scale: 0.97 }}
+          className="w-full mt-6 py-3 rounded-lg font-medium bg-gray-900 text-white"
         >
-          Verify
+          Go to Dashboard
         </motion.button>
       </motion.div>
     </div>
-  );
-}
-
-/* Components */
-
-function Input({ label, placeholder, value, onChange }) {
-  return (
-    <div>
-      <label className="text-sm text-gray-700 font-medium">{label}</label>
-      <input
-        type="text"
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        className="w-full mt-1 px-4 py-2.5 rounded-lg border border-gray-300 bg-gray-50 focus:bg-white focus:ring-1 focus:ring-gray-900 outline-none"
-      />
-    </div>
-  );
-}
-
-function PhoneInput() {
-  return (
-    <div>
-      <label className="text-sm text-gray-700 font-medium">Phone Number</label>
-      <div className="flex gap-2 mt-1">
-        <span className="px-3 py-2.5 bg-gray-100 border border-gray-300 rounded-lg text-sm">
-          +91
-        </span>
-        <input
-          type="text"
-          placeholder="Enter number"
-          className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 bg-gray-50 focus:bg-white focus:ring-1 focus:ring-gray-900 outline-none"
-        />
-      </div>
-    </div>
-  );
-}
-
-function PrimaryButton({ text, onClick }) {
-  return (
-    <motion.button
-      onClick={onClick}
-      whileTap={{ scale: 0.97 }}
-      whileHover={{ scale: 1.02 }}
-      className="w-full py-2.5 rounded-lg bg-gray-900 text-white text-sm font-medium"
-    >
-      {text}
-    </motion.button>
   );
 }
