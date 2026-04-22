@@ -130,40 +130,57 @@ const googleLoginUser = async (idToken) => {
 
   const payload = ticket.getPayload();
 
-  const { email, name, sub, picture } = payload;
+  const {
+    email,
+    name,
+    sub,
+    picture,
+    given_name,
+    family_name,
+  } = payload;
 
-  let user = await User.findOne({ emailOrPhone: email });
+  // safer split (fallback logic)
+  const firstName = given_name || name?.split(" ")[0] || "";
+  const lastName =
+    family_name || name?.split(" ").slice(1).join(" ") || "";
 
-  // 🟡 IF USER EXISTS
+  let user = await User.findOne({
+    emailOrPhone: email,
+  });
+
+  let isNewUser = false;
+
+  // 🟡 EXISTING USER
   if (user) {
-    // if local account exists, block mixing (optional rule)
     if (user.provider === "local" && user.password) {
       return {
         status: 400,
         response: {
           success: false,
-          message: "Account exists with password login. Use email/password.",
+          message: "Account exists with email/password login",
         },
       };
     }
   }
 
-  // 🟢 CREATE NEW USER
+  // 🟢 CREATE USER
   if (!user) {
+    isNewUser = true;
+
     user = await User.create({
       emailOrPhone: email,
-      firstName: name,
-      lastName: "",
+      firstName,
+      lastName,
       password: null,
-      role: null, // default role (change if needed)
+      role: "job_seeker", // FIXED (no null)
       provider: "google",
       googleId: sub,
       avatar: picture,
-      isVerified: true, // IMPORTANT: Google is already verified
+      isVerified: true,
     });
   }
 
-  // 🔐 TOKEN GENERATION
+  // 🔐 TOKENS
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken();
 
@@ -183,8 +200,16 @@ const googleLoginUser = async (idToken) => {
       accessToken,
       refreshToken,
       isVerified: true,
+      isNewUser, // 🔥 IMPORTANT for frontend onboarding
       message: "Google login successful",
-      user,
+      user: {
+        _id: user._id,
+        email: user.emailOrPhone,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        avatar: user.avatar,
+        role: user.role,
+      },
     },
   };
 };

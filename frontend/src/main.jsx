@@ -12,12 +12,21 @@ import { useAuthStore } from "./store/authStore";
 function InitAuth() {
   const token = useAuthStore((state) => state.token);
   const fetchUser = useAuthStore((state) => state.fetchUser);
+  const logout = useAuthStore((state) => state.logout);
 
   useEffect(() => {
-    if (token) {
-      fetchUser();
-    }
-  }, [token, fetchUser]);
+    const init = async () => {
+      try {
+        if (token) {
+          await fetchUser();
+        }
+      } catch (err) {
+        logout(); // 🔥 clear bad token
+      }
+    };
+
+    init();
+  }, [token]);
 
   return null;
 }

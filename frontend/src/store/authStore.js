@@ -13,13 +13,22 @@ export const useAuthStore = create((set, get) => ({
   setUser: (user) => set({ user }),
 
   login: (data) => {
-    localStorage.setItem("token", data.token);
+    console.log("AUTH DATA:", data);
+
+    const token = data.token || data.accessToken || data.jwt;
+
+    if (!token) {
+      console.error("❌ Token missing from backend response");
+      return;
+    }
+
+    localStorage.setItem("token", token);
+
     set({
-      token: data.token,
-      user: data.user,
+      token,
+      user: data.user || data.userData || null,
     });
   },
-
   fetchUser: async () => {
     try {
       const res = await api.get("/auth/me");
