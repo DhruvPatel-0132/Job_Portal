@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
+import { motion } from "framer-motion";
 
 import api from "../api/axios"; // ⚠️ fix path if needed
 import { useAuthStore } from "../store/authStore";
