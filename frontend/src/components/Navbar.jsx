@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Home,
   Users,
@@ -9,6 +9,7 @@ import {
   MessageSquare,
   Grid,
 } from "lucide-react";
+import { useAuthStore } from "../store/authStore";
 
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -30,6 +31,14 @@ const Navbar = () => {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+  const navigate = useNavigate();
+
+  const logout = useAuthStore((state) => state.logout); // ✅ ADD THIS
+
+  const handleLogout = () => {
+    logout(); // now works
+    navigate("/login");
+  };
 
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
@@ -82,7 +91,7 @@ const Navbar = () => {
             {/* Me Dropdown */}
             <div className="relative flex items-stretch" ref={dropdownRef}>
               <button
-                className="flex flex-col items-center justify-center px-3 text-gray-500 hover:text-gray-900 focus:outline-none border-b-2 border-transparent hover:border-gray-900 transition-colors h-full"
+                className="flex flex-col items-center justify-center px-3 text-gray-500 hover:text-gray-900 focus:outline-none border-b-2 border-transparent hover:border-gray-900 transition-colors h-full cursor-pointer"
                 onClick={() => setIsDropdownOpen((o) => !o)}
               >
                 <img
@@ -151,7 +160,10 @@ const Navbar = () => {
                     </a>
                   </div>
                   <div className="py-1 border-t border-gray-100">
-                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                    >
                       Sign Out
                     </button>
                   </div>

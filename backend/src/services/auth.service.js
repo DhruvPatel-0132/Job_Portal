@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const Profile = require("../models/Profile");
 const Token = require("../models/Token");
 const bcrypt = require("bcryptjs");
 
@@ -20,13 +21,19 @@ const loginUser = async ({ emailOrPhone, password }) => {
   });
 
   if (!user || !user.password) {
-    return { status: 401, response: { success: false, message: "Invalid credentials" } };
+    return {
+      status: 401,
+      response: { success: false, message: "Invalid credentials" },
+    };
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
 
   if (!isMatch) {
-    return { status: 401, response: { success: false, message: "Invalid credentials" } };
+    return {
+      status: 401,
+      response: { success: false, message: "Invalid credentials" },
+    };
   }
 
   if (!user.isVerified) {
@@ -92,6 +99,13 @@ const registerUser = async (data) => {
     role,
   });
 
+  // 🔥 CREATE PROFILE
+  await Profile.create({
+    userId: user._id,
+    fullName: `${firstName} ${lastName}`,
+    phone: emailOrPhone.includes("@") ? "" : emailOrPhone,
+  });
+
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken();
 
@@ -130,19 +144,11 @@ const googleLoginUser = async (idToken) => {
 
   const payload = ticket.getPayload();
 
-  const {
-    email,
-    name,
-    sub,
-    picture,
-    given_name,
-    family_name,
-  } = payload;
+  const { email, name, sub, picture, given_name, family_name } = payload;
 
   // safer split (fallback logic)
   const firstName = given_name || name?.split(" ")[0] || "";
-  const lastName =
-    family_name || name?.split(" ").slice(1).join(" ") || "";
+  const lastName = family_name || name?.split(" ").slice(1).join(" ") || "";
 
   let user = await User.findOne({
     emailOrPhone: email,
@@ -172,11 +178,18 @@ const googleLoginUser = async (idToken) => {
       firstName,
       lastName,
       password: null,
-      role: "job_seeker", // FIXED (no null)
+      role: "job_seeker",
       provider: "google",
       googleId: sub,
       avatar: picture,
       isVerified: true,
+    });
+
+    // 🔥 CREATE PROFILE FOR GOOGLE USER
+    await Profile.create({
+      userId: user._id,
+      fullName: `${firstName} ${lastName}`,
+      avatar: picture || "",
     });
   }
 
@@ -217,5 +230,5 @@ const googleLoginUser = async (idToken) => {
 module.exports = {
   loginUser,
   registerUser,
-  googleLoginUser
+  googleLoginUser,
 };
