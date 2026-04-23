@@ -1,5 +1,5 @@
 import React from "react";
-import { ThumbsUp, MessageSquare, Share2, Send } from "lucide-react";
+import { ThumbsUp, MessageSquare, Repeat, Send } from "lucide-react";
 
 const PostCard = ({ post }) => {
   return (
@@ -75,7 +75,7 @@ const PostCard = ({ post }) => {
           icon={<MessageSquare className="w-5 h-5" />}
           label="Comment"
         />
-        <ActionButton icon={<Share2 className="w-5 h-5" />} label="Share" />
+        <ActionButton icon={<Repeat className="w-5 h-5" />} label="Repost" />
         <ActionButton icon={<Send className="w-5 h-5" />} label="Send" />
       </div>
     </div>

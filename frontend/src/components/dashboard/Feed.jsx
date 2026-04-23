@@ -116,7 +116,7 @@ const Feed = () => {
 
       if (node) observer.current.observe(node);
     },
-    [loading, loadMorePosts]
+    [loading, loadMorePosts],
   );
 
   return (

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import axios from "axios";
+import { motion } from "framer-motion";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -86,7 +87,12 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
+      <motion.div 
+        initial={{ opacity: 0, y: 30 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        transition={{ duration: 0.4 }} 
+        className="w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-sm p-8"
+      >
         {/* Header */}
         <div className="mb-8 text-center">
           <h2 className="text-2xl font-semibold text-gray-900">Welcome back</h2>
@@ -142,12 +148,13 @@ export default function Login() {
         </div>
 
         {/* Login Button */}
-        <button
+        <motion.button
+          whileTap={{ scale: 0.98 }}
           onClick={handleLogin}
           className="w-full py-3 rounded-lg bg-gray-900 text-white font-medium hover:bg-black transition"
         >
           Sign In
-        </button>
+        </motion.button>
 
         {/* Register */}
         <p className="text-center text-sm text-gray-600 mt-6">
@@ -185,7 +192,7 @@ export default function Login() {
             navigate("/dashboard");
           }}
         />
-      </div>
+      </motion.div>
     </div>
   );
 }

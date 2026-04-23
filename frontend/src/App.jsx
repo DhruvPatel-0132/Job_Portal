@@ -5,6 +5,8 @@ import Register from "./components/Register/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import ResetPassword from "./pages/ResetPassword";
+import Profile from "./pages/Profile";
+import MainLayout from "./components/MainLayout";
 
 export default function App() {
   return (
@@ -15,7 +17,10 @@ export default function App() {
             {/* 🔥 ADD THIS */}
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/auth" element={<AuthVerification />} />
-      <Route path="/dashboard" element={<Dashboard />} /> 
+      <Route element={<MainLayout />}>
+        <Route path="/dashboard" element={<Dashboard />} /> 
+        <Route path="/profile" element={<Profile />} />
+      </Route>
     </Routes>
   );
 }

@@ -37,11 +37,11 @@ const Navbar = () => {
         <div className="flex items-stretch h-14">
           {/* ── Left: Logo + Search ── */}
           <div className="flex items-center gap-2 mr-4">
-            <Link to="/dashboard" className="flex-shrink-0">
+            {/* <Link to="/dashboard" className="flex-shrink-0">
               <div className="w-9 h-9 bg-[#0a66c2] rounded flex items-center justify-center font-extrabold text-white text-xl leading-none select-none">
                 in
               </div>
-            </Link>
+            </Link> */}
             <div className="hidden md:flex items-center bg-[#eef3f8] rounded-md px-3 h-9 w-[280px] gap-2 border border-transparent focus-within:border-[#0a66c2] focus-within:bg-white transition-all duration-150">
               <Search className="h-4 w-4 text-gray-500 flex-shrink-0" />
               <input
@@ -127,7 +127,7 @@ const Navbar = () => {
                       </div>
                     </div>
                     <Link
-                      to="#"
+                      to="/profile"
                       className="mt-3 block w-full text-center border border-[#0a66c2] text-[#0a66c2] hover:bg-blue-50 px-4 py-1 rounded-full text-sm font-semibold transition-colors"
                     >
                       View Profile

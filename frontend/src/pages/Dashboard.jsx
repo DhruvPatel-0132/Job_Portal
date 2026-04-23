@@ -1,14 +1,11 @@
 import React from "react";
-import Navbar from "../components/Navbar";
 import SidebarProfile from "../components/dashboard/SidebarProfile";
 import Feed from "../components/dashboard/Feed";
 import JobRecommendations from "../components/dashboard/JobRecommendations";
 
 const Dashboard = () => {
   return (
-    <div className="min-h-screen bg-[#f3f2ef]">
-      <Navbar />
-
+    <>
       {/* Main Content Area */}
       <main className="max-w-[1080px] mx-auto px-4 py-6">
         <div className="flex flex-col lg:flex-row gap-6 justify-center">
@@ -82,7 +79,7 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
-    </div>
+    </>
   );
 };
 
