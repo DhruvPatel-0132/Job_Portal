@@ -18,23 +18,17 @@ export const useAuthStore = create((set, get) => ({
   // LOGIN
   // =========================
   login: (data) => {
-    console.log("AUTH DATA:", data);
+  const token = data.accessToken;
 
-    const token = data.token || data.accessToken || data.jwt;
-    
-    if (!token) {
-      console.error("❌ Token missing from backend response");
-      return;
-    }
+  localStorage.setItem("token", token);
+  localStorage.setItem("refreshToken", data.refreshToken); // 🔥 ADD
 
-    localStorage.setItem("token", token);
-
-    set({
-      token,
-      user: data.user || null,
-      profile: data.profile || null, // 🔥 handle if backend sends it
-    });
-  },
+  set({
+    token,
+    user: data.user || null,
+    profile: data.profile || null,
+  });
+},
 
   // =========================
   // FETCH USER + PROFILE
@@ -58,8 +52,20 @@ export const useAuthStore = create((set, get) => ({
   // =========================
   // LOGOUT
   // =========================
-  logout: () => {
-    localStorage.removeItem("token");
-    set({ token: null, user: null, profile: null });
-  },
+  logout: async () => {
+  try {
+    const refreshToken = localStorage.getItem("refreshToken");
+
+    await api.post("/auth/logout", { refreshToken });
+  } catch (err) {
+    console.log("Logout API error:", err);
+  }
+
+  localStorage.removeItem("token");
+  localStorage.removeItem("refreshToken");
+
+  delete api.defaults.headers.common["Authorization"];
+
+  set({ token: null, user: null, profile: null });
+},
 }));
