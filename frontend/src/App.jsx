@@ -28,6 +28,7 @@ export default function App() {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/auth" element={<AuthVerification />} />
 
+
       {/* 🔥 PROTECTED ROUTE */}
       <Route
         path="/dashboard"
