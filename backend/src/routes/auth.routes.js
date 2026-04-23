@@ -12,4 +12,5 @@ router.post("/register", register);
 router.get("/me", authMiddleware, getMe);
 // google auth
 router.post("/google", googleLogin);
+
 module.exports = router;

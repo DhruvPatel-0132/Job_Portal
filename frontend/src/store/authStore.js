@@ -3,6 +3,7 @@ import api from "../api/axios";
 
 export const useAuthStore = create((set, get) => ({
   user: null,
+  profile: null, // 🔥 ADD THIS
   token: localStorage.getItem("token") || null,
 
   setToken: (token) => {
@@ -11,30 +12,54 @@ export const useAuthStore = create((set, get) => ({
   },
 
   setUser: (user) => set({ user }),
+  setProfile: (profile) => set({ profile }), // 🔥 ADD THIS
 
+  // =========================
+  // LOGIN
+  // =========================
   login: (data) => {
-    localStorage.setItem("token", data.token);
+    console.log("AUTH DATA:", data);
+
+    const token = data.token || data.accessToken || data.jwt;
+    
+    if (!token) {
+      console.error("❌ Token missing from backend response");
+      return;
+    }
+
+    localStorage.setItem("token", token);
+
     set({
-      token: data.token,
-      user: data.user,
+      token,
+      user: data.user || null,
+      profile: data.profile || null, // 🔥 handle if backend sends it
     });
   },
 
+  // =========================
+  // FETCH USER + PROFILE
+  // =========================
   fetchUser: async () => {
     try {
       const res = await api.get("/auth/me");
 
       console.log("FETCH USER SUCCESS:", res.data);
 
-      set({ user: res.data }); // 🔥 IMPORTANT
+      set({
+        user: res.data.user || null,
+        profile: res.data.profile || null,
+      });
     } catch (err) {
       console.log("FETCH USER ERROR:", err);
-      set({ user: null });
+      set({ user: null, profile: null });
     }
   },
 
+  // =========================
+  // LOGOUT
+  // =========================
   logout: () => {
     localStorage.removeItem("token");
-    set({ token: null, user: null });
+    set({ token: null, user: null, profile: null });
   },
 }));
