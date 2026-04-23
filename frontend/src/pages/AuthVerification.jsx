@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuthStore } from "../store/authStore";
 
 export default function Auth() {
+  const login = useAuthStore((state) => state.login);
   const [method, setMethod] = useState("email");
   const [otp, setOtp] = useState(Array(6).fill(""));
   const inputsRef = useRef([]);

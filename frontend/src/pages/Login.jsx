@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
-import axios from "axios";
-import { motion } from "framer-motion";
+
+import api from "../api/axios"; // ⚠️ fix path if needed
+import { useAuthStore } from "../store/authStore";
 
 export default function Login() {
   const navigate = useNavigate();
+
+  const loginStore = useAuthStore((state) => state.login);
 
   const [form, setForm] = useState({
     identifier: "",
@@ -13,11 +16,10 @@ export default function Login() {
   });
 
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-
-    // remove error while typing
     setErrors({ ...errors, [e.target.name]: "" });
   };
 
@@ -46,51 +48,46 @@ export default function Login() {
     }
 
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", {
+      setLoading(true);
+
+      const res = await api.post("/auth/login", {
         emailOrPhone: form.identifier,
         password: form.password,
       });
 
-      console.log("LOGIN SUCCESS:", res.data);
-
       const data = res.data;
 
-      // 🚨 HANDLE OTP FIRST
+      /* 🚨 OTP FLOW */
       if (data.requireOTP) {
         localStorage.setItem("userId", data.userId);
         navigate("/auth");
         return;
       }
 
-      // ✅ store tokens ONLY if login success
-      localStorage.setItem("token", data.accessToken);
-      localStorage.setItem("refreshToken", data.refreshToken);
+      /* ✅ LOGIN (ZUSTAND) */
+      await loginStore(data);
 
-      // normal flow
+      /* 🚨 VERIFY FLOW */
       if (!data.isVerified) {
         navigate("/auth");
       } else {
         navigate("/dashboard");
       }
     } catch (err) {
-      console.log("LOGIN ERROR:", err.response?.data || err.message);
-
       setErrors({
         identifier: err.response?.data?.message || "Login failed",
       });
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const handleGoogleLogin = () => {
-    navigate("/google");
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <motion.div 
-        initial={{ opacity: 0, y: 30 }} 
-        animate={{ opacity: 1, y: 0 }} 
-        transition={{ duration: 0.4 }} 
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
         className="w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-sm p-8"
       >
         {/* Header */}
@@ -140,8 +137,8 @@ export default function Login() {
         {/* Forgot */}
         <div className="text-right mb-6">
           <NavLink
-            to="forgot-password"
-            className="text-sm text-gray-500 hover:text-gray-900 cursor-pointer"
+            to="/forgot-password"
+            className="text-sm text-gray-500 hover:text-gray-900"
           >
             Forgot password?
           </NavLink>
@@ -151,9 +148,10 @@ export default function Login() {
         <motion.button
           whileTap={{ scale: 0.98 }}
           onClick={handleLogin}
-          className="w-full py-3 rounded-lg bg-gray-900 text-white font-medium hover:bg-black transition"
+          disabled={loading}
+          className="w-full py-3 rounded-lg bg-gray-900 text-white font-medium hover:bg-black transition disabled:opacity-60"
         >
-          Sign In
+          {loading ? "Signing in..." : "Sign In"}
         </motion.button>
 
         {/* Register */}
@@ -174,22 +172,24 @@ export default function Login() {
           <div className="flex-1 h-px bg-gray-200"></div>
         </div>
 
-        {/* Google */}
+        {/* Google Login */}
         <GoogleLogin
           onSuccess={async (res) => {
-            const response = await axios.post(
-              "http://localhost:5000/api/auth/google",
-              {
+            try {
+              setLoading(true);
+
+              const response = await api.post("/auth/google", {
                 token: res.credential,
-              },
-            );
+              });
 
-            const data = response.data;
+              await loginStore(response.data);
 
-            localStorage.setItem("token", data.accessToken);
-            localStorage.setItem("refreshToken", data.refreshToken);
-
-            navigate("/dashboard");
+              navigate("/dashboard");
+            } catch (err) {
+              console.log("Google login failed");
+            } finally {
+              setLoading(false);
+            }
           }}
         />
       </motion.div>
