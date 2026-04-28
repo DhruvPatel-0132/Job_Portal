@@ -136,7 +136,7 @@ const Navbar = () => {
                       </div>
                     </div>
                     <Link
-                      to="#"
+                      to="/profile"
                       className="mt-3 block w-full text-center border border-[#0a66c2] text-[#0a66c2] hover:bg-blue-50 px-4 py-1 rounded-full text-sm font-semibold transition-colors"
                     >
                       View Profile
