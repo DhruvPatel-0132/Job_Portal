@@ -1,7 +1,8 @@
 const {
   loginUser,
   registerUser,
-  googleLoginUser 
+  googleLoginUser,
+  logoutUser
 } = require("../services/auth.service");
 
 const login = async (req, res) => {
@@ -38,8 +39,21 @@ const googleLogin = async (req, res) => {
   }
 };
 
+const logoutController = async (req, res) => {
+  const refreshToken =
+    req.body.refreshToken || req.cookies?.refreshToken;
+
+  const { status, response } = await logoutUser({ refreshToken });
+
+  // 🍪 Clear cookie if you are using cookies
+  res.clearCookie("refreshToken");
+
+  return res.status(status).json(response);
+};
+
 module.exports = {
   login,
   register,
   googleLogin,
+  logoutController
 };

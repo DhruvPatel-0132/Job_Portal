@@ -7,6 +7,7 @@ const authRoutes = require("./src/routes/auth.routes");
 const emailRoutes = require("./src/routes/email.routes");
 const phoneRoutes = require("./src/routes/phone.routes");
 const forgotRoutes = require("./src/routes/forgot.routes");
+const profileRoutes = require("./src/routes/profile.routes");
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use("/api/auth", authRoutes);       // 🔥 includes /me now
 app.use("/api/otp", emailRoutes);
 app.use("/api/otp/phone", phoneRoutes);
 app.use("/api/forgot", forgotRoutes);
+app.use("/api/profile", profileRoutes);
 
 /* DB */
 connectDB();

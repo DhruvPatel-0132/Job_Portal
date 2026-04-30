@@ -20,3 +20,5 @@
 .card.active {
   @apply border-black bg-gray-50 shadow-sm;
 }
+
+a:hover, button:hover { cursor: pointer; }
