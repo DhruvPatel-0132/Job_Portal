@@ -10,15 +10,25 @@ import {
   Grid,
 } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
+import { useProfileStore } from "../store/profileStore";
 
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const user = {
-    name: "John Doe",
-    avatar: "/avatar.svg",
-    headline: "Software Engineer",
+  const { user } = useAuthStore();
+  const { profile, fetchProfile } = useProfileStore();
+
+  useEffect(() => {
+    if (!profile) {
+      fetchProfile();
+    }
+  }, [profile, fetchProfile]);
+
+  const userData = {
+    name: profile?.fullName || `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "User",
+    avatar: profile?.avatar || "/avatar.svg",
+    headline: profile?.headline || "Welcome to your profile",
   };
 
   // Close dropdown on outside click
@@ -94,11 +104,11 @@ const Navbar = () => {
                 className="flex flex-col items-center justify-center px-4 text-gray-500 hover:text-gray-900 focus:outline-none border-b-2 border-transparent hover:border-gray-900 transition-colors h-full"
                 onClick={() => setIsDropdownOpen((o) => !o)}
               >
-                <img
-                  className="h-6 w-6 rounded-full object-cover"
-                  src={user.avatar}
-                  alt="User Avatar"
-                />
+                  <img
+                    className="h-6 w-6 rounded-full object-cover"
+                    src={userData.avatar}
+                    alt="User Avatar"
+                  />
                 <div className="flex items-center mt-0.5">
                   <span className="text-xs hidden md:block">Me</span>
                   <svg
@@ -123,15 +133,15 @@ const Navbar = () => {
                     <div className="flex items-center gap-3">
                       <img
                         className="h-12 w-12 rounded-full object-cover border border-gray-200"
-                        src={user.avatar}
+                        src={userData.avatar}
                         alt="User Avatar"
                       />
                       <div>
                         <p className="text-sm font-semibold text-gray-900">
-                          {user.name}
+                          {userData.name}
                         </p>
                         <p className="text-xs text-gray-500 truncate w-36">
-                          {user.headline}
+                          {userData.headline}
                         </p>
                       </div>
                     </div>

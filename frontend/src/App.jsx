@@ -10,7 +10,6 @@ import MainLayout from "./components/MainLayout";
 
 /* ✅ USE ZUSTAND */
 import { useAuthStore } from "./store/authStore";
-import Profile from "./pages/Profile";
 
 /* 🔥 PRIVATE ROUTE (ZUSTAND) */
 function PrivateRoute({ children }) {
@@ -40,14 +39,6 @@ export default function App() {
         element={
           <PrivateRoute>
             <Dashboard />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/profile"
-        element={
-          <PrivateRoute>
-            <Profile />
           </PrivateRoute>
         }
       />

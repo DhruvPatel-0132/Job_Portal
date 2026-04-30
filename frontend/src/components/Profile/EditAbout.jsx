@@ -2,17 +2,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { X, CheckCircle2, FileText } from "lucide-react";
 
-export default function EditAbout({ isOpen, setIsOpen, aboutText, setAboutText }) {
+export default function EditAbout({ isOpen, setIsOpen, aboutText, setAboutText, onSave }) {
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsSaving(true);
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Saved About:", aboutText);
-      setIsSaving(false);
-      setIsOpen(false);
-    }, 600);
+    if (onSave) {
+      await onSave(aboutText);
+    }
+    setIsSaving(false);
+    setIsOpen(false);
   };
 
   return (

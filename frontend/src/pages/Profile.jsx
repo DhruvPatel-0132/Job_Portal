@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useProfileStore } from "../store/profileStore";
+import { useAuthStore } from "../store/authStore";
 import Navbar from "../components/Navbar";
 
 import ProfileHeader from "../components/Profile/ProfileHeader";
@@ -11,83 +13,103 @@ import EditProfileModal from "../components/Profile/EditProfileModal";
 import EditAbout from "../components/Profile/EditAbout";
 
 export default function Profile() {
-  const [profile, setProfile] = useState({
-    fullName: "Dhruv Patel",
-    headline: "Full Stack Developer | React | Node.js | Next.js",
-    avatar: "https://i.pravatar.cc/150?img=12",
-    banner: "https://images.unsplash.com/photo-1503264116251-35a269479413",
-    country: "India",
-    address: "Ahmedabad, Gujarat",
-    about:
-      "Full Stack Developer passionate about building scalable web applications using MERN stack and modern frameworks like Next.js.",
+  const { profile, fetchProfile, updateProfile, isLoading } = useProfileStore();
+  const { user } = useAuthStore();
 
-    skills: ["React", "Node.js", "Express", "MongoDB", "Next.js", "TypeScript"],
-
-    experience: [
-      {
-        title: "Software Developer Intern",
-        company: "Tech Company",
-        employmentType: "Internship",
-        location: "India",
-        locationType: "Remote",
-        startDate: "2025",
-        endDate: "Present",
-        currentlyWorking: true,
-        description: "Built REST APIs and React dashboards.",
-        skills: ["React", "Node.js", "MongoDB"],
-      },
-    ],
-
-    education: [
-      {
-        school: "GTU University",
-        degree: "B.Tech",
-        fieldOfStudy: "Computer Engineering",
-        startYear: 2022,
-        endYear: 2026,
-      },
-    ],
-  });
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   // EDIT MODAL STATE
   const [isEditOpen, setIsEditOpen] = useState(false);
-
-  const [editData, setEditData] = useState({
-    firstName: "Dhruv",
-    lastName: "Patel",
-    avatar: profile.avatar,
-    headline: profile.headline,
-    country: profile.country,
-    city: "Ahmedabad",
-    postalCode: "380001",
-    education: "B.Tech Computer Engineering",
-    industry: "Software Development",
-    email: "dhruv@example.com",
-    phone: "+91 99999 99999",
-    address: profile.address,
-    birthday: "2002-01-01",
-  });
+  const [editData, setEditData] = useState({});
 
   // EDIT ABOUT STATE
   const [isEditAboutOpen, setIsEditAboutOpen] = useState(false);
-  const [editAboutText, setEditAboutText] = useState(profile.about);
+  const [editAboutText, setEditAboutText] = useState("");
+
+  // Helper to format dates for input fields
+  const formatDateForInput = (date, type = "date") => {
+    if (!date) return "";
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "";
+    const iso = d.toISOString(); // YYYY-MM-DDTHH:mm:ss.sssZ
+    return type === "month" ? iso.slice(0, 7) : iso.slice(0, 10);
+  };
+
+  // When opening the edit modal, populate editData from the current profile
+  const handleOpenEditModal = () => {
+    setEditData({
+      firstName: profile?.fullName?.split(" ")[0] || user?.firstName || "",
+      lastName: profile?.fullName?.split(" ").slice(1).join(" ") || user?.lastName || "",
+      avatar: profile?.avatar || "",
+      banner: profile?.banner || "",
+      headline: profile?.headline || "",
+      about: profile?.about || "",
+      email: profile?.email || user?.email || "",
+      phone: profile?.phone || "",
+      country: profile?.country || "",
+      city: profile?.city || "",
+      code: profile?.code || "",
+      address: profile?.address || "",
+      birthday: formatDateForInput(profile?.birthday),
+      skills: profile?.skills || [],
+      experience: (profile?.experience || []).map(exp => ({
+        ...exp,
+        startDate: formatDateForInput(exp.startDate, "month"),
+        endDate: formatDateForInput(exp.endDate, "month"),
+      })),
+      education: (profile?.education || []).map(edu => ({
+        ...edu,
+        startDate: formatDateForInput(edu.startDate),
+        endDate: formatDateForInput(edu.endDate),
+      })),
+    });
+    setIsEditOpen(true);
+  };
+
+  const handleOpenAboutModal = () => {
+    setEditAboutText(profile?.about || "");
+    setIsEditAboutOpen(true);
+  };
+
+  const handleSaveProfile = async (updatedData) => {
+    const payload = {
+      ...updatedData,
+      fullName: `${updatedData.firstName || ""} ${updatedData.lastName || ""}`.trim(),
+    };
+    await updateProfile(payload);
+    fetchProfile();
+  };
+
+  const handleSaveAbout = async (newAboutText) => {
+    await updateProfile({ about: newAboutText });
+    fetchProfile();
+    setIsEditAboutOpen(false);
+  };
+
+  if (isLoading && !profile) {
+    return <div className="min-h-screen flex items-center justify-center bg-gray-100">Loading profile...</div>;
+  }
+
+  if (!profile) {
+    return <div className="min-h-screen flex items-center justify-center bg-gray-100">Profile not found</div>;
+  }
 
   return (
     <>
-      <Navbar />
-
       <div className="min-h-screen bg-gray-100 flex justify-center px-4 pt-5">
         <div className="w-full max-w-3xl space-y-4">
-          <ProfileHeader profile={profile} onEdit={() => setIsEditOpen(true)} />
+          <ProfileHeader profile={profile} onEdit={handleOpenEditModal} />
 
           <AboutCard
-            about={profile.about}
-            onEdit={() => setIsEditAboutOpen(true)}
+            about={profile?.about}
+            onEdit={handleOpenAboutModal}
           />
 
-          <ExperienceCard experience={profile.experience} />
-          <EducationCard education={profile.education} />
-          <SkillsCard skills={profile.skills} />
+          <ExperienceCard experience={profile?.experience} onEdit={handleOpenEditModal} />
+          <EducationCard education={profile?.education} onEdit={handleOpenEditModal} />
+          <SkillsCard skills={profile?.skills} onEdit={handleOpenEditModal} />
         </div>
       </div>
 
@@ -97,6 +119,7 @@ export default function Profile() {
         setIsOpen={setIsEditOpen}
         editData={editData}
         setEditData={setEditData}
+        onSave={handleSaveProfile}
       />
 
       {/* EDIT ABOUT */}
@@ -105,6 +128,7 @@ export default function Profile() {
         setIsOpen={setIsEditAboutOpen}
         aboutText={editAboutText}
         setAboutText={setEditAboutText}
+        onSave={handleSaveAbout}
       />
     </>
   );

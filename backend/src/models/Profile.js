@@ -4,13 +4,16 @@ const experienceSchema = new mongoose.Schema(
   {
     title: String,
     company: String,
+    employmentType: String,
+    locationType: String,
     location: String,
     startDate: Date,
     endDate: Date,
     currentlyWorking: Boolean,
     description: String,
+    skills: [{ type: String }],
   },
-  { _id: false }
+  { _id: false },
 );
 
 const educationSchema = new mongoose.Schema(
@@ -18,12 +21,13 @@ const educationSchema = new mongoose.Schema(
     school: String,
     degree: String,
     fieldOfStudy: String,
-    startYear: Number,
-    endYear: Number,
+    startDate: Date,
+    endDate: Date,
     grade: String,
     description: String,
+    stillStudying: Boolean,
   },
-  { _id: false }
+  { _id: false },
 );
 
 const profileSchema = new mongoose.Schema(
@@ -71,9 +75,23 @@ const profileSchema = new mongoose.Schema(
       default: "",
     },
 
+    email: {
+      type: String,
+      default: "",
+    },
+
     address: {
       type: String,
       default: "",
+    },
+
+    city: {
+      type: String,
+      default: "",
+    },
+
+    birthday: {
+      type: Date,
     },
 
     about: {
@@ -93,7 +111,7 @@ const profileSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const Profile = mongoose.model("Profile", profileSchema);
