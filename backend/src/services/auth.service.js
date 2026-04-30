@@ -76,7 +76,11 @@ const loginUser = async ({ emailOrPhone, password }) => {
 
 // REGISTER SERVICE
 const registerUser = async (data) => {
-  const { emailOrPhone, password, firstName, lastName, role } = data;
+  const {
+    emailOrPhone, password, firstName, lastName, role,
+    hireType, skills, experience, project,
+    companyName, year, about, selectedCompany, newCompany
+  } = data;
 
   const exists = await User.findOne({
     emailOrPhone: emailOrPhone.trim(),
@@ -100,11 +104,29 @@ const registerUser = async (data) => {
   });
 
   // 🔥 CREATE PROFILE
-  await Profile.create({
+  const profileData = {
     userId: user._id,
     fullName: `${firstName} ${lastName}`,
+    email: emailOrPhone.includes("@") ? emailOrPhone : "",
     phone: emailOrPhone.includes("@") ? "" : emailOrPhone,
-  });
+  };
+
+  if (role === "company") {
+    profileData.companyName = companyName || "";
+    profileData.establishedYear = year || "";
+    profileData.about = about || "";
+  } else if (role === "hire") {
+    profileData.hireType = hireType || "";
+    if (hireType === "individual") {
+      if (skills && Array.isArray(skills)) profileData.skills = skills;
+      profileData.requiredExperience = experience || "";
+      profileData.project = project || "";
+    } else if (hireType === "company") {
+      profileData.companyName = selectedCompany || newCompany || "";
+    }
+  }
+
+  await Profile.create(profileData);
 
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken();
@@ -189,6 +211,7 @@ const googleLoginUser = async (idToken) => {
     await Profile.create({
       userId: user._id,
       fullName: `${firstName} ${lastName}`,
+      email: email,
       avatar: picture || "",
     });
   }
