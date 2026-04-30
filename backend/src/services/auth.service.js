@@ -227,8 +227,59 @@ const googleLoginUser = async (idToken) => {
   };
 };
 
+const logoutUser = async ({ refreshToken }) => {
+  try {
+    if (!refreshToken) {
+      return {
+        status: 200,
+        response: {
+          success: true,
+          message: "Already logged out",
+        },
+      };
+    }
+
+    // 🔐 Hash incoming token to match DB
+    const hashedToken = hashToken(refreshToken);
+
+    // ❌ Delete refresh token from DB
+    const deletedToken = await Token.findOneAndDelete({
+      refreshToken: hashedToken,
+    });
+
+    if (!deletedToken) {
+      return {
+        status: 200,
+        response: {
+          success: true,
+          message: "Session already expired",
+        },
+      };
+    }
+
+    return {
+      status: 200,
+      response: {
+        success: true,
+        message: "Logout successful",
+      },
+    };
+  } catch (error) {
+    console.error("Logout Error:", error);
+
+    return {
+      status: 500,
+      response: {
+        success: false,
+        message: "Logout failed",
+      },
+    };
+  }
+};
+
 module.exports = {
   loginUser,
   registerUser,
   googleLoginUser,
+  logoutUser
 };
