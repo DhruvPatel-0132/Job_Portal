@@ -99,9 +99,11 @@ export default function ProfileHeader({ profile, onEdit }) {
         <div className="mt-10">
           <h1 className="text-2xl font-bold">{profile.fullName}</h1>
           <p className="text-gray-600">{profile.headline}</p>
-          <p className="text-sm text-gray-500">
-            📍 {profile.address}, {profile.country}
-          </p>
+          {profile.address && profile.country && (
+            <p className="text-sm text-gray-500">
+              📍 {profile.address}, {profile.country}
+            </p>
+          )}
         </div>
       </div>
     </motion.div>

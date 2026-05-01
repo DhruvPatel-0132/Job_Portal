@@ -5,6 +5,7 @@ export const useAuthStore = create((set, get) => ({
   user: null,
   profile: null, // 🔥 ADD THIS
   token: localStorage.getItem("token") || null,
+  refreshToken: localStorage.getItem("refreshToken") || null,
 
   setToken: (token) => {
     localStorage.setItem("token", token);
@@ -19,12 +20,14 @@ export const useAuthStore = create((set, get) => ({
   // =========================
   login: (data) => {
     const token = data.accessToken;
+    const refreshToken = data.refreshToken;
 
     localStorage.setItem("token", token);
-    localStorage.setItem("refreshToken", data.refreshToken); // 🔥 ADD
+    localStorage.setItem("refreshToken", refreshToken);
 
     set({
       token,
+      refreshToken,
       user: data.user || null,
       profile: data.profile || null,
     });
@@ -67,6 +70,6 @@ export const useAuthStore = create((set, get) => ({
 
     delete api.defaults.headers.common["Authorization"];
 
-    set({ token: null, user: null, profile: null });
+    set({ token: null, refreshToken: null, user: null, profile: null });
   },
 }));
