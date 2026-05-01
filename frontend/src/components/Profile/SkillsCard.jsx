@@ -12,18 +12,22 @@ export default function SkillsCard({ skills, onEdit }) {
         <Edit2 size={20} className="text-gray-600" />
       </button>
 
-      <h2 className="text-lg font-semibold mb-2">Skills</h2>
+      <h2 className="text-lg font-semibold mb-6">Skills</h2>
 
       <div className="flex flex-wrap gap-2">
-        {skills.map((skill, i) => (
-          <motion.span
-            key={i}
-            whileHover={{ scale: 1.1 }}
-            className="bg-gray-200 px-3 py-1 rounded-full text-sm"
-          >
-            {skill}
-          </motion.span>
-        ))}
+        {skills && skills.length > 0 ? (
+          skills.map((skill, i) => (
+            <motion.span
+              key={i}
+              whileHover={{ scale: 1.1 }}
+              className="bg-gray-200 px-3 py-1 rounded-full text-sm"
+            >
+              {skill}
+            </motion.span>
+          ))
+        ) : (
+          <p className="text-gray-500 italic text-sm">No skills added yet.</p>
+        )}
       </div>
     </motion.div>
   );

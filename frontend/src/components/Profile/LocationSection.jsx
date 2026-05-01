@@ -19,6 +19,7 @@ export default function LocationSection({ editData, update }) {
           value={editData.country}
           onChange={update}
           icon={Globe}
+          placeholder="e.g. USA"
         />
         <InputField
           label="City"
@@ -26,6 +27,7 @@ export default function LocationSection({ editData, update }) {
           value={editData.city}
           onChange={update}
           icon={Building2}
+          placeholder="e.g. New York"
         />
         <InputField
           label="Postal Code"
@@ -33,6 +35,7 @@ export default function LocationSection({ editData, update }) {
           value={editData.code}
           onChange={update}
           icon={Hash}
+          placeholder="e.g. 10001"
         />
         <InputField
           label="Detailed Address"
@@ -41,6 +44,7 @@ export default function LocationSection({ editData, update }) {
           onChange={update}
           icon={MapPin}
           className="sm:col-span-2"
+          placeholder="e.g. 123 Main St, Apt 4B"
         />
       </div>
     </motion.div>
