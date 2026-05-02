@@ -56,7 +56,7 @@ const SidebarProfile = ({ profile }) => {
 
       {/* Stats Section */}
       <div className="py-2.5 border-b border-gray-50 bg-gray-50/30">
-        <motion.div
+        {/* <motion.div
           whileHover={{ x: 3, backgroundColor: "rgba(249, 250, 251, 1)" }}
           className="px-4 py-1.5 cursor-pointer flex justify-between items-center transition-all group"
         >
@@ -66,7 +66,7 @@ const SidebarProfile = ({ profile }) => {
           <span className="text-[13px] text-blue-600 font-bold">
             {safeProfile.profileViews || 0}
           </span>
-        </motion.div>
+        </motion.div> */}
 
         <motion.div
           whileHover={{ x: 3, backgroundColor: "rgba(249, 250, 251, 1)" }}
@@ -82,19 +82,19 @@ const SidebarProfile = ({ profile }) => {
       </div>
 
       {/* Skills Section */}
-      <div className="py-4 border-b border-gray-50 px-4">
+      {/* <div className="py-4 border-b border-gray-50 px-4">
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em] mb-3">
           Top Skills
         </p>
         <div className="flex flex-wrap gap-1.5">
           {skills.length > 0 ? (
-            skills.slice(0, 3).map((skill, index) => (
+            skills.map((skill, index) => (
               <motion.span
                 key={index}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-blue-50/60 text-blue-700 text-[10px] px-2.5 py-1 rounded-md font-bold border border-blue-100/40"
+                transition={{ delay: index * 0.05 }}
+                className="bg-blue-50/60 text-blue-700 text-[10px] px-2.5 py-1 rounded-md font-medium border border-blue-100/40"
               >
                 {skill}
               </motion.span>
@@ -103,7 +103,7 @@ const SidebarProfile = ({ profile }) => {
             <span className="text-[11px] text-gray-400 italic">No skills added</span>
           )}
         </div>
-      </div>
+      </div> */}
 
       {/* Bottom Action */}
       <motion.div
@@ -120,10 +120,10 @@ const SidebarProfile = ({ profile }) => {
           </svg>
           My items
         </span>
-        <svg 
-          className="w-3.5 h-3.5 text-gray-300 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" 
-          fill="none" 
-          viewBox="0 0 24 24" 
+        <svg
+          className="w-3.5 h-3.5 text-gray-300 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0"
+          fill="none"
+          viewBox="0 0 24 24"
           stroke="currentColor"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />

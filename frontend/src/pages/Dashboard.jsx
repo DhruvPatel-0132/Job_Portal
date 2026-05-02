@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar";
 import SidebarProfile from "../components/dashboard/SidebarProfile";
 import Feed from "../components/dashboard/Feed";
 import JobRecommendations from "../components/dashboard/JobRecommendations";
+import ProfileProgress from "../components/dashboard/ProfileProgress";
 import { useAuthStore } from "../store/authStore";
 
 const Dashboard = () => {
@@ -28,6 +29,7 @@ const Dashboard = () => {
           </div>
 
           <div className="w-full lg:w-[540px] xl:w-[600px] flex-shrink-0 self-start">
+            <ProfileProgress profile={profile} />
             <Feed />
           </div>
 

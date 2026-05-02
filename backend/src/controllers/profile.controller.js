@@ -4,7 +4,7 @@ const Profile = require("../models/Profile");
 const getProfile = async (req, res) => {
   try {
     let profile = await Profile.findOne({ userId: req.user.id });
-    
+
     // If profile doesn't exist, we create an empty one linked to the user
     if (!profile) {
       profile = new Profile({
@@ -12,7 +12,7 @@ const getProfile = async (req, res) => {
       });
       await profile.save();
     }
-    
+
     return res.status(200).json({ success: true, profile });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
@@ -31,7 +31,7 @@ const updateProfile = async (req, res) => {
       { $set: updateData },
       { new: true, upsert: true }
     );
-    
+
     return res.status(200).json({ success: true, profile });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

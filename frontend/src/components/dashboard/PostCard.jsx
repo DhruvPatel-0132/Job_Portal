@@ -75,7 +75,7 @@ const PostCard = ({ post }) => {
           icon={<MessageSquare className="w-5 h-5" />}
           label="Comment"
         />
-        <ActionButton icon={<Repeat className="w-5 h-5" />} label="Repost" />
+        {/* <ActionButton icon={<Repeat className="w-5 h-5" />} label="Repost" /> */}
         <ActionButton icon={<Send className="w-5 h-5" />} label="Send" />
       </div>
     </div>
