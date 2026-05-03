@@ -100,37 +100,6 @@ const profileSchema = new mongoose.Schema(
       default: "",
     },
 
-    aboutCompany: {
-      type: String,
-      maxlength: 1000,
-      default: "",
-    },
-
-    hireType: {
-      type: String,
-      default: "",
-    },
-
-    companyName: {
-      type: String,
-      default: "",
-    },
-
-    establishedYear: {
-      type: String,
-      default: "",
-    },
-
-    requiredExperience: {
-      type: String,
-      default: "",
-    },
-
-    project: {
-      type: String,
-      default: "",
-    },
-
     skills: [
       {
         type: String,

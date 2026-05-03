@@ -2,6 +2,7 @@ const User = require("../models/User");
 const Profile = require("../models/Profile");
 const Token = require("../models/Token");
 const Company = require("../models/Company");
+const ProfessionalDetails = require("../models/ProfessionalDetails");
 const bcrypt = require("bcryptjs");
 
 const {
@@ -113,10 +114,6 @@ const registerUser = async (data) => {
   };
 
   if (role === "company") {
-    profileData.companyName = companyName || "";
-    profileData.establishedYear = year || "";
-    profileData.aboutCompany = about || "";
-
     if (companyName) {
       await Company.create({
         name: companyName,
@@ -126,13 +123,21 @@ const registerUser = async (data) => {
       }).catch((err) => console.log("Company already exists or error", err));
     }
   } else if (role === "hire") {
-    profileData.hireType = hireType || "";
+    const profDetails = {
+      userId: user._id,
+      hireType: hireType || "",
+    };
+
     if (hireType === "individual") {
-      if (skills && Array.isArray(skills)) profileData.skills = skills;
-      profileData.requiredExperience = experience || "";
-      profileData.project = project || "";
+      profDetails.currentProfession = typeof skills === "string" ? skills : "";
+      if (typeof skills === "string") {
+        profDetails.skills = skills.split(",").map((s) => s.trim()).filter(Boolean);
+      } else if (Array.isArray(skills)) {
+        profDetails.skills = skills;
+      }
+      profDetails.requiredExperience = experience || "";
+      profDetails.project = project || "";
     } else if (hireType === "company") {
-      profileData.companyName = selectedCompany || newCompany || "";
       if (newCompany) {
         await Company.create({
           name: newCompany,
@@ -140,6 +145,10 @@ const registerUser = async (data) => {
         }).catch((err) => console.log("Company already exists or error", err));
       }
     }
+
+    await ProfessionalDetails.create(profDetails).catch((err) =>
+      console.log("Professional details creation error", err)
+    );
   }
 
   await Profile.create(profileData);
