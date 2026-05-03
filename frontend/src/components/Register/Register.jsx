@@ -21,7 +21,7 @@ export default function Register() {
   const [role, setRole] = useState("");
   const [hireType, setHireType] = useState("");
 
-  const [skills, setSkills] = useState("");
+  const [currentProfession, setCurrentProfession] = useState("");
   const [experience, setExperience] = useState("");
   const [project, setProject] = useState("");
 
@@ -58,7 +58,7 @@ export default function Register() {
       password,
       firstName,
       lastName,
-      skills,
+      currentProfession,
       companyName,
     });
 
@@ -82,7 +82,7 @@ export default function Register() {
       password,
       firstName,
       lastName,
-      skills,
+      currentProfession,
       companyName,
     });
 
@@ -101,12 +101,7 @@ export default function Register() {
           firstName,
           lastName,
 
-          // ✅ normalize skills for backend
-          skills:
-            typeof skills === "string"
-              ? skills.split(",").map((s) => s.trim())
-              : skills,
-
+          currentProfession,
           experience,
           project,
 
@@ -188,8 +183,8 @@ export default function Register() {
       case "individual":
         return (
           <IndividualStep
-            skills={skills}
-            setSkills={setSkills}
+            currentProfession={currentProfession}
+            setCurrentProfession={setCurrentProfession}
             experience={experience}
             setExperience={setExperience}
             project={project}

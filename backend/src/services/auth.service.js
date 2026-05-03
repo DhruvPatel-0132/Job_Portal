@@ -80,7 +80,7 @@ const loginUser = async ({ emailOrPhone, password }) => {
 const registerUser = async (data) => {
   const {
     emailOrPhone, password, firstName, lastName, role,
-    hireType, skills, experience, project,
+    hireType, currentProfession, experience, project,
     companyName, year, about, selectedCompany, newCompany
   } = data;
 
@@ -129,12 +129,7 @@ const registerUser = async (data) => {
     };
 
     if (hireType === "individual") {
-      profDetails.currentProfession = typeof skills === "string" ? skills : "";
-      if (typeof skills === "string") {
-        profDetails.skills = skills.split(",").map((s) => s.trim()).filter(Boolean);
-      } else if (Array.isArray(skills)) {
-        profDetails.skills = skills;
-      }
+      profDetails.currentProfession = currentProfession || "";
       profDetails.industryExperience = experience || "";
       profDetails.portfolioDescription = project || "";
     } else if (hireType === "company") {

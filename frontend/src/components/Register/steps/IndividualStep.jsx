@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 
 export default function IndividualStep({
-  skills, setSkills,
+  currentProfession, setCurrentProfession,
   experience, setExperience,
   project, setProject,
   handleSubmit
@@ -19,11 +19,11 @@ export default function IndividualStep({
 
       <div className="space-y-4">
         <div>
-          <label className="text-sm font-medium text-gray-700 ml-1">Current Profession / Skills</label>
+          <label className="text-sm font-medium text-gray-700 ml-1">Current Profession</label>
           <input
-            value={skills}
-            onChange={(e) => setSkills(e.target.value)}
-            placeholder="e.g. Web Development, AI, Design"
+            value={currentProfession}
+            onChange={(e) => setCurrentProfession(e.target.value)}
+            placeholder="e.g. Full Stack Developer, UI/UX Designer"
             className="input mt-1"
           />
         </div>
