@@ -12,14 +12,7 @@ const professionalDetailsSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-    requiredExperience: {
-      type: String,
-      default: "",
-    },
-    project: {
-      type: String,
-      default: "",
-    },
+    // Matches "Current Profession / Skills" from UI
     currentProfession: {
       type: String,
       default: "",
@@ -29,6 +22,16 @@ const professionalDetailsSchema = new mongoose.Schema(
         type: String,
       },
     ],
+    // Matches "Years of Experience" from UI
+    industryExperience: {
+      type: String,
+      default: "",
+    },
+    // Matches "Current Work / Projects" from UI
+    portfolioDescription: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true }
 );

@@ -135,8 +135,8 @@ const registerUser = async (data) => {
       } else if (Array.isArray(skills)) {
         profDetails.skills = skills;
       }
-      profDetails.requiredExperience = experience || "";
-      profDetails.project = project || "";
+      profDetails.industryExperience = experience || "";
+      profDetails.portfolioDescription = project || "";
     } else if (hireType === "company") {
       if (newCompany) {
         await Company.create({

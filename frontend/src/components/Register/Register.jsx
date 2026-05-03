@@ -21,7 +21,7 @@ export default function Register() {
   const [role, setRole] = useState("");
   const [hireType, setHireType] = useState("");
 
-  const [skills, setSkills] = useState([]); // ✅ FIXED (array)
+  const [skills, setSkills] = useState("");
   const [experience, setExperience] = useState("");
   const [project, setProject] = useState("");
 
@@ -233,7 +233,7 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 to-gray-200 px-4">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}

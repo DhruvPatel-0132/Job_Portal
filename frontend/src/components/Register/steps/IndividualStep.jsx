@@ -20,31 +20,31 @@ export default function IndividualStep({
       <div className="space-y-4">
         <div>
           <label className="text-sm font-medium text-gray-700 ml-1">Current Profession / Skills</label>
-          <input 
-            value={skills} 
-            onChange={(e) => setSkills(e.target.value)} 
-            placeholder="e.g. Web Development, AI, Design" 
-            className="input mt-1" 
+          <input
+            value={skills}
+            onChange={(e) => setSkills(e.target.value)}
+            placeholder="e.g. Web Development, AI, Design"
+            className="input mt-1"
           />
         </div>
 
         <div>
           <label className="text-sm font-medium text-gray-700 ml-1">Years of Experience</label>
-          <input 
-            value={experience} 
-            onChange={(e) => setExperience(e.target.value)} 
-            placeholder="e.g. 1 year, Fresher, 3+ years" 
-            className="input mt-1" 
+          <input
+            value={experience}
+            onChange={(e) => setExperience(e.target.value)}
+            placeholder="e.g. 1 year, Fresher, 3+ years"
+            className="input mt-1"
           />
         </div>
 
         <div>
           <label className="text-sm font-medium text-gray-700 ml-1">Current Work / Projects (Optional)</label>
-          <textarea 
-            value={project} 
-            onChange={(e) => setProject(e.target.value)} 
-            placeholder="Describe what you are currently working on..." 
-            className="input mt-1 h-24" 
+          <textarea
+            value={project}
+            onChange={(e) => setProject(e.target.value)}
+            placeholder="Describe what you are currently working on..."
+            className="input mt-1 h-24"
           />
         </div>
       </div>
