@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Home,
   Users,
@@ -9,15 +9,26 @@ import {
   MessageSquare,
   Grid,
 } from "lucide-react";
+import { useAuthStore } from "../store/authStore";
+import { useProfileStore } from "../store/profileStore";
 
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const user = {
-    name: "John Doe",
-    avatar: "/avatar.svg",
-    headline: "Software Engineer",
+  const { user } = useAuthStore();
+  const { profile, fetchProfile } = useProfileStore();
+
+  useEffect(() => {
+    if (!profile) {
+      fetchProfile();
+    }
+  }, [profile, fetchProfile]);
+
+  const userData = {
+    name: profile?.fullName || `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "User",
+    avatar: profile?.avatar || "/avatar.svg",
+    headline: profile?.headline || "Welcome to your profile",
   };
 
   // Close dropdown on outside click
@@ -30,19 +41,27 @@ const Navbar = () => {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+  const navigate = useNavigate();
+
+  const logout = useAuthStore((state) => state.logout); // ✅ ADD THIS
+
+  const handleLogout = () => {
+    logout(); // now works
+    navigate("/");
+  };
 
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-8 lg:px-16">
+      <div className="max-w-[1280px] mx-auto px-2">
         <div className="flex items-stretch h-14">
           {/* ── Left: Logo + Search ── */}
-          <div className="flex items-center gap-2 mr-2">
-            <Link to="/dashboard" className="flex-shrink-0">
+          <div className="flex items-center gap-2 mr-4">
+            {/* <Link to="/dashboard" className="flex-shrink-0">
               <div className="w-9 h-9 bg-[#0a66c2] rounded flex items-center justify-center font-extrabold text-white text-xl leading-none select-none">
                 in
               </div>
-            </Link>
-            <div className="hidden md:flex items-center bg-[#eef3f8] rounded-md px-3 h-9 w-[220px] gap-2 border border-transparent focus-within:border-[#0a66c2] focus-within:bg-white transition-all duration-150">
+            </Link> */}
+            <div className="hidden md:flex items-center bg-[#eef3f8] rounded-md px-3 h-9 w-[280px] gap-2 border border-transparent focus-within:border-[#0a66c2] focus-within:bg-white transition-all duration-150">
               <Search className="h-4 w-4 text-gray-500 flex-shrink-0" />
               <input
                 type="text"
@@ -77,19 +96,19 @@ const Navbar = () => {
             />
 
             {/* Vertical divider */}
-            <div className="self-center mx-1 w-px h-8 bg-gray-300" />
+            <div className="self-center mx-2 w-px h-8 bg-gray-300" />
 
             {/* Me Dropdown */}
             <div className="relative flex items-stretch" ref={dropdownRef}>
               <button
-                className="flex flex-col items-center justify-center px-3 text-gray-500 hover:text-gray-900 focus:outline-none border-b-2 border-transparent hover:border-gray-900 transition-colors h-full"
+                className="flex flex-col items-center justify-center px-4 text-gray-500 hover:text-gray-900 focus:outline-none border-b-2 border-transparent hover:border-gray-900 transition-colors h-full"
                 onClick={() => setIsDropdownOpen((o) => !o)}
               >
-                <img
-                  className="h-6 w-6 rounded-full object-cover"
-                  src={user.avatar}
-                  alt="User Avatar"
-                />
+                  <img
+                    className="h-6 w-6 rounded-full object-cover"
+                    src={userData.avatar}
+                    alt="User Avatar"
+                  />
                 <div className="flex items-center mt-0.5">
                   <span className="text-xs hidden md:block">Me</span>
                   <svg
@@ -114,20 +133,20 @@ const Navbar = () => {
                     <div className="flex items-center gap-3">
                       <img
                         className="h-12 w-12 rounded-full object-cover border border-gray-200"
-                        src={user.avatar}
+                        src={userData.avatar}
                         alt="User Avatar"
                       />
                       <div>
                         <p className="text-sm font-semibold text-gray-900">
-                          {user.name}
+                          {userData.name}
                         </p>
                         <p className="text-xs text-gray-500 truncate w-36">
-                          {user.headline}
+                          {userData.headline}
                         </p>
                       </div>
                     </div>
                     <Link
-                      to="#"
+                      to="/profile"
                       className="mt-3 block w-full text-center border border-[#0a66c2] text-[#0a66c2] hover:bg-blue-50 px-4 py-1 rounded-full text-sm font-semibold transition-colors"
                     >
                       View Profile
@@ -151,7 +170,10 @@ const Navbar = () => {
                     </a>
                   </div>
                   <div className="py-1 border-t border-gray-100">
-                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                    >
                       Sign Out
                     </button>
                   </div>
@@ -168,7 +190,7 @@ const Navbar = () => {
 const NavItem = ({ icon, label, to, active }) => (
   <Link
     to={to}
-    className={`flex flex-col items-center justify-center px-3 border-b-2 transition-colors
+    className={`flex flex-col items-center justify-center px-4 border-b-2 transition-colors
       ${
         active
           ? "border-gray-900 text-gray-900"

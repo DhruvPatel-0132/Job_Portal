@@ -14,6 +14,7 @@ import CompanyFormStep from "./steps/CompanyFormStep";
 import StepDots from "./components/StepDots";
 import ProgressBar from "./components/ProgressBar";
 import { NavLink, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 export default function Register() {
   const [stepIndex, setStepIndex] = useState(0);
@@ -232,7 +233,12 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 to-gray-200 px-4">
-      <div className="w-full max-w-md bg-white/80 backdrop-blur-xl border border-gray-200 shadow-xl rounded-3xl p-8">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-md bg-white/80 backdrop-blur-xl border border-gray-200 shadow-xl rounded-3xl p-8"
+      >
         <StepDots step={stepIndex + 1} totalSteps={steps.length} />
         <ProgressBar progress={progress} />
 
@@ -247,7 +253,7 @@ export default function Register() {
             </NavLink>
           </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

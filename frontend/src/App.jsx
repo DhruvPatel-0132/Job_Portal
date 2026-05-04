@@ -5,6 +5,8 @@ import Register from "./components/Register/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import ResetPassword from "./pages/ResetPassword";
+import Profile from "./pages/Profile";
+import MainLayout from "./components/MainLayout";
 
 /* ✅ USE ZUSTAND */
 import { useAuthStore } from "./store/authStore";
@@ -27,8 +29,11 @@ export default function App() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/auth" element={<AuthVerification />} />
+      <Route element={<MainLayout />}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
+      </Route>
 
-      {/* 🔥 PROTECTED ROUTE */}
       <Route
         path="/dashboard"
         element={

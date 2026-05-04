@@ -78,7 +78,7 @@ export default function Auth() {
     const data = await res.json();
 
     if (data.success) {
-      login(data);
+      localStorage.setItem("user", JSON.stringify(data.user));
       window.location.href = "/dashboard";
     } else {
       alert(data.message);
