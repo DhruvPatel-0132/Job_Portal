@@ -31,8 +31,8 @@ export default function LocationSection({ editData, update }) {
         />
         <InputField
           label="Postal Code"
-          field="code"
-          value={editData.code}
+          field="postalCode"
+          value={editData.postalCode}
           onChange={update}
           icon={Hash}
           placeholder="e.g. 10001"

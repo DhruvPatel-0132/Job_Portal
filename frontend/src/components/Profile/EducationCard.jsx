@@ -40,6 +40,11 @@ export default function EducationCard({ education, onEdit }) {
                 {edu.startDate && (edu.stillStudying || edu.endDate) ? " - " : ""}
                 {edu.stillStudying ? "Present" : (edu.endDate ? formatDate(edu.endDate) : "")}
               </p>
+              {edu.grade && (
+                <p className="text-[14px] text-gray-700 mt-1 font-medium">
+                  Grade: <span className="text-gray-900">{edu.grade}</span>
+                </p>
+              )}
               {edu.description && (
                 <p className="text-[14px] text-gray-600 mt-2 leading-relaxed">
                   {edu.description}

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Edit2, Upload, Trash2, X } from "lucide-react";
+import { Edit2, Upload, Trash2, X, MapPin } from "lucide-react";
 import { useState, useRef } from "react";
 import { useProfileStore } from "../../store/profileStore";
 
@@ -72,12 +72,12 @@ export default function ProfileHeader({ profile, onEdit }) {
           </div>
         )}
 
-        <input 
-          type="file" 
-          accept="image/*" 
-          ref={fileInputRef} 
-          className="hidden" 
-          onChange={handleBannerChange} 
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          className="hidden"
+          onChange={handleBannerChange}
         />
       </div>
 
@@ -99,10 +99,15 @@ export default function ProfileHeader({ profile, onEdit }) {
         <div className="mt-10">
           <h1 className="text-2xl font-bold">{profile.fullName}</h1>
           <p className="text-gray-600">{profile.headline}</p>
-          {profile.address && profile.country && (
-            <p className="text-sm text-gray-500">
-              📍 {profile.address}, {profile.country}
-            </p>
+          {(profile.address || profile.city || profile.country) && (
+            <div className="flex items-center gap-2 text-sm text-gray-500 mt-2">
+              <MapPin size={16} className="text-gray-400 shrink-0" />
+              <span>
+                {profile.address && `${profile.address}, `}
+                {[profile.city, profile.country].filter(Boolean).join(", ")}
+                {profile.postalCode && ` (${profile.postalCode})`}
+              </span>
+            </div>
           )}
         </div>
       </div>

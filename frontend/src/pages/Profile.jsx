@@ -46,8 +46,8 @@ export default function Profile() {
       phone: profile?.phone || "",
       country: profile?.country || "",
       city: profile?.city || "",
-      code: profile?.code || "",
       address: profile?.address || "",
+      postalCode: profile?.postalCode || "",
       birthday: formatDateForInput(profile?.birthday),
       skills: profile?.skills || [],
       experience: (profile?.experience || []).map(exp => ({
