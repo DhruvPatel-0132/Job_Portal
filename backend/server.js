@@ -1,5 +1,7 @@
 const express = require("express");
 const dotenv = require("dotenv");
+dotenv.config();
+
 const cors = require("cors");
 const connectDB = require("./src/config/db");
 
@@ -9,8 +11,7 @@ const phoneRoutes = require("./src/routes/phone.routes");
 const forgotRoutes = require("./src/routes/forgot.routes");
 const profileRoutes = require("./src/routes/profile.routes");
 const companyRoutes = require("./src/routes/company.routes");
-
-dotenv.config();
+const uploadRoutes = require("./src/routes/upload.routes");
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use("/api/otp/phone", phoneRoutes);
 app.use("/api/forgot", forgotRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/companies", companyRoutes);
+app.use("/api/upload", uploadRoutes);
 
 /* DB */
 connectDB();
