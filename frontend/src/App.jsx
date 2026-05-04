@@ -6,6 +6,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
+import CompanyProfile from "./pages/CompanyProfile";
 import Jobs from "./pages/Jobs";
 import Onboarding from "./pages/Onboarding";
 import MainLayout from "./components/MainLayout";
@@ -21,6 +22,12 @@ function PrivateRoute({ children }) {
   const finalToken = token || localStorage.getItem("token");
 
   return finalToken ? children : <Navigate to="/" replace />;
+}
+
+// Wrapper for Profile Route to check role
+function ProfileRouteWrapper() {
+  const user = useAuthStore((state) => state.user);
+  return user?.role === "company" ? <CompanyProfile /> : <Profile />;
 }
 
 export default function App() {
@@ -40,7 +47,7 @@ export default function App() {
         }
       >
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile" element={<ProfileRouteWrapper />} />
         <Route path="/jobs" element={<Jobs />} />
       </Route>
     </Routes>
