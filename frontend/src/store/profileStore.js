@@ -33,4 +33,6 @@ export const useProfileStore = create((set) => ({
       return false;
     }
   },
+
+  clearProfile: () => set({ profile: null, isLoading: false, error: null }),
 }));

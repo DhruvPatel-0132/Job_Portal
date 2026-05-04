@@ -46,8 +46,10 @@ const Navbar = () => {
 
   const logout = useAuthStore((state) => state.logout); // ✅ ADD THIS
 
-  const handleLogout = () => {
-    logout(); // now works
+  const clearProfile = useProfileStore((state) => state.clearProfile);
+  const handleLogout = async () => {
+    clearProfile();
+    await logout();
     navigate("/");
   };
 
