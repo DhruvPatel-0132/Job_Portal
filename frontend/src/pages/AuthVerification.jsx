@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "../store/authStore";
 
 export default function Auth() {
+  const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
   const [method, setMethod] = useState("email");
   const [otp, setOtp] = useState(Array(6).fill(""));
@@ -78,8 +80,14 @@ export default function Auth() {
     const data = await res.json();
 
     if (data.success) {
-      localStorage.setItem("user", JSON.stringify(data.user));
-      window.location.href = "/dashboard";
+      // ✅ Use Zustand login to store tokens and user
+      login(data);
+      
+      if (!data.user?.isOnboarded) {
+        navigate("/onboarding");
+      } else {
+        navigate("/dashboard");
+      }
     } else {
       alert(data.message);
     }

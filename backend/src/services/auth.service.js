@@ -72,6 +72,14 @@ const loginUser = async ({ emailOrPhone, password }) => {
       refreshToken,
       isVerified: true,
       message: "Login successful",
+      user: {
+        id: user._id,
+        emailOrPhone: user.emailOrPhone,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        isOnboarded: user.isOnboarded,
+      },
     },
   };
 };
@@ -172,6 +180,7 @@ const registerUser = async (data) => {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
+        isOnboarded: user.isOnboarded,
       },
     },
   };
@@ -265,6 +274,7 @@ const googleLoginUser = async (idToken) => {
         lastName: user.lastName,
         avatar: user.avatar,
         role: user.role,
+        isOnboarded: user.isOnboarded,
       },
     },
   };

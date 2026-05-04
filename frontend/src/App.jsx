@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import Jobs from "./pages/Jobs";
+import Onboarding from "./pages/Onboarding";
 import MainLayout from "./components/MainLayout";
 
 /* ✅ USE ZUSTAND */
@@ -30,6 +31,7 @@ export default function App() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/auth" element={<AuthVerification />} />
+      <Route path="/onboarding" element={<Onboarding />} />
       <Route element={<MainLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
