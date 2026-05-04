@@ -141,6 +141,7 @@ const registerUser = async (data) => {
       profDetails.industryExperience = experience || "";
       profDetails.portfolioDescription = project || "";
     } else if (hireType === "company") {
+      profDetails.company = selectedCompany || newCompany || "";
       if (newCompany) {
         await Company.create({
           name: newCompany,

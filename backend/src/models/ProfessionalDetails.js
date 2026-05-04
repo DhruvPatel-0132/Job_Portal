@@ -32,6 +32,10 @@ const professionalDetailsSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    company: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true }
 );

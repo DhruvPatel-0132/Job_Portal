@@ -25,6 +25,7 @@ const getProfile = async (req, res) => {
       profileObj.portfolioDescription = profDetails.portfolioDescription;
       profileObj.currentProfession = profDetails.currentProfession;
       profileObj.skills = profDetails.skills;
+      profileObj.company = profDetails.company;
     }
 
     return res.status(200).json({ success: true, profile: profileObj });
@@ -41,7 +42,7 @@ const updateProfile = async (req, res) => {
     delete updateData.userId;
 
     // Separate data for ProfessionalDetails if role is hire or company recruiter
-    const professionalFields = ["hireType", "industryExperience", "portfolioDescription", "currentProfession", "skills"];
+    const professionalFields = ["hireType", "industryExperience", "portfolioDescription", "currentProfession", "skills", "company"];
     const profData = {};
     
     // Check if the user is a recruiter (role: hire)
@@ -81,6 +82,7 @@ const updateProfile = async (req, res) => {
       profileObj.portfolioDescription = updatedProfDetails.portfolioDescription;
       profileObj.currentProfession = updatedProfDetails.currentProfession;
       profileObj.skills = updatedProfDetails.skills;
+      profileObj.company = updatedProfDetails.company;
     }
 
     return res.status(200).json({ success: true, profile: profileObj });
