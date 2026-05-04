@@ -27,8 +27,8 @@ export const validateStep = (step, state) => {
       break;
 
     case "individual":
-      if (!state.skills?.trim()) {
-        errors.skills = "Required";
+      if (!state.currentProfession?.trim()) {
+        errors.currentProfession = "Required";
       }
       break;
 

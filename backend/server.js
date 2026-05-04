@@ -8,6 +8,7 @@ const emailRoutes = require("./src/routes/email.routes");
 const phoneRoutes = require("./src/routes/phone.routes");
 const forgotRoutes = require("./src/routes/forgot.routes");
 const profileRoutes = require("./src/routes/profile.routes");
+const companyRoutes = require("./src/routes/company.routes");
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use("/api/otp", emailRoutes);
 app.use("/api/otp/phone", phoneRoutes);
 app.use("/api/forgot", forgotRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/companies", companyRoutes);
 
 /* DB */
 connectDB();

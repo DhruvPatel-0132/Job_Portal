@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   Home,
   Users,
@@ -15,6 +15,7 @@ import { useProfileStore } from "../store/profileStore";
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const location = useLocation();
 
   const { user } = useAuthStore();
   const { profile, fetchProfile } = useProfileStore();
@@ -77,22 +78,25 @@ const Navbar = () => {
               icon={<Home className="h-5 w-5" />}
               label="Home"
               to="/dashboard"
-              active
+              active={location.pathname === "/dashboard"}
             />
             <NavItem
               icon={<Users className="h-5 w-5" />}
               label="My Network"
               to="#"
+              active={location.pathname === "/network"}
             />
             <NavItem
               icon={<Briefcase className="h-5 w-5" />}
               label="Jobs"
-              to="#"
+              to="/jobs"
+              active={location.pathname === "/jobs"}
             />
             <NavItem
               icon={<Bell className="h-5 w-5" />}
               label="Notifications"
               to="#"
+              active={location.pathname === "/notifications"}
             />
 
             {/* Vertical divider */}
@@ -104,11 +108,11 @@ const Navbar = () => {
                 className="flex flex-col items-center justify-center px-4 text-gray-500 hover:text-gray-900 focus:outline-none border-b-2 border-transparent hover:border-gray-900 transition-colors h-full"
                 onClick={() => setIsDropdownOpen((o) => !o)}
               >
-                  <img
-                    className="h-6 w-6 rounded-full object-cover"
-                    src={userData.avatar}
-                    alt="User Avatar"
-                  />
+                <img
+                  className="h-6 w-6 rounded-full object-cover"
+                  src={userData.avatar}
+                  alt="User Avatar"
+                />
                 <div className="flex items-center mt-0.5">
                   <span className="text-xs hidden md:block">Me</span>
                   <svg
@@ -191,10 +195,9 @@ const NavItem = ({ icon, label, to, active }) => (
   <Link
     to={to}
     className={`flex flex-col items-center justify-center px-4 border-b-2 transition-colors
-      ${
-        active
-          ? "border-gray-900 text-gray-900"
-          : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-900"
+      ${active
+        ? "border-gray-900 text-gray-900"
+        : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-900"
       }`}
   >
     {icon}

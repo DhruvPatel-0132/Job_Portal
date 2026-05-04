@@ -1,6 +1,8 @@
 const User = require("../models/User");
 const Profile = require("../models/Profile");
 const Token = require("../models/Token");
+const Company = require("../models/Company");
+const ProfessionalDetails = require("../models/ProfessionalDetails");
 const bcrypt = require("bcryptjs");
 
 const {
@@ -76,7 +78,11 @@ const loginUser = async ({ emailOrPhone, password }) => {
 
 // REGISTER SERVICE
 const registerUser = async (data) => {
-  const { emailOrPhone, password, firstName, lastName, role } = data;
+  const {
+    emailOrPhone, password, firstName, lastName, role,
+    hireType, currentProfession, experience, project,
+    companyName, year, about, selectedCompany, newCompany
+  } = data;
 
   const exists = await User.findOne({
     emailOrPhone: emailOrPhone.trim(),
@@ -100,11 +106,47 @@ const registerUser = async (data) => {
   });
 
   // 🔥 CREATE PROFILE
-  await Profile.create({
+  const profileData = {
     userId: user._id,
     fullName: `${firstName} ${lastName}`,
+    email: emailOrPhone.includes("@") ? emailOrPhone : "",
     phone: emailOrPhone.includes("@") ? "" : emailOrPhone,
-  });
+  };
+
+  if (role === "company") {
+    if (companyName) {
+      await Company.create({
+        name: companyName,
+        establishedYear: year || "",
+        about: about || "",
+        createdBy: user._id,
+      }).catch((err) => console.log("Company already exists or error", err));
+    }
+  } else if (role === "hire") {
+    const profDetails = {
+      userId: user._id,
+      hireType: hireType || "",
+    };
+
+    if (hireType === "individual") {
+      profDetails.currentProfession = currentProfession || "";
+      profDetails.industryExperience = experience || "";
+      profDetails.portfolioDescription = project || "";
+    } else if (hireType === "company") {
+      if (newCompany) {
+        await Company.create({
+          name: newCompany,
+          createdBy: user._id,
+        }).catch((err) => console.log("Company already exists or error", err));
+      }
+    }
+
+    await ProfessionalDetails.create(profDetails).catch((err) =>
+      console.log("Professional details creation error", err)
+    );
+  }
+
+  await Profile.create(profileData);
 
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken();
@@ -189,6 +231,7 @@ const googleLoginUser = async (idToken) => {
     await Profile.create({
       userId: user._id,
       fullName: `${firstName} ${lastName}`,
+      email: email,
       avatar: picture || "",
     });
   }
@@ -277,9 +320,64 @@ const logoutUser = async ({ refreshToken }) => {
   }
 };
 
+const refreshAccessToken = async (refreshToken) => {
+  try {
+    if (!refreshToken) {
+      return {
+        status: 401,
+        response: { success: false, message: "Refresh token required" },
+      };
+    }
+
+    const hashedToken = hashToken(refreshToken);
+    const tokenDoc = await Token.findOne({ refreshToken: hashedToken });
+
+    if (!tokenDoc) {
+      return {
+        status: 401,
+        response: { success: false, message: "Invalid refresh token" },
+      };
+    }
+
+    if (tokenDoc.expiresAt < new Date()) {
+      await Token.findByIdAndDelete(tokenDoc._id);
+      return {
+        status: 401,
+        response: { success: false, message: "Refresh token expired" },
+      };
+    }
+
+    const user = await User.findById(tokenDoc.userId);
+    if (!user) {
+      return {
+        status: 404,
+        response: { success: false, message: "User not found" },
+      };
+    }
+
+    const accessToken = generateAccessToken(user);
+
+    return {
+      status: 200,
+      response: {
+        success: true,
+        accessToken,
+        message: "Token refreshed",
+      },
+    };
+  } catch (error) {
+    console.error("Refresh Token Error:", error);
+    return {
+      status: 500,
+      response: { success: false, message: "Internal server error" },
+    };
+  }
+};
+
 module.exports = {
   loginUser,
   registerUser,
   googleLoginUser,
-  logoutUser
+  logoutUser,
+  refreshAccessToken
 };

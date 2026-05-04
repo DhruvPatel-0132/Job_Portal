@@ -6,6 +6,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
+import Jobs from "./pages/Jobs";
 import MainLayout from "./components/MainLayout";
 
 /* ✅ USE ZUSTAND */
@@ -32,6 +33,7 @@ export default function App() {
       <Route element={<MainLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/jobs" element={<Jobs />} />
       </Route>
 
       <Route

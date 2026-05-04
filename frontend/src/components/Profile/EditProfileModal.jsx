@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { X, User, CheckCircle2 } from "lucide-react";
 import { SECTIONS, SECTION_MAP } from "../../validation/constant.js";
 
@@ -11,9 +11,16 @@ export default function EditProfileModal({
   editData,
   setEditData,
   onSave,
+  initialSection = "basic",
 }) {
-  const [activeSection, setActiveSection] = useState("basic");
+  const [activeSection, setActiveSection] = useState(initialSection);
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setActiveSection(initialSection);
+    }
+  }, [isOpen, initialSection]);
 
   const update = (field, value) =>
     setEditData((prev) => ({ ...prev, [field]: value }));
