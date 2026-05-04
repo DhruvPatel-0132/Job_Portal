@@ -40,7 +40,7 @@ export const useAuthStore = create((set, get) => ({
     try {
       const res = await api.get("/auth/me");
 
-      console.log("FETCH USER SUCCESS:", res.data);
+      // console.log("FETCH USER SUCCESS:", res.data);
 
       set({
         user: res.data.user || null,

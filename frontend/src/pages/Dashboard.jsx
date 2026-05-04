@@ -15,8 +15,8 @@ const Dashboard = () => {
     fetchUser();
   }, [fetchUser]);
 
-  console.log("🔥 DASHBOARD USER:", user);
-  console.log("🔥 DASHBOARD PROFILE:", profile); // 🔥 DEBUG
+  // console.log("🔥 DASHBOARD USER:", user);
+  // console.log("🔥 DASHBOARD PROFILE:", profile); // 🔥 DEBUG
 
   return (
     <>

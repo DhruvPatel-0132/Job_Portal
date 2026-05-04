@@ -27,7 +27,10 @@ const Navbar = () => {
   }, [profile, fetchProfile]);
 
   const userData = {
-    name: profile?.fullName || `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "User",
+    name:
+      profile?.fullName ||
+      `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
+      "User",
     avatar: profile?.avatar || "/avatar.svg",
     headline: profile?.headline || "Welcome to your profile",
   };
@@ -59,11 +62,13 @@ const Navbar = () => {
         <div className="flex items-stretch h-14">
           {/* ── Left: Logo + Search ── */}
           <div className="flex items-center gap-2 mr-4">
-            {/* <Link to="/dashboard" className="flex-shrink-0">
-              <div className="w-9 h-9 bg-[#0a66c2] rounded flex items-center justify-center font-extrabold text-white text-xl leading-none select-none">
-                in
-              </div>
-            </Link> */}
+            <Link to="/dashboard" className="flex-shrink-0">
+              <img
+                src="../public/logo.png"
+                alt="Logo"
+                className="w-11 h-11 object-contain rounded"
+              />
+            </Link>
             <div className="hidden md:flex items-center bg-[#eef3f8] rounded-md px-3 h-9 w-[280px] gap-2 border border-transparent focus-within:border-[#0a66c2] focus-within:bg-white transition-all duration-150">
               <Search className="h-4 w-4 text-gray-500 flex-shrink-0" />
               <input
@@ -178,7 +183,7 @@ const Navbar = () => {
                   <div className="py-1 border-t border-gray-100">
                     <button
                       onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                      className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-100 cursor-pointer"
                     >
                       Sign Out
                     </button>
@@ -197,9 +202,10 @@ const NavItem = ({ icon, label, to, active }) => (
   <Link
     to={to}
     className={`flex flex-col items-center justify-center px-4 border-b-2 transition-colors
-      ${active
-        ? "border-gray-900 text-gray-900"
-        : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-900"
+      ${
+        active
+          ? "border-gray-900 text-gray-900"
+          : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-900"
       }`}
   >
     {icon}
