@@ -90,7 +90,7 @@ const Navbar = () => {
             <NavItem
               icon={<Users className="h-5 w-5" />}
               label="My Network"
-              to="#"
+              to="/network"
               active={location.pathname === "/network"}
             />
             <NavItem
@@ -102,8 +102,8 @@ const Navbar = () => {
             <NavItem
               icon={<Bell className="h-5 w-5" />}
               label="Notifications"
-              to="#"
-              active={location.pathname === "/notifications"}
+              to="/notification"
+              active={location.pathname === "/notification"}
             />
 
             {/* Vertical divider */}

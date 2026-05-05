@@ -13,6 +13,8 @@ import MainLayout from "./components/MainLayout";
 
 /* ✅ USE ZUSTAND */
 import { useAuthStore } from "./store/authStore";
+import NotificationPage from "./pages/NotificationPage";
+import MyNetwork from "./pages/MyNetwork";
 
 /* 🔥 PRIVATE ROUTE (ZUSTAND) */
 function PrivateRoute({ children }) {
@@ -49,6 +51,8 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<ProfileRouteWrapper />} />
         <Route path="/jobs" element={<Jobs />} />
+        <Route path="/notification" element={<NotificationPage />} />
+        <Route path="/network" element={<MyNetwork />} />
       </Route>
     </Routes>
   );
