@@ -5,6 +5,7 @@ const Profile = require("../models/Profile");
 exports.getMe = async (req, res) => {
   try {
     const userId = req.user.id;
+    const Company = require("../models/Company");
 
     // 🔥 run both queries in parallel (better performance)
     const [user, profile] = await Promise.all([
@@ -16,10 +17,16 @@ exports.getMe = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    let company = null;
+    if (user.role === "company") {
+      company = await Company.findOne({ createdBy: userId });
+    }
+
     res.status(200).json({
       success: true,
       user,
       profile: profile || {}, // fallback if not found
+      company: company || null,
     });
   } catch (err) {
     console.error("getMe error:", err);
