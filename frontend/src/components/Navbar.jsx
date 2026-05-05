@@ -17,22 +17,32 @@ const Navbar = () => {
   const dropdownRef = useRef(null);
   const location = useLocation();
 
-  const { user } = useAuthStore();
-  const { profile, fetchProfile } = useProfileStore();
+  const { user, company } = useAuthStore();
+  const { profile, fetchProfile, clearProfile } = useProfileStore();
 
+  // Re-fetch profile whenever the logged-in user changes (e.g. after switching accounts)
   useEffect(() => {
-    if (!profile) {
+    if (user) {
+      // If profile belongs to a different user, clear it first then re-fetch
+      if (profile && profile.userId && profile.userId !== user.id) {
+        clearProfile();
+      }
       fetchProfile();
     }
-  }, [profile, fetchProfile]);
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const isCompany = user?.role === "company";
 
   const userData = {
-    name:
-      profile?.fullName ||
-      `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
-      "User",
-    avatar: profile?.avatar || "/avatar.svg",
-    headline: profile?.headline || "Welcome to your profile",
+    name: isCompany
+      ? company?.name || profile?.fullName || "Company"
+      : profile?.fullName ||
+        `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
+        "User",
+    avatar: profile?.avatar || company?.logo || "/avatar.svg",
+    headline: isCompany
+      ? profile?.headline || company?.industry || "Company Account"
+      : profile?.headline || "Welcome to your profile",
   };
 
   // Close dropdown on outside click
@@ -47,9 +57,8 @@ const Navbar = () => {
   }, []);
   const navigate = useNavigate();
 
-  const logout = useAuthStore((state) => state.logout); // ✅ ADD THIS
+  const logout = useAuthStore((state) => state.logout);
 
-  const clearProfile = useProfileStore((state) => state.clearProfile);
   const handleLogout = async () => {
     clearProfile();
     await logout();

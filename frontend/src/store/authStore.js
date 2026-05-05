@@ -55,6 +55,20 @@ export const useAuthStore = create((set, get) => ({
   },
 
   // =========================
+  // UPDATE COMPANY
+  // =========================
+  updateCompany: async (updateData) => {
+    try {
+      const res = await api.put("/companies/me", updateData);
+      set({ company: res.data.company });
+      return true;
+    } catch (err) {
+      console.log("UPDATE COMPANY ERROR:", err);
+      return false;
+    }
+  },
+
+  // =========================
   // LOGOUT
   // =========================
   logout: async () => {

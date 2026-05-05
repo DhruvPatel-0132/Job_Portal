@@ -12,13 +12,13 @@ const SidebarCompanyProfile = () => {
   const safeProfile = profile || {};
 
   const companyName = safeCompany.name || safeProfile.fullName || (user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() : "Company Name");
-  const avatar = safeProfile.avatar || "/avatar.svg";
-  const banner = safeProfile.banner || "";
-  const headline = safeProfile.headline || "No headline added";
+  const avatar = safeCompany.logo || "/avatar.svg";
+  const banner = safeCompany.banner || "";
+  const headline = safeCompany.tagline || "No headline added";
   
   // Use company establishedYear or about if available, otherwise mock it
   const location = safeProfile.city ? `${safeProfile.city}, ${safeProfile.country}` : "Not specified";
-  const establishedYear = safeCompany.establishedYear ? `Established ${safeCompany.establishedYear}` : "Industry not specified";
+  const establishedYear = safeCompany.foundedYear ? `Founded ${safeCompany.foundedYear}` : "Industry not specified";
 
   return (
     <motion.div
