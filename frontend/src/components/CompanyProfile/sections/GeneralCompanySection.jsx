@@ -230,6 +230,7 @@ export default function GeneralCompanySection({ editData, update }) {
             <option value="Sole Proprietorship">Sole Proprietorship</option>
             <option value="Privately Held">Privately Held</option>
             <option value="Partnership">Partnership</option>
+            <option value="Semi Government">Semi Government</option>
           </select>
         </div>
         <div>

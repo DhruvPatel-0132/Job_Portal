@@ -197,9 +197,16 @@ export default function Login() {
 
               await loginStore(response.data);
 
-              if (!response.data.user?.isOnboarded) {
+              const { isNewUser, user: googleUser } = response.data;
+
+              if (isNewUser) {
+                // New Google user → reuse Register flow starting at RoleStep
+                navigate("/register", { state: { googleMode: true } });
+              } else if (!googleUser?.isOnboarded) {
+                // Existing Google user not yet onboarded
                 navigate("/onboarding");
               } else {
+                // Fully set up user → dashboard
                 navigate("/dashboard");
               }
             } catch (err) {
