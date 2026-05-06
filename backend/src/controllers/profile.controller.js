@@ -17,8 +17,16 @@ const getProfile = async (req, res) => {
     // Fetch professional details from separate model
     const profDetails = await ProfessionalDetails.findOne({ userId: req.user.id });
 
+    // Fetch connections count
+    const Connection = require("../models/Connection");
+    const connectionsCount = await Connection.countDocuments({
+      $or: [{ user1: req.user.id }, { user2: req.user.id }]
+    });
+
     // Convert profile to object to add extra fields
     const profileObj = profile.toObject();
+    profileObj.connections = connectionsCount;
+
     if (profDetails) {
       profileObj.hireType = profDetails.hireType;
       profileObj.industryExperience = profDetails.industryExperience;
@@ -74,7 +82,15 @@ const updateProfile = async (req, res) => {
 
     // Fetch updated professional details to return a complete profile
     const updatedProfDetails = await ProfessionalDetails.findOne({ userId: req.user.id });
+    
+    // Fetch connections count
+    const Connection = require("../models/Connection");
+    const connectionsCount = await Connection.countDocuments({
+      $or: [{ user1: req.user.id }, { user2: req.user.id }]
+    });
+
     const profileObj = profile.toObject();
+    profileObj.connections = connectionsCount;
     
     if (updatedProfDetails) {
       profileObj.hireType = updatedProfDetails.hireType;
