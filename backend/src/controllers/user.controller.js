@@ -117,4 +117,49 @@ exports.updateOnboarding = async (req, res) => {
     console.error("updateOnboarding error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
-};
+};
+
+/* GET ALL USERS FOR NETWORK PAGE */
+exports.getAllUsers = async (req, res) => {
+  try {
+    const currentUserId = req.user.id;
+    
+    // Fetch all users except the current one
+    const users = await User.find({ _id: { $ne: currentUserId } }).select("firstName lastName role isVerified avatar");
+    
+    // Fetch profiles for these users
+    const userIds = users.map(user => user._id);
+    const profiles = await Profile.find({ userId: { $in: userIds } }).select("userId headline banner avatar");
+
+    // Fetch companies for company users
+    const companyUsers = users.filter(u => u.role === "company");
+    const companyUserIds = companyUsers.map(u => u._id);
+    const companies = await require("../models/Company").find({ createdBy: { $in: companyUserIds } }).select("_id createdBy");
+
+    // Map profiles to users
+    const usersWithProfiles = users.map(user => {
+      const userProfile = profiles.find(p => p.userId.toString() === user._id.toString());
+      const userCompany = companies.find(c => c.createdBy.toString() === user._id.toString());
+      
+      return {
+        _id: user._id,
+        name: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : (user.firstName || user.lastName || "Unknown User"),
+        role: user.role,
+        isVerified: user.isVerified,
+        avatar: user.avatar || userProfile?.avatar || "/avatar.svg",
+        headline: userProfile?.headline || "No headline available",
+        banner: userProfile?.banner || "linear-gradient(to bottom right, #a1c4fd, #c2e9fb)",
+        companyId: userCompany ? userCompany._id : null
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      users: usersWithProfiles,
+    });
+  } catch (err) {
+    console.error("getAllUsers error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+

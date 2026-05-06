@@ -12,6 +12,8 @@ const forgotRoutes = require("./src/routes/forgot.routes");
 const profileRoutes = require("./src/routes/profile.routes");
 const companyRoutes = require("./src/routes/company.routes");
 const uploadRoutes = require("./src/routes/upload.routes");
+const requestRoutes = require("./src/routes/request.routes");
+const connectionRoutes = require("./src/routes/connection.routes");
 
 const app = express();
 
@@ -27,6 +29,8 @@ app.use("/api/forgot", forgotRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/companies", companyRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/requests", requestRoutes);
+app.use("/api/connections", connectionRoutes);
 
 /* DB */
 connectDB();
