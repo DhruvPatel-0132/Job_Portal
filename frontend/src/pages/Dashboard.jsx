@@ -1,14 +1,17 @@
 import React, { useEffect } from "react";
 import Navbar from "../components/Navbar";
 import SidebarProfile from "../components/dashboard/SidebarProfile";
+import SidebarCompanyProfile from "../components/dashboard/SidebarCompanyProfile";
 import Feed from "../components/dashboard/Feed";
 import JobRecommendations from "../components/dashboard/JobRecommendations";
 import ProfileProgress from "../components/dashboard/ProfileProgress";
+import CompanyProgress from "../components/CompanyProfile/CompanyProgress";
 import { useAuthStore } from "../store/authStore";
 
 const Dashboard = () => {
   const user = useAuthStore((state) => state.user);
   const profile = useAuthStore((state) => state.profile); // 🔥 ADD
+  const company = useAuthStore((state) => state.company);
   const fetchUser = useAuthStore((state) => state.fetchUser);
 
   useEffect(() => {
@@ -25,11 +28,19 @@ const Dashboard = () => {
         <div className="flex flex-col lg:flex-row gap-6 justify-center">
           <div className="w-full lg:w-[225px] flex-shrink-0 self-start lg:sticky lg:top-[72px]">
             {/* 🔥 PASS PROFILE INSTEAD OF USER */}
-            <SidebarProfile profile={profile} />
+            {user?.role === "company" ? (
+              <SidebarCompanyProfile profile={profile} />
+            ) : (
+              <SidebarProfile profile={profile} />
+            )}
           </div>
 
           <div className="w-full lg:w-[540px] xl:w-[600px] flex-shrink-0 self-start">
-            <ProfileProgress profile={profile} />
+            {user?.role === "company" ? (
+              <CompanyProgress company={company} profile={profile} />
+            ) : (
+              <ProfileProgress profile={profile} />
+            )}
             <Feed />
           </div>
 

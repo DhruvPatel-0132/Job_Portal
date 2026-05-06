@@ -6,9 +6,21 @@ import { useAuthStore } from "../store/authStore";
 export default function Auth() {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
+  const { token, user } = useAuthStore();
   const [method, setMethod] = useState("email");
   const [otp, setOtp] = useState(Array(6).fill(""));
   const inputsRef = useRef([]);
+
+  // 🚫 Google users are pre-verified — bounce them away from /auth
+  useEffect(() => {
+    if (token && user) {
+      if (!user.isOnboarded) {
+        navigate("/onboarding", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
+    }
+  }, [token, user, navigate]);
 
   const [timer, setTimer] = useState(0);
   const [isTimerActive, setIsTimerActive] = useState(false);

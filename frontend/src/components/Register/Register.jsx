@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getFlowSteps } from "./flowConfig";
+import { getFlowSteps, getGoogleFlowSteps } from "./flowConfig";
 import { validateStep } from "../../validation/stepValidation";
 import axios from "axios";
 
@@ -13,10 +13,19 @@ import CompanyFormStep from "./steps/CompanyFormStep";
 
 import StepDots from "./components/StepDots";
 import ProgressBar from "./components/ProgressBar";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
+import api from "../../api/axios";
+import { useAuthStore } from "../../store/authStore";
 
 export default function Register() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // 🔑 Google OAuth mode — user is already authenticated, just needs a role
+  const googleMode = location.state?.googleMode === true;
+  const { setUser, user } = useAuthStore();
+
   const [stepIndex, setStepIndex] = useState(0);
   const [role, setRole] = useState("");
   const [hireType, setHireType] = useState("");
@@ -42,10 +51,12 @@ export default function Register() {
 
   const [errors, setErrors] = useState({});
 
-  const steps = getFlowSteps(role, hireType);
+  // Use the correct flow based on mode
+  const steps = googleMode
+    ? getGoogleFlowSteps(role, hireType)
+    : getFlowSteps(role, hireType);
+
   const currentStep = steps[stepIndex];
-  // inside component
-  const navigate = useNavigate();
 
   // =========================
   // NEXT STEP VALIDATION
@@ -72,7 +83,7 @@ export default function Register() {
   const back = () => setStepIndex((i) => i - 1);
 
   // =========================
-  // SUBMIT API CALL
+  // NORMAL REGISTER SUBMIT
   // =========================
   const handleSubmit = async () => {
     const result = validateStep(currentStep, {
@@ -115,11 +126,10 @@ export default function Register() {
       );
 
       console.log("REGISTER SUCCESS:", data);
-      // alert("Registration Successful!");
 
       localStorage.setItem("token", data.accessToken);
       localStorage.setItem("refreshToken", data.refreshToken);
-      localStorage.setItem("userId", data.userId); // ✅ ADD THIS
+      localStorage.setItem("userId", data.userId);
       navigate("/auth");
     } catch (error) {
       console.error(
@@ -128,6 +138,43 @@ export default function Register() {
       );
     }
   };
+
+  // =========================
+  // GOOGLE MODE SUBMIT
+  // Updates role for an already-authenticated Google user,
+  // then redirects to onboarding.
+  // =========================
+  const handleGoogleSubmit = async () => {
+    try {
+      const res = await api.put("/auth/update-role", {
+        role,
+        companyName,
+        year,
+        about,
+        hireType,
+        currentProfession,
+        experience,
+        project,
+        selectedCompany,
+        newCompany,
+      });
+
+      if (res.data.success) {
+        // Sync role into Zustand store
+        setUser({ ...user, role });
+        navigate("/onboarding");
+      }
+    } catch (error) {
+      console.error(
+        "GOOGLE ROLE UPDATE ERROR:",
+        error?.response?.data?.message || error.message,
+      );
+    }
+  };
+
+  // Pick the right submit handler based on mode
+  const activeSubmit = googleMode ? handleGoogleSubmit : handleSubmit;
+
 
   const progress = ((stepIndex + 1) / steps.length) * 100;
 
@@ -167,7 +214,7 @@ export default function Register() {
             role={role}
             setRole={setRole}
             next={next}
-            handleSubmit={handleSubmit}
+            handleSubmit={activeSubmit}
           />
         );
 
@@ -189,7 +236,7 @@ export default function Register() {
             setExperience={setExperience}
             project={project}
             setProject={setProject}
-            handleSubmit={handleSubmit}
+            handleSubmit={activeSubmit}
           />
         );
 
@@ -204,7 +251,7 @@ export default function Register() {
             setIsNewCompany={setIsNewCompany}
             newCompany={newCompany}
             setNewCompany={setNewCompany}
-            handleSubmit={handleSubmit}
+            handleSubmit={activeSubmit}
           />
         );
 
@@ -217,7 +264,7 @@ export default function Register() {
             setYear={setYear}
             about={about}
             setAbout={setAbout}
-            handleSubmit={handleSubmit}
+            handleSubmit={activeSubmit}
           />
         );
 
@@ -239,15 +286,17 @@ export default function Register() {
 
         {renderStep()}
 
-        {/* LOGIN */}
-        <div className="mt-8 pt-6 border-t text-center">
-          <p className="text-sm text-gray-500">
-            Already have an account?{" "}
-            <NavLink to="/" className="text-black font-medium hover:underline">
-              Sign in
-            </NavLink>
-          </p>
-        </div>
+        {/* LOGIN — hidden in Google mode since user is already authenticated */}
+        {!googleMode && (
+          <div className="mt-8 pt-6 border-t text-center">
+            <p className="text-sm text-gray-500">
+              Already have an account?{" "}
+              <NavLink to="/" className="text-black font-medium hover:underline">
+                Sign in
+              </NavLink>
+            </p>
+          </div>
+        )}
       </motion.div>
     </div>
   );

@@ -45,11 +45,26 @@ export const useAuthStore = create((set, get) => ({
       set({
         user: res.data.user || null,
         profile: res.data.profile || null,
+        company: res.data.company || null,
       });
     } catch (err) {
       console.log("FETCH USER ERROR:", err);
-      set({ user: null, profile: null });
+      set({ user: null, profile: null, company: null });
       get().logout(); // 🔥 auto-logout on bad token to prevent infinite 404s
+    }
+  },
+
+  // =========================
+  // UPDATE COMPANY
+  // =========================
+  updateCompany: async (updateData) => {
+    try {
+      const res = await api.put("/companies/me", updateData);
+      set({ company: res.data.company });
+      return true;
+    } catch (err) {
+      console.log("UPDATE COMPANY ERROR:", err);
+      return false;
     }
   },
 

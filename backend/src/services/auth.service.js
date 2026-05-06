@@ -123,7 +123,7 @@ const registerUser = async (data) => {
 
   if (role === "company") {
     if (companyName) {
-      profileData.fullName = companyName;
+      // profileData.fullName = companyName;
       await Company.create({
         name: companyName,
         establishedYear: year || "",
