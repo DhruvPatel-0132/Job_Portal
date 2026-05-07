@@ -1,24 +1,36 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuthStore } from "../../store/authStore";
+import { useNetworkStore } from "../../store/networkStore";
 
 const SidebarCompanyProfile = () => {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const company = useAuthStore((state) => state.company);
   const profile = useAuthStore((state) => state.profile);
+  const followedCompanies =
+    useNetworkStore((state) => state.followedCompanies) || [];
 
   const safeCompany = company || {};
   const safeProfile = profile || {};
 
-  const companyName = safeCompany.name || safeProfile.fullName || (user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() : "Company Name");
+  const companyName =
+    safeCompany.name ||
+    safeProfile.fullName ||
+    (user
+      ? `${user.firstName || ""} ${user.lastName || ""}`.trim()
+      : "Company Name");
   const avatar = safeCompany.logo || "/avatar.svg";
   const banner = safeCompany.banner || "";
   const headline = safeCompany.tagline || "No headline added";
-  
+
   // Use company establishedYear or about if available, otherwise mock it
-  const location = safeProfile.city ? `${safeProfile.city}, ${safeProfile.country}` : "Not specified";
-  const establishedYear = safeCompany.foundedYear ? `Founded ${safeCompany.foundedYear}` : "Industry not specified";
+  const location = safeProfile.city
+    ? `${safeProfile.city}, ${safeProfile.country}`
+    : "Not specified";
+  const establishedYear = safeCompany.foundedYear
+    ? `Founded ${safeCompany.foundedYear}`
+    : "Industry not specified";
 
   return (
     <motion.div
@@ -72,7 +84,7 @@ const SidebarCompanyProfile = () => {
             Followers
           </span>
           <span className="text-[13px] text-blue-600 font-bold">
-            {safeProfile.followers || 0}
+            {safeCompany.followersCount || 0}
           </span>
         </motion.div>
 
@@ -92,11 +104,41 @@ const SidebarCompanyProfile = () => {
       {/* Location / Industry */}
       <div className="py-3 border-b border-gray-50 px-4 flex flex-col gap-2">
         <div className="flex items-center gap-2 text-gray-500">
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+            ></path>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+            ></path>
+          </svg>
           <span className="text-[11px]">{location}</span>
         </div>
         <div className="flex items-center gap-2 text-gray-500">
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+            ></path>
+          </svg>
           <span className="text-[11px] truncate">{establishedYear}</span>
         </div>
       </div>
@@ -123,7 +165,12 @@ const SidebarCompanyProfile = () => {
           viewBox="0 0 24 24"
           stroke="currentColor"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={3}
+            d="M9 5l7 7-7 7"
+          />
         </svg>
       </motion.div>
     </motion.div>
