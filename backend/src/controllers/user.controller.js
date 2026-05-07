@@ -24,10 +24,18 @@ exports.getMe = async (req, res) => {
       company = await Company.findOne({ createdBy: userId });
     }
 
+    const Connection = require("../models/Connection");
+    const connectionsCount = await Connection.countDocuments({
+      $or: [{ user1: userId }, { user2: userId }]
+    });
+
+    const profileObj = profile ? profile.toObject() : {};
+    profileObj.connections = connectionsCount;
+
     res.status(200).json({
       success: true,
       user,
-      profile: profile || {}, // fallback if not found
+      profile: profileObj,
       company: company || null,
     });
   } catch (err) {
@@ -134,7 +142,7 @@ exports.getAllUsers = async (req, res) => {
     // Fetch companies for company users
     const companyUsers = users.filter(u => u.role === "company");
     const companyUserIds = companyUsers.map(u => u._id);
-    const companies = await require("../models/Company").find({ createdBy: { $in: companyUserIds } }).select("_id createdBy");
+    const companies = await require("../models/Company").find({ createdBy: { $in: companyUserIds } }).select("_id createdBy name logo banner tagline");
 
     // Map profiles to users
     const usersWithProfiles = users.map(user => {
@@ -143,12 +151,12 @@ exports.getAllUsers = async (req, res) => {
       
       return {
         _id: user._id,
-        name: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : (user.firstName || user.lastName || "Unknown User"),
+        name: user.role === "company" && userCompany?.name ? userCompany.name : (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : (user.firstName || user.lastName || "Unknown User")),
         role: user.role,
         isVerified: user.isVerified,
-        avatar: user.avatar || userProfile?.avatar || "/avatar.svg",
-        headline: userProfile?.headline || "No headline available",
-        banner: userProfile?.banner || "linear-gradient(to bottom right, #a1c4fd, #c2e9fb)",
+        avatar: user.role === "company" && userCompany?.logo ? userCompany.logo : (user.avatar || userProfile?.avatar || "/avatar.svg"),
+        headline: user.role === "company" && userCompany?.tagline ? userCompany.tagline : (userProfile?.headline || "No headline available"),
+        banner: user.role === "company" && userCompany?.banner ? userCompany.banner : (userProfile?.banner || ""),
         companyId: userCompany ? userCompany._id : null
       };
     });

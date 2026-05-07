@@ -7,16 +7,12 @@ import JobRecommendations from "../components/dashboard/JobRecommendations";
 import ProfileProgress from "../components/dashboard/ProfileProgress";
 import CompanyProgress from "../components/CompanyProfile/CompanyProgress";
 import { useAuthStore } from "../store/authStore";
+import SidebarContent from "../components/dashboard/SidebarContent";
 
 const Dashboard = () => {
   const user = useAuthStore((state) => state.user);
   const profile = useAuthStore((state) => state.profile); // 🔥 ADD
   const company = useAuthStore((state) => state.company);
-  const fetchUser = useAuthStore((state) => state.fetchUser);
-
-  useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
 
   // console.log("🔥 DASHBOARD USER:", user);
   // console.log("🔥 DASHBOARD PROFILE:", profile); // 🔥 DEBUG
@@ -26,15 +22,7 @@ const Dashboard = () => {
       {/* Main Content Area */}
       <main className="max-w-[1080px] mx-auto px-4 py-6">
         <div className="flex flex-col lg:flex-row gap-6 justify-center">
-          <div className="w-full lg:w-[225px] flex-shrink-0 self-start lg:sticky lg:top-[72px]">
-            {/* 🔥 PASS PROFILE INSTEAD OF USER */}
-            {user?.role === "company" ? (
-              <SidebarCompanyProfile profile={profile} />
-            ) : (
-              <SidebarProfile profile={profile} />
-            )}
-          </div>
-
+          <SidebarContent />
           <div className="w-full lg:w-[540px] xl:w-[600px] flex-shrink-0 self-start">
             {user?.role === "company" ? (
               <CompanyProgress company={company} profile={profile} />

@@ -1,14 +1,12 @@
-import React, { useEffect } from "react";
 import { Send } from "lucide-react";
-import SidebarProfile from "../components/dashboard/SidebarProfile";
 import Footer from "../components/dashboard/Footer";
-import { useProfileStore } from "../store/profileStore";
 import { useNetworkStore } from "../store/networkStore";
 import ConnectionRequestList from "../components/network/ConnectionRequestList";
 import PeopleYouMayKnowCard from "../components/network/PeopleYouMayKnowCard";
+import SidebarContent from "../components/dashboard/SidebarContent";
+import { useEffect } from "react";
 
 const MyNetwork = () => {
-  const { profile, fetchProfile } = useProfileStore();
   const {
     networkUsers,
     requests,
@@ -22,11 +20,6 @@ const MyNetwork = () => {
     followCompany,
     unfollowCompany,
   } = useNetworkStore();
-
-  useEffect(() => {
-    fetchProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     fetchNetworkingData();
@@ -45,7 +38,7 @@ const MyNetwork = () => {
           <div className="w-full lg:w-[225px] flex-shrink-0 space-y-4">
             <div className="self-start lg:sticky lg:top-[72px]">
               <div className="mb-4 hidden lg:block">
-                <SidebarProfile profile={profile} />
+                <SidebarContent />
               </div>
               <div className="hidden lg:block sticky top-[calc(72px+16px+240px)]">
                 <Footer />
