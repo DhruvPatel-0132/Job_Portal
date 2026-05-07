@@ -38,12 +38,12 @@ const PeopleYouMayKnowCard = ({
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col items-center text-center relative group hover:shadow-md transition-shadow duration-300">
       {/* Banner */}
       <div
-        className="h-14 w-full opacity-40"
-        style={{
-          background:
-            person.banner ||
-            "linear-gradient(to bottom right, #a1c4fd, #c2e9fb)",
-        }}
+        className={`h-14 w-full bg-cover bg-center ${!person.banner ? "opacity-40" : ""}`}
+        style={
+          person.banner
+            ? { backgroundImage: `url(${person.banner})` }
+            : { backgroundImage: "linear-gradient(to bottom right, #a1c4fd, #c2e9fb)" }
+        }
       />
 
       {/* Close button */}

@@ -1,9 +1,11 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useNetworkStore } from "../../store/networkStore";
 
 const SidebarProfile = ({ profile }) => {
   const navigate = useNavigate();
+  const followedCompanies = useNetworkStore((state) => state.followedCompanies) || [];
   const safeProfile = profile || {};
 
   const fullName = safeProfile.fullName || "Loading...";
@@ -79,6 +81,17 @@ const SidebarProfile = ({ profile }) => {
             {safeProfile.connections || 0}
           </span>
         </motion.div>
+        <motion.div
+          whileHover={{ x: 3, backgroundColor: "rgba(249, 250, 251, 1)" }}
+          className="px-4 py-1.5 cursor-pointer flex justify-between items-center transition-all group"
+        >
+          <span className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider group-hover:text-gray-700">
+            Page Followed
+          </span>
+          <span className="text-[13px] text-blue-600 font-bold">
+            {followedCompanies.length}
+          </span>
+        </motion.div>
       </div>
 
       {/* Skills Section */}
@@ -126,7 +139,12 @@ const SidebarProfile = ({ profile }) => {
           viewBox="0 0 24 24"
           stroke="currentColor"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={3}
+            d="M9 5l7 7-7 7"
+          />
         </svg>
       </motion.div>
     </motion.div>
