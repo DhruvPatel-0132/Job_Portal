@@ -17,14 +17,16 @@ const Navbar = () => {
   const dropdownRef = useRef(null);
   const location = useLocation();
 
-  const { user, company } = useAuthStore();
-  const { profile, fetchProfile, clearProfile } = useProfileStore();
+  const { user, company, profile: authProfile } = useAuthStore();
+  const { profile: storeProfile, fetchProfile, clearProfile } = useProfileStore();
+
+  const profile = storeProfile || authProfile;
 
   // Re-fetch profile whenever the logged-in user changes (e.g. after switching accounts)
   useEffect(() => {
     if (user) {
       // If profile belongs to a different user, clear it first then re-fetch
-      if (profile && profile.userId && profile.userId !== user.id) {
+      if (storeProfile && storeProfile.userId && storeProfile.userId !== user.id) {
         clearProfile();
       }
       fetchProfile();

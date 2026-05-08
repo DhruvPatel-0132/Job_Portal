@@ -94,6 +94,11 @@ export const useNetworkStore = create((set, get) => ({
       if (res.data.success) {
         set((state) => ({
           followedCompanies: [...state.followedCompanies, { _id: companyId }],
+          networkUsers: state.networkUsers.map((u) =>
+            u.companyId === companyId
+              ? { ...u, followersCount: (u.followersCount || 0) + 1 }
+              : u
+          ),
         }));
       }
     } catch (err) {
@@ -107,7 +112,14 @@ export const useNetworkStore = create((set, get) => ({
       const res = await api.delete(`/companies/unfollow/${companyId}`);
       if (res.data.success) {
         set((state) => ({
-          followedCompanies: state.followedCompanies.filter((c) => c._id !== companyId),
+          followedCompanies: state.followedCompanies.filter(
+            (c) => c._id !== companyId,
+          ),
+          networkUsers: state.networkUsers.map((u) =>
+            u.companyId === companyId
+              ? { ...u, followersCount: Math.max(0, (u.followersCount || 0) - 1) }
+              : u
+          ),
         }));
       }
     } catch (err) {
