@@ -2,8 +2,7 @@ import { Send } from "lucide-react";
 import Footer from "../components/dashboard/Footer";
 import { useNetworkStore } from "../store/networkStore";
 import ConnectionRequestList from "../components/network/ConnectionRequestList";
-import UserSuggestionCard from "../components/network/UserSuggestionCard";
-import CompanySuggestionCard from "../components/network/CompanySuggestionCard";
+import PeopleYouMayKnowCard from "../components/network/PeopleYouMayKnowCard";
 import SidebarContent from "../components/dashboard/SidebarContent";
 import { useEffect } from "react";
 
@@ -30,11 +29,6 @@ const MyNetwork = () => {
   const suggestedUsers = networkUsers.filter((person) => {
     return !connections.some((c) => c._id === person._id);
   });
-
-  const suggestedPeople = suggestedUsers.filter((u) => u.role !== "company");
-  const suggestedCompanies = suggestedUsers.filter((u) => 
-    u.role === "company" && !followedCompanies.some(fc => fc?._id === u.companyId)
-  );
 
   return (
     <div className="min-h-screen bg-[#f3f2ef]">
@@ -111,7 +105,7 @@ const MyNetwork = () => {
             )}
 
             {/* People You May Know Section */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-6">
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
               <div className="flex justify-between items-center px-4 py-3">
                 <h2 className="text-[16px] font-medium text-gray-600">
                   People you may know
@@ -121,73 +115,41 @@ const MyNetwork = () => {
                 </button>
               </div>
 
+              {/* Grid of cards */}
               {isLoading ? (
                 <div className="p-8 text-center text-gray-500">
                   Loading suggestions...
                 </div>
-              ) : suggestedPeople.length > 0 ? (
+              ) : suggestedUsers.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 p-3">
-                  {suggestedPeople.map((person) => {
+                  {suggestedUsers.map((person) => {
+                    const isConnected = false; // We filtered them out
                     const isPending = requests.outgoing.some(
                       (r) =>
                         r.recipientId === person._id ||
                         r.recipientId?._id === person._id,
                     );
+                    const isFollowed = followedCompanies.some(
+                      (c) => c._id === person.companyId,
+                    );
 
                     return (
-                      <UserSuggestionCard
+                      <PeopleYouMayKnowCard
                         key={person._id}
                         person={person}
-                        isConnected={false}
+                        isConnected={isConnected}
                         isPending={isPending}
-                        onConnect={() => sendConnectionRequest(person._id)}
-                      />
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="p-8 text-center text-gray-500">
-                  No new people suggestions for now.
-                </div>
-              )}
-            </div>
-
-            {/* Companies You Should Follow Section */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-6">
-              <div className="flex justify-between items-center px-4 py-3">
-                <h2 className="text-[16px] font-medium text-gray-600">
-                  Companies you should follow
-                </h2>
-                <button className="text-[16px] font-bold text-gray-500 hover:text-black hover:underline transition-colors">
-                  Show all
-                </button>
-              </div>
-
-              {isLoading ? (
-                <div className="p-8 text-center text-gray-500">
-                  Loading suggestions...
-                </div>
-              ) : suggestedCompanies.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 p-3">
-                  {suggestedCompanies.map((company) => {
-                    const isFollowed = followedCompanies.some(
-                      (c) => c._id === company.companyId,
-                    );
-
-                    return (
-                      <CompanySuggestionCard
-                        key={company._id}
-                        company={company}
                         isFollowed={isFollowed}
-                        onFollow={() => followCompany(company.companyId)}
-                        onUnfollow={() => unfollowCompany(company.companyId)}
+                        onConnect={() => sendConnectionRequest(person._id)}
+                        onFollow={() => followCompany(person.companyId)}
+                        onUnfollow={() => unfollowCompany(person.companyId)}
                       />
                     );
                   })}
                 </div>
               ) : (
                 <div className="p-8 text-center text-gray-500">
-                  No new company suggestions for now.
+                  No new suggestions for now.
                 </div>
               )}
             </div>
@@ -197,6 +159,5 @@ const MyNetwork = () => {
     </div>
   );
 };
-
 
 export default MyNetwork;
