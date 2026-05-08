@@ -1,5 +1,7 @@
+const User = require("../models/User");
 const Profile = require("../models/Profile");
 const ProfessionalDetails = require("../models/ProfessionalDetails");
+const Connection = require("../models/Connection");
 
 // Get current user profile
 const getProfile = async (req, res) => {
@@ -45,22 +47,94 @@ const getProfile = async (req, res) => {
 // Update current user profile
 const updateProfile = async (req, res) => {
   try {
-    // Ensure userId is not modified by the client
+    // =========================
+    // CLONE BODY
+    // =========================
     const updateData = { ...req.body };
+
+    // Prevent sensitive updates
     delete updateData.userId;
+    delete updateData.password;
+    delete updateData.role;
+    delete updateData.provider;
+    delete updateData.googleId;
+    delete updateData.isVerified;
+    delete updateData.isOnboarded;
 
-    // Separate data for ProfessionalDetails if role is hire or company recruiter
-    const professionalFields = ["hireType", "industryExperience", "portfolioDescription", "currentProfession", "skills", "company"];
+    // =========================
+    // VALIDATION
+    // =========================
+    if (updateData.email && updateData.phone) {
+      return res.status(400).json({
+        success: false,
+        message: "Update either email or phone, not both",
+      });
+    }
+
+    // =========================
+    // USER UPDATE DATA
+    // =========================
+    const userData = {};
+
+    // Direct user fields
+    const userFields = ["firstName", "lastName", "avatar"];
+
+    userFields.forEach((field) => {
+      if (updateData[field] !== undefined) {
+        userData[field] = updateData[field];
+      }
+    });
+
+    // Sync email -> emailOrPhone
+    if (updateData.email) {
+      userData.emailOrPhone = updateData.email;
+    }
+
+    // Sync phone -> emailOrPhone
+    if (updateData.phone) {
+      userData.emailOrPhone = updateData.phone;
+    }
+
+    // =========================
+    // UPDATE USER
+    // =========================
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      {
+        $set: userData,
+      },
+      {
+        new: true,
+      }
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // =========================
+    // PROFESSIONAL DETAILS
+    // =========================
+    const professionalFields = [
+      "hireType",
+      "industryExperience",
+      "portfolioDescription",
+      "currentProfession",
+      "skills",
+      "company",
+    ];
+
     const profData = {};
-    
-    // Check if the user is a recruiter (role: hire)
-    const user = await require("../models/User").findById(req.user.id);
-    const isRecruiter = user && user.role === "hire";
 
-    if (isRecruiter) {
-      professionalFields.forEach(field => {
+    if (updatedUser.role === "hire") {
+      professionalFields.forEach((field) => {
         if (updateData[field] !== undefined) {
           profData[field] = updateData[field];
+
+          // Remove from profile payload
           delete updateData[field];
         }
       });
@@ -68,43 +142,80 @@ const updateProfile = async (req, res) => {
       if (Object.keys(profData).length > 0) {
         await ProfessionalDetails.findOneAndUpdate(
           { userId: req.user.id },
-          { $set: profData },
-          { new: true, upsert: true }
+          {
+            $set: profData,
+          },
+          {
+            new: true,
+            upsert: true,
+          }
         );
       }
     }
 
-    const profile = await Profile.findOneAndUpdate(
-      { userId: req.user.id },
-      { $set: updateData },
-      { new: true, upsert: true }
-    );
-
-    // Fetch updated professional details to return a complete profile
-    const updatedProfDetails = await ProfessionalDetails.findOne({ userId: req.user.id });
-    
-    // Fetch connections count
-    const Connection = require("../models/Connection");
-    const connectionsCount = await Connection.countDocuments({
-      $or: [{ user1: req.user.id }, { user2: req.user.id }]
-    });
-
-    const profileObj = profile.toObject();
-    profileObj.connections = connectionsCount;
-    
-    if (updatedProfDetails) {
-      profileObj.hireType = updatedProfDetails.hireType;
-      profileObj.industryExperience = updatedProfDetails.industryExperience;
-      profileObj.portfolioDescription = updatedProfDetails.portfolioDescription;
-      profileObj.currentProfession = updatedProfDetails.currentProfession;
-      profileObj.skills = updatedProfDetails.skills;
-      profileObj.company = updatedProfDetails.company;
+    // =========================
+    // SYNC AVATAR TO PROFILE
+    // =========================
+    if (userData.avatar) {
+      updateData.avatar = userData.avatar;
     }
 
-    return res.status(200).json({ success: true, profile: profileObj });
+    // =========================
+    // UPDATE PROFILE
+    // =========================
+    const updatedProfile = await Profile.findOneAndUpdate(
+      {
+        userId: req.user.id,
+      },
+      {
+        $set: updateData,
+      },
+      {
+        new: true,
+        upsert: true,
+      }
+    );
+
+    // =========================
+    // FETCH PROFESSIONAL DETAILS
+    // =========================
+    const professionalDetails =
+      await ProfessionalDetails.findOne({
+        userId: req.user.id,
+      });
+
+    // =========================
+    // CONNECTION COUNT
+    // =========================
+    const connectionsCount = await Connection.countDocuments({
+      $or: [{ user1: req.user.id }, { user2: req.user.id }],
+    });
+
+    // =========================
+    // FINAL RESPONSE
+    // =========================
+    return res.status(200).json({
+      success: true,
+      profile: {
+        ...updatedProfile.toObject(),
+
+        user: updatedUser,
+
+        professionalDetails,
+
+        connections: connectionsCount,
+      },
+    });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    console.error("UPDATE PROFILE ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
+
+
 
 module.exports = { getProfile, updateProfile };
