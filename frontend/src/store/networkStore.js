@@ -4,6 +4,7 @@ import api from "../api/axios";
 export const useNetworkStore = create((set, get) => ({
   networkUsers: [],
   requests: { incoming: [], outgoing: [] },
+  pendingIncomingCount: 0,
   connections: [],
   followedCompanies: [],
   isLoading: false,
@@ -23,6 +24,7 @@ export const useNetworkStore = create((set, get) => ({
         requests: reqRes.data.success
           ? { incoming: reqRes.data.incoming, outgoing: reqRes.data.outgoing }
           : { incoming: [], outgoing: [] },
+        pendingIncomingCount: reqRes.data.success ? reqRes.data.incoming.length : 0,
         connections: connRes.data.success ? connRes.data.connections : [],
         followedCompanies: compRes.data.success ? compRes.data.companies : [],
         networkUsers: usersRes.data.success ? usersRes.data.users : [],
@@ -50,6 +52,17 @@ export const useNetworkStore = create((set, get) => ({
       }
     } catch (err) {
       console.error(err);
+    }
+  },
+
+  fetchPendingIncomingCount: async () => {
+    try {
+      const res = await api.get("/requests/pending");
+      if (res.data.success) {
+        set({ pendingIncomingCount: res.data.incoming?.length || 0 });
+      }
+    } catch (error) {
+      console.error("fetchPendingIncomingCount error:", error);
     }
   },
 
@@ -94,6 +107,11 @@ export const useNetworkStore = create((set, get) => ({
       if (res.data.success) {
         set((state) => ({
           followedCompanies: [...state.followedCompanies, { _id: companyId }],
+          networkUsers: state.networkUsers.map((u) =>
+            u.companyId === companyId
+              ? { ...u, followersCount: (u.followersCount || 0) + 1 }
+              : u
+          ),
         }));
       }
     } catch (err) {
@@ -107,7 +125,14 @@ export const useNetworkStore = create((set, get) => ({
       const res = await api.delete(`/companies/unfollow/${companyId}`);
       if (res.data.success) {
         set((state) => ({
-          followedCompanies: state.followedCompanies.filter((c) => c._id !== companyId),
+          followedCompanies: state.followedCompanies.filter(
+            (c) => c._id !== companyId,
+          ),
+          networkUsers: state.networkUsers.map((u) =>
+            u.companyId === companyId
+              ? { ...u, followersCount: Math.max(0, (u.followersCount || 0) - 1) }
+              : u
+          ),
         }));
       }
     } catch (err) {

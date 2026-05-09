@@ -11,6 +11,8 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { uploadResume, getLatestResume } from "../services/resumeApi";
+import { useEffect } from "react";
 
 const JOBS_DATA = [
   {
@@ -21,7 +23,8 @@ const JOBS_DATA = [
     salary: "$150k - $220k",
     type: "Full-time",
     logo: "https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png",
-    description: "We are looking for an experienced Full Stack Developer to build scalable web applications. You will work across the entire stack, from frontend UI in React to backend services in Node.js and Python. Strong problem-solving skills and system design experience are required."
+    description: "We are looking for an experienced Full Stack Developer to build scalable web applications. You will work across the entire stack, from frontend UI in React to backend services in Node.js and Python. Strong problem-solving skills and system design experience are required.",
+    skills: ["react", "node", "javascript", "python", "api", "sql"]
   },
   {
     id: 2,
@@ -31,7 +34,8 @@ const JOBS_DATA = [
     salary: "$130k - $190k",
     type: "Contract",
     logo: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Meta_Platforms_Inc._logo.svg",
-    description: "Join our core product team to design intuitive and engaging user experiences. You will collaborate closely with product managers and engineers to take features from concept to launch. A strong portfolio demonstrating UI/UX principles and interaction design is a must."
+    description: "Join our core product team to design intuitive and engaging user experiences. You will collaborate closely with product managers and engineers to take features from concept to launch. A strong portfolio demonstrating UI/UX principles and interaction design is a must.",
+    skills: ["figma", "ui", "ux", "design", "prototyping"]
   },
   {
     id: 3,
@@ -41,15 +45,18 @@ const JOBS_DATA = [
     salary: "$140k - $210k",
     type: "Full-time",
     logo: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg",
-    description: "Seeking a Data Scientist to analyze complex datasets and build predictive models. You will help drive business decisions through data insights and machine learning algorithms. Experience with SQL, Python, and statistical modeling is required."
+    description: "Seeking a Data Scientist to analyze complex datasets and build predictive models. You will help drive business decisions through data insights and machine learning algorithms. Experience with SQL, Python, and statistical modeling is required.",
+    skills: ["python", "sql", "data analysis", "machine learning", "statistics"]
   }
 ];
 
 const Jobs = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [resumeName, setResumeName] = useState(null);
+  const [resumeUrl, setResumeUrl] = useState(null);
   const [atsScore, setAtsScore] = useState(null);
   const [summary, setSummary] = useState(null);
+  const [userSkills, setUserSkills] = useState([]);
   const [expandedJobs, setExpandedJobs] = useState([]);
 
   const toggleJob = (id) => {
@@ -58,23 +65,46 @@ const Jobs = () => {
     );
   };
 
-  const handleFileUpload = (e) => {
+  useEffect(() => {
+    const fetchResume = async () => {
+      try {
+        const data = await getLatestResume();
+        if (data.success && data.resume) {
+          setResumeName(data.resume.fileName);
+          setAtsScore(data.resume.atsScore);
+          setSummary(data.resume.highlights);
+          setResumeUrl(data.resume.resumeUrl);
+          setUserSkills(data.resume.skills || []);
+        }
+      } catch (err) {
+        console.log("No previous resume found or error fetching");
+      }
+    };
+    fetchResume();
+  }, []);
+
+  const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
       setIsUploading(true);
       setResumeName(file.name);
       
-      // Simulate ATS analysis
-      setTimeout(() => {
+      try {
+        const data = await uploadResume(file);
+        if (data.success) {
+          setAtsScore(data.resume.atsScore);
+          setSummary(data.resume.highlights);
+          setResumeUrl(data.resume.resumeUrl);
+          setUserSkills(data.resume.skills || []);
+        }
+      } catch (err) {
+        console.error("Upload failed:", err);
+        const errMsg = err.response?.data?.error || "Failed to analyze resume.";
+        alert(`Error: ${errMsg}`);
+        setResumeName(null);
+      } finally {
         setIsUploading(false);
-        setAtsScore(Math.floor(Math.random() * (95 - 75 + 1)) + 75);
-        setSummary([
-          "Expertise in React, Node.js, and Distributed Systems",
-          "5+ years of experience in Full Stack Development",
-          "Strong background in Cloud Infrastructure (AWS/GCP)",
-          "Proven track record of leading cross-functional teams"
-        ]);
-      }, 2000);
+      }
     }
   };
 
@@ -125,24 +155,39 @@ const Jobs = () => {
                         {/* Header: Score & File */}
                         <div className="flex items-center justify-between pb-6">
                           <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 bg-blue-600 text-white rounded-xl flex flex-col items-center justify-center shadow-lg shadow-blue-100">
-                              <span className="text-lg font-black leading-none">{atsScore}</span>
-                              <span className="text-[8px] font-bold uppercase mt-1 opacity-80">Score</span>
+                            <div className="relative">
+                              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-2xl flex flex-col items-center justify-center shadow-xl shadow-blue-200/50 transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+                                <span className="text-xl font-black leading-none">{atsScore}%</span>
+                                <span className="text-[7px] font-bold uppercase mt-1.5 opacity-80 tracking-widest">ATS Score</span>
+                              </div>
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
                             </div>
                             <div>
-                              <h4 className="font-bold text-gray-900">ATS Match Found</h4>
+                              <h4 className="font-bold text-gray-900 text-lg tracking-tight">Match Analysis Ready</h4>
                               <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
                                 <FileText size={12} className="text-blue-600" />
                                 <span className="truncate max-w-[150px]">{resumeName}</span>
                               </div>
                             </div>
                           </div>
-                          <button 
-                            onClick={() => { setResumeName(null); setAtsScore(null); setSummary(null); }}
-                            className="text-xs font-bold text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg transition-colors"
-                          >
-                            Change File
-                          </button>
+                          <div className="flex items-center gap-2">
+                            {resumeUrl && (
+                              <a 
+                                href={resumeUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-[10px] font-black text-gray-400 hover:text-blue-600 transition-colors uppercase tracking-widest px-2 py-1"
+                              >
+                                View File
+                              </a>
+                            )}
+                            <button 
+                              onClick={() => { setResumeName(null); setAtsScore(null); setSummary(null); setResumeUrl(null); }}
+                              className="text-xs font-bold text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg transition-colors"
+                            >
+                              Change File
+                            </button>
+                          </div>
                         </div>
 
                         {/* Resume Summary Section */}
@@ -204,8 +249,10 @@ const Jobs = () => {
                         </div>
                         <div className="flex items-center gap-3">
                           {atsScore && (
-                            <div className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-[10px] font-black">
-                              {atsScore - index * 2}% Match
+                            <div className="flex items-center gap-2">
+                              <div className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter">
+                                {Math.round((job.skills.filter(s => userSkills.includes(s)).length / job.skills.length) * 100) || 0}% Match
+                              </div>
                             </div>
                           )}
                           <button className="text-gray-400 hover:text-blue-600 transition-colors p-1 rounded-full hover:bg-gray-50">

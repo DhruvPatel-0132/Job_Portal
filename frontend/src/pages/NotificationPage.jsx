@@ -1,71 +1,53 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Bell,
-  MoreHorizontal,
-  UserPlus,
-  Briefcase,
-  TrendingUp,
-  ChevronRight,
-} from "lucide-react";
+import { Bell, UserPlus, CheckCircle2, Building2 } from "lucide-react";
 import SidebarProfile from "../components/dashboard/SidebarProfile";
 import Footer from "../components/dashboard/Footer";
 import { useProfileStore } from "../store/profileStore";
+import { useNotificationStore } from "../store/notificationStore";
 
-// Static dummy data for informative notifications
-const notificationsData = [
-  {
-    id: 1,
-    type: "hiring",
-    title: "Hiring Update",
-    content:
-      "**Google** is hiring for **Senior React Developer** roles. Check out the latest openings.",
-    time: "2h",
-    isRead: false,
-    avatar: "/company.svg",
-    action: "View Job",
-  },
-  {
-    id: 2,
-    type: "post",
-    title: "New Post",
-    content:
-      "**Jane Smith** shared a new post: 'Excited to share our latest project deployment using Vite and Tailwind.'",
-    time: "5h",
-    isRead: true,
-    avatar: "/avatar.svg",
-    action: "View Post",
-  },
-  {
-    id: 3,
-    type: "hiring",
-    title: "Hiring Update",
-    content:
-      "**Microsoft** started hiring for **Full Stack Engineer** positions in your area.",
-    time: "1d",
-    isRead: true,
-    avatar: "/company.svg",
-    action: "View Job",
-  },
-  {
-    id: 4,
-    type: "post",
-    title: "New Post",
-    content:
-      "**Michael Brown** uploaded a new post: 'Tips for mastering React 19 features.'",
-    time: "1d",
-    isRead: true,
-    avatar: "/avatar.svg",
-    action: "View Post",
-  },
-];
+const getNotificationMessage = (notification) => {
+  const senderName = notification?.sender?.fullName || "Someone";
 
-const NotificationItem = ({ notification }) => {
+  switch (notification.type) {
+    case "CONNECTION_REQUEST":
+      return `${senderName} sent you a connection request.`;
+    case "CONNECTION_ACCEPTED":
+      return `${senderName} accepted your connection request.`;
+    case "FOLLOW":
+      return `${senderName} started following your company.`;
+    case "POST":
+      return `${senderName} published a new post.`;
+    default:
+      return `${senderName} sent you a notification.`;
+  }
+};
+
+const formatTimeAgo = (dateValue) => {
+  const now = new Date();
+  const date = new Date(dateValue);
+  const diffInSec = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 1000));
+
+  if (diffInSec < 60) return "Just now";
+  if (diffInSec < 3600) return `${Math.floor(diffInSec / 60)}m`;
+  if (diffInSec < 86400) return `${Math.floor(diffInSec / 3600)}h`;
+  return `${Math.floor(diffInSec / 86400)}d`;
+};
+
+const getNotificationIcon = (type) => {
+  if (type === "CONNECTION_REQUEST") return <UserPlus className="w-3.5 h-3.5 text-blue-600" />;
+  if (type === "CONNECTION_ACCEPTED") return <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />;
+  if (type === "FOLLOW") return <Building2 className="w-3.5 h-3.5 text-purple-600" />;
+  return <Bell className="w-3.5 h-3.5 text-gray-600" />;
+};
+
+const NotificationItem = ({ notification, onClick }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ backgroundColor: "rgba(243, 244, 246, 0.5)" }}
+      onClick={onClick}
       className={`p-4 flex gap-4 border-b border-gray-100 transition-all cursor-pointer relative group ${!notification.isRead ? "bg-blue-50/30" : "bg-white"}`}
     >
       {!notification.isRead && (
@@ -74,44 +56,26 @@ const NotificationItem = ({ notification }) => {
 
       <div className="relative flex-shrink-0">
         <img
-          src={notification.avatar || "/avatar.svg"}
+          src={notification.sender?.avatar || "/avatar.svg"}
           alt="Avatar"
           className="w-14 h-14 rounded-full object-cover border border-gray-100 shadow-sm bg-white"
         />
-        <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-md border border-gray-50 flex items-center justify-center">
-          {notification.icon}
-        </div>
+        {!notification.isRead && (
+          <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-md border border-gray-50 flex items-center justify-center">
+            {getNotificationIcon(notification.type)}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-start gap-4">
-          <div className="text-[14px] text-gray-700 leading-snug">
-            <span
-              dangerouslySetInnerHTML={{
-                __html: notification.content.replace(
-                  /\*\*(.*?)\*\*/g,
-                  '<span class="font-bold text-gray-900">$1</span>',
-                ),
-              }}
-            />
-          </div>
+          <p className="text-[14px] text-gray-700 leading-snug">{getNotificationMessage(notification)}</p>
           <div className="flex flex-col items-end gap-2 flex-shrink-0">
             <span className="text-[12px] text-gray-500 font-medium whitespace-nowrap">
-              {notification.time}
+              {formatTimeAgo(notification.createdAt)}
             </span>
-            <button className="p-1.5 hover:bg-gray-200 rounded-full transition-colors text-gray-400 group-hover:text-gray-600">
-              <MoreHorizontal className="w-5 h-5" />
-            </button>
           </div>
         </div>
-
-        {notification.action && (
-          <div className="mt-3">
-            <button className="px-5 py-1.5 rounded-full text-sm font-bold border border-blue-600 text-blue-600 hover:bg-blue-50 transition-all duration-200">
-              {notification.action}
-            </button>
-          </div>
-        )}
       </div>
     </motion.div>
   );
@@ -120,6 +84,8 @@ const NotificationItem = ({ notification }) => {
 const NotificationPage = () => {
   const [activeTab, setActiveTab] = useState("ALL");
   const { profile, fetchProfile } = useProfileStore();
+  const { notifications, isLoading, fetchNotifications, markAsRead, markAllAsRead, fetchUnreadCount } =
+    useNotificationStore();
 
   useEffect(() => {
     if (!profile) {
@@ -127,7 +93,24 @@ const NotificationPage = () => {
     }
   }, [profile, fetchProfile]);
 
-  const tabs = ["ALL", "Posts"];
+  useEffect(() => {
+    const category = activeTab === "CONNECTIONS" ? "CONNECTION" : undefined;
+    fetchNotifications(category);
+  }, [activeTab, fetchNotifications]);
+
+  const tabs = [
+    { key: "ALL", label: "All" },
+    { key: "CONNECTIONS", label: "Connections" },
+  ];
+
+  const filteredNotifications = useMemo(() => {
+    if (activeTab === "CONNECTIONS") {
+      return notifications.filter((notification) => notification.category === "CONNECTION");
+    }
+    return notifications;
+  }, [activeTab, notifications]);
+
+  const unreadInView = filteredNotifications.filter((notification) => !notification.isRead).length;
 
   return (
     <div className="min-h-screen bg-[#f3f2ef]">
@@ -145,23 +128,33 @@ const NotificationPage = () => {
               {/* Header & Tabs */}
               <div className="border-b border-gray-100">
                 <div className="px-4 py-3">
-                  <h1 className="text-xl font-bold text-gray-900">
-                    Notifications
-                  </h1>
+                  <div className="flex items-center justify-between gap-3">
+                    <h1 className="text-xl font-bold text-gray-900">Notifications</h1>
+                    <button
+                      onClick={async () => {
+                        await markAllAsRead();
+                        fetchUnreadCount();
+                      }}
+                      disabled={unreadInView === 0}
+                      className="text-xs font-semibold text-black hover:underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
+                    >
+                      Mark all as read
+                    </button>
+                  </div>
                 </div>
                 <div className="flex px-4 overflow-x-auto no-scrollbar">
                   {tabs.map((tab) => (
                     <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
+                      key={tab.key}
+                      onClick={() => setActiveTab(tab.key)}
                       className={`px-4 py-3 text-sm font-bold transition-all relative whitespace-nowrap ${
-                        activeTab === tab
+                        activeTab === tab.key
                           ? "text-black"
                           : "text-gray-500 hover:text-gray-900"
                       }`}
                     >
-                      {tab}
-                      {activeTab === tab && (
+                      {tab.label}
+                      {activeTab === tab.key && (
                         <motion.div
                           layoutId="activeTabUnderline"
                           className="absolute bottom-0 left-0 right-0 h-[2px] bg-black rounded-t-full"
@@ -180,21 +173,22 @@ const NotificationPage = () => {
               {/* Notification List */}
               <div className="flex flex-col min-h-[300px]">
                 <AnimatePresence mode="popLayout">
-                  {notificationsData
-                    .filter((n) => {
-                      if (activeTab === "Posts") return n.type === "post";
-                      return n.type === "post" || n.type === "hiring";
-                    })
-                    .map((notif) => (
-                      <NotificationItem key={notif.id} notification={notif} />
-                    ))}
+                  {filteredNotifications.map((notif) => (
+                    <NotificationItem
+                      key={notif._id}
+                      notification={notif}
+                      onClick={async () => {
+                        if (!notif.isRead) {
+                          await markAsRead(notif._id);
+                          fetchUnreadCount();
+                        }
+                      }}
+                    />
+                  ))}
                 </AnimatePresence>
 
                 {/* Empty State */}
-                {notificationsData.filter((n) => {
-                  if (activeTab === "Posts") return n.type === "post";
-                  return n.type === "post" || n.type === "hiring";
-                }).length === 0 && (
+                {!isLoading && filteredNotifications.length === 0 && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -207,18 +201,13 @@ const NotificationPage = () => {
                       No notifications yet
                     </h3>
                     <p className="text-sm text-gray-500">
-                      Informative updates and connection posts will appear here.
+                      Your latest updates will appear here.
                     </p>
                   </motion.div>
                 )}
-              </div>
-
-              {/* Load More */}
-              <div className="p-4 border-t border-gray-50 text-center bg-gray-50/30">
-                <button className="px-4 py-1.5 text-[14px] font-bold text-blue-600 hover:bg-blue-50 rounded-full transition-all flex items-center justify-center mx-auto gap-1">
-                  Load earlier notifications
-                  <ChevronRight className="w-4 h-4" />
-                </button>
+                {isLoading && (
+                  <div className="py-20 text-center text-sm text-gray-500">Loading notifications...</div>
+                )}
               </div>
             </div>
           </div>

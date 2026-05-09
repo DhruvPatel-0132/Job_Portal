@@ -10,12 +10,16 @@ import { useAuthStore } from "../store/authStore";
 import SidebarContent from "../components/dashboard/SidebarContent";
 
 const Dashboard = () => {
-  const user = useAuthStore((state) => state.user);
-  const profile = useAuthStore((state) => state.profile); // 🔥 ADD
-  const company = useAuthStore((state) => state.company);
+  const { user, profile, company, token } = useAuthStore();
 
-  // console.log("🔥 DASHBOARD USER:", user);
-  // console.log("🔥 DASHBOARD PROFILE:", profile); // 🔥 DEBUG
+  // Show loading while user data is being fetched on refresh
+  if (token && !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <>

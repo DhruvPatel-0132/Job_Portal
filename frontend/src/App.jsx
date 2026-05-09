@@ -15,6 +15,7 @@ import MainLayout from "./components/MainLayout";
 import { useAuthStore } from "./store/authStore";
 import NotificationPage from "./pages/NotificationPage";
 import MyNetwork from "./pages/MyNetwork";
+import { useEffect } from "react";
 
 /* 🔥 PRIVATE ROUTE (ZUSTAND) */
 function PrivateRoute({ children }) {
@@ -33,6 +34,15 @@ function ProfileRouteWrapper() {
 }
 
 export default function App() {
+  const { fetchUser, token } = useAuthStore();
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+    if (storedToken || token) {
+      fetchUser();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <Routes>
       <Route path="/" element={<Login />} />
