@@ -1,7 +1,7 @@
 const ConnectRequest = require("../models/ConnectRequest");
 const Connection = require("../models/Connection");
 const User = require("../models/User");
-const mongoose = require("mongoose");
+const { createNotification } = require("../services/notification.service");
 
 exports.sendRequest = async (req, res) => {
   try {
@@ -41,6 +41,14 @@ exports.sendRequest = async (req, res) => {
       recipientId,
     });
 
+    await createNotification({
+      recipientId,
+      senderId,
+      type: "CONNECTION_REQUEST",
+      category: "CONNECTION",
+      entityId: newRequest._id,
+    });
+
     res.status(201).json({ success: true, message: "Request sent", request: newRequest });
   } catch (error) {
     console.error("sendRequest error:", error);
@@ -67,6 +75,14 @@ exports.acceptRequest = async (req, res) => {
     await Connection.create({
       user1: request.senderId,
       user2: request.recipientId,
+    });
+
+    await createNotification({
+      recipientId: request.senderId,
+      senderId: request.recipientId,
+      type: "CONNECTION_ACCEPTED",
+      category: "CONNECTION",
+      entityId: request._id,
     });
 
     // Remove the request (or mark as accepted, but prompt says "Remove request")

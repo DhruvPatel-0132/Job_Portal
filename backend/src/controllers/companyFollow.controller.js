@@ -1,5 +1,6 @@
 const CompanyFollower = require("../models/CompanyFollower");
 const Company = require("../models/Company");
+const { createNotification } = require("../services/notification.service");
 
 exports.followCompany = async (req, res) => {
   try {
@@ -15,7 +16,21 @@ exports.followCompany = async (req, res) => {
     await CompanyFollower.create({ userId, companyId });
 
     // Update followers count
-    await Company.findByIdAndUpdate(companyId, { $inc: { followersCount: 1 } });
+    const company = await Company.findByIdAndUpdate(
+      companyId,
+      { $inc: { followersCount: 1 } },
+      { new: true }
+    ).select("createdBy");
+
+    if (company?.createdBy) {
+      await createNotification({
+        recipientId: company.createdBy,
+        senderId: userId,
+        type: "FOLLOW",
+        category: "SOCIAL",
+        entityId: companyId,
+      });
+    }
 
     res.status(200).json({ success: true, message: "Company followed" });
   } catch (error) {

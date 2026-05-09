@@ -11,14 +11,18 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import { useProfileStore } from "../store/profileStore";
+import { useNotificationStore } from "../store/notificationStore";
+import { useNetworkStore } from "../store/networkStore";
 
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const location = useLocation();
 
-  const { user, company, profile: authProfile } = useAuthStore();
+  const { user, company, profile: authProfile, token } = useAuthStore();
   const { profile: storeProfile, fetchProfile, clearProfile } = useProfileStore();
+  const { unreadCount, fetchUnreadCount, fetchNotifications } = useNotificationStore();
+  const { pendingIncomingCount, fetchPendingIncomingCount } = useNetworkStore();
 
   const profile = storeProfile || authProfile;
 
@@ -32,6 +36,24 @@ const Navbar = () => {
       fetchProfile();
     }
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const authToken = token || localStorage.getItem("token");
+
+  useEffect(() => {
+    if (authToken) {
+      fetchUnreadCount();
+      fetchNotifications();
+      fetchPendingIncomingCount();
+
+      const intervalId = setInterval(() => {
+        fetchUnreadCount();
+        fetchNotifications();
+        fetchPendingIncomingCount();
+      }, 15000);
+
+      return () => clearInterval(intervalId);
+    }
+  }, [authToken, fetchUnreadCount, fetchNotifications, fetchPendingIncomingCount]);
 
   const isCompany = user?.role === "company";
 
@@ -103,6 +125,7 @@ const Navbar = () => {
               label="My Network"
               to="/network"
               active={location.pathname === "/network"}
+              badgeCount={pendingIncomingCount}
             />
             <NavItem
               icon={<Briefcase className="h-5 w-5" />}
@@ -115,6 +138,7 @@ const Navbar = () => {
               label="Notifications"
               to="/notification"
               active={location.pathname === "/notification"}
+              badgeCount={unreadCount}
             />
 
             {/* Vertical divider */}
@@ -209,7 +233,7 @@ const Navbar = () => {
   );
 };
 
-const NavItem = ({ icon, label, to, active }) => (
+const NavItem = ({ icon, label, to, active, badgeCount = 0 }) => (
   <Link
     to={to}
     className={`flex flex-col items-center justify-center px-4 border-b-2 transition-colors
@@ -219,7 +243,14 @@ const NavItem = ({ icon, label, to, active }) => (
           : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-900"
       }`}
   >
-    {icon}
+    <div className="relative">
+      {icon}
+      {badgeCount > 0 && (
+        <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 bg-black text-white text-[10px] rounded-full flex items-center justify-center leading-none">
+          {badgeCount > 99 ? "99+" : badgeCount}
+        </span>
+      )}
+    </div>
     <span className="text-xs mt-0.5 hidden md:block">{label}</span>
   </Link>
 );

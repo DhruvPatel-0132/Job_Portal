@@ -4,6 +4,7 @@ import api from "../api/axios";
 export const useNetworkStore = create((set, get) => ({
   networkUsers: [],
   requests: { incoming: [], outgoing: [] },
+  pendingIncomingCount: 0,
   connections: [],
   followedCompanies: [],
   isLoading: false,
@@ -23,6 +24,7 @@ export const useNetworkStore = create((set, get) => ({
         requests: reqRes.data.success
           ? { incoming: reqRes.data.incoming, outgoing: reqRes.data.outgoing }
           : { incoming: [], outgoing: [] },
+        pendingIncomingCount: reqRes.data.success ? reqRes.data.incoming.length : 0,
         connections: connRes.data.success ? connRes.data.connections : [],
         followedCompanies: compRes.data.success ? compRes.data.companies : [],
         networkUsers: usersRes.data.success ? usersRes.data.users : [],
@@ -50,6 +52,17 @@ export const useNetworkStore = create((set, get) => ({
       }
     } catch (err) {
       console.error(err);
+    }
+  },
+
+  fetchPendingIncomingCount: async () => {
+    try {
+      const res = await api.get("/requests/pending");
+      if (res.data.success) {
+        set({ pendingIncomingCount: res.data.incoming?.length || 0 });
+      }
+    } catch (error) {
+      console.error("fetchPendingIncomingCount error:", error);
     }
   },
 
