@@ -98,12 +98,14 @@ const Navbar = () => {
               to="/dashboard"
               active={location.pathname === "/dashboard"}
             />
-            <NavItem
-              icon={<Users className="h-5 w-5" />}
-              label="My Network"
-              to="/network"
-              active={location.pathname === "/network"}
-            />
+            {!isCompany && (
+              <NavItem
+                icon={<Users className="h-5 w-5" />}
+                label="My Network"
+                to="/network"
+                active={location.pathname === "/network"}
+              />
+            )}
             <NavItem
               icon={<Briefcase className="h-5 w-5" />}
               label="Jobs"

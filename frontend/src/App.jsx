@@ -33,6 +33,15 @@ function ProfileRouteWrapper() {
   return user?.role === "company" ? <CompanyProfile /> : <Profile />;
 }
 
+// Wrapper for Network Route to hide for company
+function NetworkRouteWrapper() {
+  const user = useAuthStore((state) => state.user);
+  if (user?.role === "company") {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <MyNetwork />;
+}
+
 export default function App() {
   const { fetchUser, token } = useAuthStore();
 
@@ -62,7 +71,7 @@ export default function App() {
         <Route path="/profile" element={<ProfileRouteWrapper />} />
         <Route path="/jobs" element={<Jobs />} />
         <Route path="/notification" element={<NotificationPage />} />
-        <Route path="/network" element={<MyNetwork />} />
+        <Route path="/network" element={<NetworkRouteWrapper />} />
       </Route>
     </Routes>
   );
