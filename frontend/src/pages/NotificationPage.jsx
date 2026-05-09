@@ -5,6 +5,7 @@ import SidebarProfile from "../components/dashboard/SidebarProfile";
 import Footer from "../components/dashboard/Footer";
 import { useProfileStore } from "../store/profileStore";
 import { useNotificationStore } from "../store/notificationStore";
+import SidebarContent from "../components/dashboard/SidebarContent";
 
 const getNotificationMessage = (notification) => {
   const senderName = notification?.sender?.fullName || "Someone";
@@ -118,7 +119,7 @@ const NotificationPage = () => {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left Sidebar */}
           <div className="w-full lg:w-[225px] flex-shrink-0 space-y-3 self-start lg:sticky lg:top-[72px]">
-            <SidebarProfile profile={profile} />
+            <SidebarContent />
           </div>
 
           {/* Center Feed */}

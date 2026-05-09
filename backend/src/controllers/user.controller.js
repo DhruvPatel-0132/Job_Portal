@@ -142,7 +142,7 @@ exports.getAllUsers = async (req, res) => {
     // Fetch companies for company users
     const companyUsers = users.filter(u => u.role === "company");
     const companyUserIds = companyUsers.map(u => u._id);
-    const companies = await require("../models/Company").find({ createdBy: { $in: companyUserIds } }).select("_id createdBy name logo banner tagline");
+    const companies = await require("../models/Company").find({ createdBy: { $in: companyUserIds } }).select("_id createdBy name logo banner tagline followersCount");
 
     // Map profiles to users
     const usersWithProfiles = users.map(user => {
@@ -157,7 +157,8 @@ exports.getAllUsers = async (req, res) => {
         avatar: user.role === "company" && userCompany?.logo ? userCompany.logo : (user.avatar || userProfile?.avatar || "/avatar.svg"),
         headline: user.role === "company" && userCompany?.tagline ? userCompany.tagline : (userProfile?.headline || "No headline available"),
         banner: user.role === "company" && userCompany?.banner ? userCompany.banner : (userProfile?.banner || ""),
-        companyId: userCompany ? userCompany._id : null
+        companyId: userCompany ? userCompany._id : null,
+        followersCount: userCompany?.followersCount || 0
       };
     });
 
