@@ -44,7 +44,6 @@ const getProfile = async (req, res) => {
   }
 };
 
-// Update current user profile
 const updateProfile = async (req, res) => {
   try {
     // =========================
@@ -62,12 +61,14 @@ const updateProfile = async (req, res) => {
     delete updateData.isOnboarded;
 
     // =========================
-    // VALIDATION
+    // GET CURRENT USER
     // =========================
-    if (updateData.email && updateData.phone) {
-      return res.status(400).json({
+    const existingUser = await User.findById(req.user.id);
+
+    if (!existingUser) {
+      return res.status(404).json({
         success: false,
-        message: "Update either email or phone, not both",
+        message: "User not found",
       });
     }
 
@@ -85,14 +86,52 @@ const updateProfile = async (req, res) => {
       }
     });
 
-    // Sync email -> emailOrPhone
-    if (updateData.email) {
-      userData.emailOrPhone = updateData.email;
+    // =========================
+    // EMAIL / PHONE LOGIC
+    // =========================
+
+    /*
+      IMPORTANT RULE:
+
+      If user originally registered with EMAIL:
+      -> emailOrPhone should ALWAYS remain email
+      -> adding/updating phone should NOT change login field
+
+      If user originally registered with PHONE:
+      -> emailOrPhone should ALWAYS remain phone
+      -> adding/updating email should NOT change login field
+    */
+
+    const currentLogin = existingUser.emailOrPhone;
+
+    const isEmailLogin = currentLogin.includes("@");
+
+    // Store extra fields in profile only
+    if (updateData.email !== undefined) {
+      updateData.email = updateData.email;
     }
 
-    // Sync phone -> emailOrPhone
-    if (updateData.phone) {
-      userData.emailOrPhone = updateData.phone;
+    if (updateData.phone !== undefined) {
+      updateData.phone = updateData.phone;
+    }
+
+    // ONLY update login credential type user registered with
+    if (isEmailLogin) {
+      // User registered with EMAIL
+
+      if (updateData.email) {
+        userData.emailOrPhone = updateData.email;
+      }
+
+      // phone update will NOT affect login
+    } else {
+      // User registered with PHONE
+
+      if (updateData.phone) {
+        userData.emailOrPhone = updateData.phone;
+      }
+
+      // email update will NOT affect login
     }
 
     // =========================
@@ -107,13 +146,6 @@ const updateProfile = async (req, res) => {
         new: true,
       }
     ).select("-password");
-
-    if (!updatedUser) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
 
     // =========================
     // PROFESSIONAL DETAILS
@@ -215,7 +247,6 @@ const updateProfile = async (req, res) => {
     });
   }
 };
-
 
 
 module.exports = { getProfile, updateProfile };

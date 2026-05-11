@@ -21,7 +21,7 @@ const PostCard = ({ post }) => {
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="mt-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100/50 group cursor-pointer hover:bg-blue-50 transition-colors"
+            className="p-4 bg-blue-50/50 rounded-xl border border-blue-100/50 group cursor-pointer hover:bg-blue-50 transition-colors"
           >
             <div className="flex justify-between items-start">
               <div className="flex-1">
@@ -33,13 +33,15 @@ const PostCard = ({ post }) => {
                   <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {post.referenceId.location}</span>
                   <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {post.referenceId.employmentType}</span>
                 </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {post.referenceId.skillsRequired?.map((skill, i) => (
-                    <span key={i} className="px-2.5 py-1 bg-white border border-blue-200 text-blue-600 text-[10px] font-bold rounded-lg shadow-sm">
-                      {skill}
-                    </span>
-                  ))}
-                </div>
+                {post.referenceId.skillsRequired && post.referenceId.skillsRequired.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {post.referenceId.skillsRequired.map((skill, i) => (
+                      <span key={i} className="px-2.5 py-1 bg-white border border-blue-200 text-blue-600 text-[10px] font-bold rounded-lg shadow-sm">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -57,7 +59,7 @@ const PostCard = ({ post }) => {
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="mt-3 p-4 bg-gray-50 rounded-xl border border-gray-200 group"
+            className="p-4 bg-gray-50 rounded-xl border border-gray-200 group"
           >
             <h4 className="font-bold text-gray-900 flex items-center gap-2 group-hover:text-blue-600 transition-colors">
               <Code className="w-4 h-4 text-indigo-600" />
@@ -72,13 +74,15 @@ const PostCard = ({ post }) => {
                   <ExternalLink className="w-3 h-3" /> Live Demo
                 </a>
               )}
-              <div className="flex gap-2">
-                {post.referenceId.techStack?.map((tech, i) => (
-                  <span key={i} className="text-[10px] bg-white border px-2 py-0.5 rounded text-gray-500 font-medium">
-                    {tech.name}
-                  </span>
-                ))}
-              </div>
+              {post.referenceId.techStack && post.referenceId.techStack.length > 0 && (
+                <div className="flex gap-2">
+                  {post.referenceId.techStack.map((tech, i) => (
+                    <span key={i} className="text-[10px] bg-white border px-2 py-0.5 rounded text-gray-500 font-medium">
+                      {tech.name || tech}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </motion.div>
         );
@@ -88,7 +92,7 @@ const PostCard = ({ post }) => {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-3 overflow-hidden rounded-xl border border-gray-200 hover:shadow-lg transition-all cursor-pointer group bg-white"
+            className="overflow-hidden rounded-xl border border-gray-200 hover:shadow-lg transition-all cursor-pointer group bg-white"
           >
             {post.referenceId.bannerImage && (
               <div className="relative h-40 overflow-hidden">
@@ -103,9 +107,11 @@ const PostCard = ({ post }) => {
               <div className="flex items-center gap-3 mt-3 text-xs text-gray-400 font-medium">
                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {post.referenceId.readTime} min read</span>
                 <span>•</span>
-                <div className="flex gap-2">
-                  {post.referenceId.tags?.map((tag, i) => <span key={i}>#{tag}</span>)}
-                </div>
+                {post.referenceId.tags && post.referenceId.tags.length > 0 && (
+                  <div className="flex gap-2">
+                    {post.referenceId.tags.map((tag, i) => <span key={i}>#{tag}</span>)}
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
@@ -116,7 +122,7 @@ const PostCard = ({ post }) => {
           <motion.div
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            className="mt-3 p-4 bg-amber-50/50 rounded-xl border border-amber-100 flex gap-4 items-center"
+            className="p-4 bg-amber-50/50 rounded-xl border border-amber-100 flex gap-4 items-center"
           >
             <div className="w-14 h-14 bg-amber-100 rounded-xl flex items-center justify-center shrink-0 shadow-inner">
               <Award className="w-8 h-8 text-amber-600" />
@@ -138,7 +144,7 @@ const PostCard = ({ post }) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -2 }}
+      // whileHover={{ y: -2 }}
       transition={{ duration: 0.3 }}
       className="bg-white rounded-xl border border-gray-200 mb-4 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
     >
@@ -173,14 +179,18 @@ const PostCard = ({ post }) => {
       </div>
 
       {/* Post Content */}
-      <div className="px-4 pb-3">
-        <p className="text-[14.5px] leading-relaxed text-gray-800 whitespace-pre-line font-normal">
-          {post.content}
-        </p>
+      {(post.content || post.referenceId) && (
+        <div className="px-4 pb-3 space-y-3">
+          {post.content && (
+            <p className="text-[14.5px] leading-relaxed text-gray-800 whitespace-pre-line font-normal">
+              {post.content}
+            </p>
+          )}
 
-        {/* Render polymorphic content based on postType */}
-        {renderSpecializedContent()}
-      </div>
+          {/* Render polymorphic content based on postType */}
+          {renderSpecializedContent()}
+        </div>
+      )}
 
       {/* Post Image (optional - for media posts) */}
       {post.image && (

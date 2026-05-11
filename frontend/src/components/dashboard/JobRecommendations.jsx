@@ -120,14 +120,21 @@ const JobRecommendations = () => {
 
         <div className="mt-5 pt-3 border-t border-gray-100">
           <motion.button 
-            whileHover={{ scale: 1.01, backgroundColor: "#f9fafb" }}
+            variants={{
+              hovered: { scale: 1.01, backgroundColor: "#f9fafb" }
+            }}
+            whileHover="hovered"
             whileTap={{ scale: 0.99 }}
             className="text-gray-500 hover:text-gray-900 w-full rounded-xl py-2 text-xs font-bold transition-all flex items-center justify-center gap-1.5 border border-transparent hover:border-gray-200"
           >
             Show all
             <motion.svg
-              animate={{ x: [0, 4, 0] }}
-              transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+              variants={{
+                hovered: { 
+                  x: [0, 4, 0],
+                  transition: { repeat: Infinity, duration: 1.5, ease: "easeInOut" } 
+                }
+              }}
               className="w-4 h-4"
               fill="currentColor"
               viewBox="0 0 20 20"

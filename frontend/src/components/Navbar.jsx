@@ -126,6 +126,7 @@ const Navbar = () => {
                 label="My Network"
                 to="/network"
                 active={location.pathname === "/network"}
+                badgeCount={pendingIncomingCount}
               />
             )}
             <NavItem
