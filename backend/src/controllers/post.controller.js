@@ -1,4 +1,4 @@
-const { createPost, getPosts } = require("../services/post.service");
+const { createPost, getPosts, getUserPosts } = require("../services/post.service");
 
 const createPostController = async (req, res) => {
   try {
@@ -30,7 +30,22 @@ const getPostsController = async (req, res) => {
   }
 };
 
+const getUserPostsController = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { status, response } = await getUserPosts(userId);
+    return res.status(status).json(response);
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createPostController,
   getPostsController,
+  getUserPostsController,
 };

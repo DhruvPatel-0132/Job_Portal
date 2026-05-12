@@ -5,6 +5,7 @@ import PostHeader from "./PostHeader";
 import PostFooter from "./PostFooter";
 import PostFormRenderer from "./PostFormRenderer";
 import usePostStore from "../../store/postStore";
+import { uploadToCloudinary } from "../../utils/cloudinary";
 
 
 const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "regular" }) => {
@@ -38,6 +39,9 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
     title: "", type: "certification", issuer: "", date: "", credentialUrl: "",
     expiryDate: "", doesNotExpire: false, credentialId: "", description: ""
   });
+  
+  const [isMediaUploading, setIsMediaUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
     if (isOpen) setPostType(initialType);
@@ -53,38 +57,99 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
 
     if (!content.trim() && selectedMedia.length === 0 && !hasSpecializedData) return;
 
+    setIsMediaUploading(true);
+    setUploadProgress(10);
 
-    const postData = {
-      postType,
-      content,
-      media: selectedMedia.map(m => ({
-        url: m.url, 
-        type: m.type
-      })),
-      jobData: postType === "job_post" ? jobData : null,
-      projectData: postType === "project" ? projectData : null,
-      articleData: postType === "article" ? articleData : null,
-      achievementData: postType === "achievement" ? achievementData : null,
-    };
+    try {
+      let finalObjectId = null;
 
+      // 1. Upload Main Media
+      const uploadedMedia = await Promise.all(
+        selectedMedia.map(async (m, index) => {
+          if (m.file) {
+            const result = await uploadToCloudinary(m.file, "post", postType, finalObjectId);
+            if (!finalObjectId) finalObjectId = result.objectId;
+            setUploadProgress(prev => Math.min(prev + 20, 90));
+            return { url: result.url, type: m.type, publicId: result.publicId };
+          }
+          return { url: m.url, type: m.type };
+        })
+      );
 
-    const result = await createPost(postData);
-    if (result.success) {
-      setContent("");
-      setSelectedMedia([]);
-      onClose();
+      // 2. Upload Project Images
+      let uploadedProjectImages = [];
+      if (postType === "project" && projectData.images.length > 0) {
+        uploadedProjectImages = await Promise.all(
+          projectData.images.map(async (img) => {
+            if (img.file) {
+              const result = await uploadToCloudinary(img.file, "post", "project", finalObjectId);
+              if (!finalObjectId) finalObjectId = result.objectId;
+              setUploadProgress(prev => Math.min(prev + 20, 90));
+              return { url: result.url, publicId: result.publicId };
+            }
+            return { url: img.url };
+          })
+        );
+      }
+
+      // 3. Upload Article Cover
+      let uploadedArticleCover = null;
+      if (postType === "article" && articleData.coverImage?.file) {
+        const result = await uploadToCloudinary(articleData.coverImage.file, "post", "article", finalObjectId);
+        if (!finalObjectId) finalObjectId = result.objectId;
+        setUploadProgress(prev => Math.min(prev + 20, 90));
+        uploadedArticleCover = { url: result.url, publicId: result.publicId };
+      } else if (articleData.coverImage?.url) {
+        uploadedArticleCover = { url: articleData.coverImage.url };
+      }
+
+      setUploadProgress(95);
+
+      const postData = {
+        _id: finalObjectId, // Use the pre-generated ID
+        postType,
+        content,
+        media: uploadedMedia,
+        jobData: postType === "job_post" ? jobData : null,
+        projectData: postType === "project" ? { ...projectData, images: uploadedProjectImages } : null,
+        articleData: postType === "article" ? { ...articleData, coverImage: uploadedArticleCover } : null,
+        achievementData: postType === "achievement" ? achievementData : null,
+      };
+
+      const result = await createPost(postData);
+      setUploadProgress(100);
+      if (result.success) {
+        setContent("");
+        setSelectedMedia([]);
+        setProjectData(prev => ({ ...prev, images: [] }));
+        setArticleData(prev => ({ ...prev, coverImage: null }));
+        onClose();
+      }
+    } catch (error) {
+      console.error("Failed to upload media or create post:", error);
+      alert("Something went wrong while uploading media. Please try again.");
+    } finally {
+      setIsMediaUploading(false);
+      setUploadProgress(0);
     }
   };
 
 
   const handleMediaSelect = (e) => {
     const files = Array.from(e.target.files);
-    const newMedia = files.map(file => ({
+    if (files.length === 0) return;
+
+    // Only allow one media item
+    const file = files[0];
+    const newMedia = [{
       file,
       url: URL.createObjectURL(file),
       type: file.type.startsWith('image/') ? 'image' : 'video'
-    }));
-    setSelectedMedia(prev => [...prev, ...newMedia]);
+    }];
+    
+    // Revoke old URLs to prevent memory leaks
+    selectedMedia.forEach(m => URL.revokeObjectURL(m.url));
+    setSelectedMedia(newMedia);
   };
 
   const removeMedia = (index) => {
@@ -98,13 +163,19 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
 
   const handleProjectImageSelect = (e) => {
     const files = Array.from(e.target.files);
-    const newImages = files.map(file => ({
+    if (files.length === 0) return;
+
+    // Only allow one project image
+    const file = files[0];
+    const newImages = [{
       file,
       url: URL.createObjectURL(file)
-    }));
+    }];
+    
+    projectData.images.forEach(img => URL.revokeObjectURL(img.url));
     setProjectData(prev => ({
       ...prev,
-      images: [...prev.images, ...newImages]
+      images: newImages
     }));
   };
 
@@ -215,6 +286,58 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
           >
             <PostHeader postType={postType} onClose={onClose} />
 
+            {/* Uploading Overlay */}
+            <AnimatePresence>
+              {isMediaUploading && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 z-[110] bg-white/70 backdrop-blur-md flex flex-col items-center justify-center p-6"
+                >
+                  <div className="w-full max-w-[300px] space-y-4 text-center">
+                    <div className="relative w-20 h-20 mx-auto">
+                      <svg className="w-full h-full" viewBox="0 0 100 100">
+                        <circle
+                          className="text-gray-100 stroke-current"
+                          strokeWidth="8"
+                          cx="50"
+                          cy="50"
+                          r="40"
+                          fill="transparent"
+                        ></circle>
+                        <motion.circle
+                          className="text-black stroke-current"
+                          strokeWidth="8"
+                          strokeLinecap="round"
+                          cx="50"
+                          cy="50"
+                          r="40"
+                          fill="transparent"
+                          initial={{ strokeDasharray: "0 251.2" }}
+                          animate={{ strokeDasharray: `${(uploadProgress / 100) * 251.2} 251.2` }}
+                        ></motion.circle>
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center font-bold text-lg">
+                        {Math.round(uploadProgress)}%
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-xl text-gray-900">Uploading your post...</h3>
+                      <p className="text-gray-500 text-sm mt-1">Please wait while we process your media.</p>
+                    </div>
+                    <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${uploadProgress}%` }}
+                        className="h-full bg-black"
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Content Area */}
             <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar">
               <div className="flex items-center gap-3 mb-6">
@@ -281,7 +404,7 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
               setPostType={setPostType} 
               role={role} 
               handlePost={handlePost} 
-              loading={loading}
+              loading={loading || isMediaUploading}
             />
 
           </motion.div>

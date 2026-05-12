@@ -12,8 +12,8 @@ export default function GeneralCompanySection({ editData, update }) {
     if (file) {
       try {
         setIsUploading((prev) => ({ ...prev, logo: true }));
-        const url = await uploadToCloudinary(file);
-        update("logo", url);
+        const result = await uploadToCloudinary(file, "profile");
+        update("logo", result.url);
       } catch (error) {
         console.error("Logo upload failed:", error);
         alert("Failed to upload logo.");
@@ -28,8 +28,8 @@ export default function GeneralCompanySection({ editData, update }) {
     if (file) {
       try {
         setIsUploading((prev) => ({ ...prev, banner: true }));
-        const url = await uploadToCloudinary(file);
-        update("banner", url);
+        const result = await uploadToCloudinary(file, "profile");
+        update("banner", result.url);
       } catch (error) {
         console.error("Banner upload failed:", error);
         alert("Failed to upload banner.");

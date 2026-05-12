@@ -143,7 +143,7 @@ const PostCard = ({ post }) => {
               )}
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-3 text-xs text-gray-400 font-medium">
                 <span className="flex items-center gap-1 shrink-0">
-                  <Clock className="w-3 h-3 text-blue-500" /> 
+                  <Clock className="w-3 h-3 text-blue-500" />
                   {post.referenceId.readTime || 1} min read
                 </span>
                 {post.referenceId.tags && post.referenceId.tags.length > 0 && (
@@ -212,7 +212,7 @@ const PostCard = ({ post }) => {
           <div className="flex items-center mt-0.5 space-x-1">
             <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">{timeAgo}</p>
           </div>
-          
+
         </div>
         <motion.button
           whileHover={{ backgroundColor: "#f3f4f6" }}
@@ -239,25 +239,25 @@ const PostCard = ({ post }) => {
 
       {/* Post Media (Images/Videos) */}
       {(post.media && post.media.length > 0) ? (
-        <div className="mt-1 bg-gray-50 border-y border-gray-100">
+        <div className="mt-1 overflow-hidden relative py-2 flex justify-center">
           {post.media.map((item, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="relative group overflow-hidden"
+              className="relative w-[85%] max-w-[500px]"
             >
               {item.type === "image" ? (
                 <img
                   src={item.url}
                   alt="Post content"
-                  className="w-full h-auto object-contain max-h-[500px] transition-transform duration-700 group-hover:scale-[1.01]"
+                  className="w-full h-auto rounded-lg shadow-xl"
                 />
               ) : item.type === "video" ? (
                 <video
                   src={item.url}
                   controls
-                  className="w-full h-auto max-h-[500px]"
+                  className="w-full h-auto rounded-lg shadow-xl"
                 />
               ) : null}
             </motion.div>
@@ -267,13 +267,15 @@ const PostCard = ({ post }) => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="mt-1 relative group overflow-hidden bg-gray-50 border-y border-gray-100"
+          className="mt-1 relative overflow-hidden py-2 flex justify-center"
         >
-          <img
-            src={post.image}
-            alt="Post content"
-            className="w-full h-auto object-contain max-h-[500px] transition-transform duration-700 group-hover:scale-[1.02]"
-          />
+          <div className="w-[85%] max-w-[500px]">
+            <img
+              src={post.image}
+              alt="Post content"
+              className="w-full h-auto rounded-lg shadow-xl"
+            />
+          </div>
         </motion.div>
       )}
 

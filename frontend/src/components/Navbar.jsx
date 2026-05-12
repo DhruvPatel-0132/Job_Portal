@@ -221,6 +221,12 @@ const Navbar = () => {
                     >
                       Settings &amp; Privacy
                     </a>
+                    <Link
+                      to="/manage-posts"
+                      className="block px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Manage Posts
+                    </Link>
                     <a
                       href="#"
                       className="block px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100"

@@ -1,5 +1,5 @@
 import React from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { Image as ImageIcon, X } from "lucide-react";
 
 const MediaForm = ({ 
@@ -28,7 +28,6 @@ const MediaForm = ({
           type="file"
           ref={fileInputRef}
           onChange={handleMediaSelect}
-          multiple
           accept="image/*,video/*"
           className="hidden"
         />
@@ -38,8 +37,8 @@ const MediaForm = ({
         >
           <ImageIcon className="w-8 h-8 text-blue-600" />
         </motion.div>
-        <h3 className="text-lg font-bold text-gray-900">Select images and videos</h3>
-        <p className="text-gray-500 text-sm mt-1">or drag and drop them here</p>
+        <h3 className="text-lg font-bold text-gray-900">Select image or video</h3>
+        <p className="text-gray-500 text-sm mt-1">Click to browse your files</p>
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -51,25 +50,46 @@ const MediaForm = ({
         </button>
       </div>
 
-      {selectedMedia.length > 0 && (
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          {selectedMedia.map((media, index) => (
-            <div key={index} className="relative group rounded-xl overflow-hidden aspect-video bg-gray-100 border border-gray-200">
-              {media.type === 'image' ? (
-                <img src={media.url} alt="Preview" className="w-full h-full object-cover" />
+      <AnimatePresence>
+        {selectedMedia.length > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="relative mt-4 group flex justify-center"
+          >
+            <div className="w-[85%] max-w-[500px] relative">
+              {selectedMedia[0].type === 'image' ? (
+                <img 
+                  src={selectedMedia[0].url} 
+                  alt="Preview" 
+                  className="w-full h-auto rounded-xl shadow-xl border border-gray-100" 
+                />
               ) : (
-                <video src={media.url} className="w-full h-full object-cover" />
+                <video 
+                  src={selectedMedia[0].url} 
+                  controls 
+                  className="w-full h-auto rounded-xl shadow-xl border border-gray-100" 
+                />
               )}
+
               <button
-                onClick={() => removeMedia(index)}
-                className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeMedia(0);
+                }}
+                className="absolute top-3 right-3 p-2 bg-white/90 hover:bg-white text-gray-900 rounded-full shadow-lg transition-all transform hover:scale-110 active:scale-95 z-10"
               >
                 <X className="w-4 h-4" />
               </button>
+
+              <div className="absolute bottom-3 left-3 px-3 py-1 bg-black/50 backdrop-blur-md rounded-full text-white text-[10px] font-bold uppercase tracking-widest pointer-events-none">
+                {selectedMedia[0].type} Preview
+              </div>
             </div>
-          ))}
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

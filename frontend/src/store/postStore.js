@@ -3,6 +3,7 @@ import api from "../api/axios";
 
 const usePostStore = create((set, get) => ({
   posts: [],
+  userPosts: [],
   loading: false,
   error: null,
 
@@ -43,6 +44,17 @@ const usePostStore = create((set, get) => ({
       return { success: false, message };
     }
   },
+
+  fetchUserPosts: async () => {
+    set({ loading: true });
+    try {
+      const response = await api.get("/posts/me");
+      set({ userPosts: response.data.posts, loading: false });
+    } catch (error) {
+      set({ error: error.response?.data?.message || "Failed to fetch user posts", loading: false });
+    }
+  },
+
 }));
 
 

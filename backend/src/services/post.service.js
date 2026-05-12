@@ -53,12 +53,13 @@ const createPost = async (userId, userRole, postData) => {
       const wordCount = content.trim().split(/\s+/).length;
       const readTime = Math.max(1, Math.ceil(wordCount / 200));
 
+      const generatedSlug = postData.articleData.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now();
       const article = await Article.create({
         title: postData.articleData.title,
         summary: postData.articleData.summary,
         content: content,
         tags: postData.articleData.tags || [],
-        seoSlug: postData.articleData.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now(),
+        seoSlug: generatedSlug,
         bannerImage: postData.articleData.coverImage ? { url: postData.articleData.coverImage.url } : null,
         readTime: readTime,
         status: "published",
@@ -103,6 +104,7 @@ const createPost = async (userId, userRole, postData) => {
 
 
     const newPost = new Post({
+      _id: postData._id || undefined, // Use pre-generated ID if available
       author: authorId,
       authorModel: authorModel,
       postType: postType,
@@ -176,7 +178,46 @@ const getPosts = async (query = {}) => {
   }
 };
 
+const getUserPosts = async (userId) => {
+  try {
+    const company = await Company.findOne({ createdBy: userId });
+    let authorQuery = { author: userId };
+    
+    // If user is a company, they might have posts under their company ID
+    if (company) {
+      authorQuery = { author: { $in: [userId, company._id] } };
+    }
+
+    const posts = await Post.find({ ...authorQuery, isDeleted: false })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "author",
+        select: "firstName lastName name logo avatar",
+      })
+      .populate("referenceId");
+
+    return {
+      status: 200,
+      response: {
+        success: true,
+        posts,
+      },
+    };
+  } catch (error) {
+    console.error("Get User Posts Service Error:", error);
+    return {
+      status: 500,
+      response: {
+        success: false,
+        message: "Failed to fetch user posts",
+        error: error.message,
+      },
+    };
+  }
+};
+
 module.exports = {
   createPost,
   getPosts,
+  getUserPosts,
 };
