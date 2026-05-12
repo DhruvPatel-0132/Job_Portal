@@ -32,6 +32,11 @@ const PostCard = ({ post }) => {
                 <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-blue-700 font-medium">
                   <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {post.referenceId.location}</span>
                   <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {post.referenceId.employmentType}</span>
+                  {post.referenceId.salary && (
+                    <span className="flex items-center gap-1">
+                      {post.referenceId.salary.min} - {post.referenceId.salary.max} {post.referenceId.salary.currency || "INR"}
+                    </span>
+                  )}
                 </div>
                 {post.referenceId.skillsRequired && post.referenceId.skillsRequired.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -94,9 +99,9 @@ const PostCard = ({ post }) => {
             animate={{ opacity: 1, y: 0 }}
             className="overflow-hidden rounded-xl border border-gray-200 hover:shadow-lg transition-all cursor-pointer group bg-white"
           >
-            {post.referenceId.bannerImage && (
+            {post.referenceId.bannerImage?.url && (
               <div className="relative h-40 overflow-hidden">
-                <img src={post.referenceId.bannerImage} alt={post.referenceId.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                <img src={post.referenceId.bannerImage.url} alt={post.referenceId.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 <div className="absolute top-3 left-3 px-2 py-1 bg-black/50 backdrop-blur-md text-white text-[10px] font-bold rounded uppercase tracking-wider">Article</div>
               </div>
             )}
@@ -105,7 +110,7 @@ const PostCard = ({ post }) => {
                 {post.referenceId.title}
               </h4>
               <div className="flex items-center gap-3 mt-3 text-xs text-gray-400 font-medium">
-                <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {post.referenceId.readTime} min read</span>
+                <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {post.referenceId.readTime || 0} min read</span>
                 <span>•</span>
                 {post.referenceId.tags && post.referenceId.tags.length > 0 && (
                   <div className="flex gap-2">
@@ -129,11 +134,12 @@ const PostCard = ({ post }) => {
             </div>
             <div>
               <h4 className="font-bold text-amber-900 leading-tight">{post.referenceId.title}</h4>
-              <p className="text-sm text-amber-800/80 font-medium">{post.referenceId.issuer}</p>
+              <p className="text-sm text-amber-800/80 font-medium">{post.referenceId.issuer?.name || post.referenceId.issuer}</p>
               <p className="text-[10px] text-amber-600 font-bold mt-1 uppercase">Achievement Unlocked</p>
             </div>
           </motion.div>
         );
+
 
       default:
         return null;
@@ -154,8 +160,13 @@ const PostCard = ({ post }) => {
           whileHover={{ scale: 1.05 }}
           src={authorAvatar}
           alt={authorName}
+          onError={(e) => {
+            e.target.onerror = null; 
+            e.target.src = "/avatar.svg";
+          }}
           className="w-12 h-12 rounded-full object-cover mr-3 border border-gray-100 p-0.5"
         />
+
         <div className="flex-1">
           <h3 className="text-sm font-bold text-gray-900 hover:text-blue-600 hover:underline cursor-pointer transition-colors">
             {authorName}
@@ -192,8 +203,33 @@ const PostCard = ({ post }) => {
         </div>
       )}
 
-      {/* Post Image (optional - for media posts) */}
-      {post.image && (
+      {/* Post Media (Images/Videos) */}
+      {(post.media && post.media.length > 0) ? (
+        <div className="mt-1 bg-gray-50 border-y border-gray-100">
+          {post.media.map((item, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="relative group overflow-hidden"
+            >
+              {item.type === "image" ? (
+                <img
+                  src={item.url}
+                  alt="Post content"
+                  className="w-full h-auto object-contain max-h-[500px] transition-transform duration-700 group-hover:scale-[1.01]"
+                />
+              ) : item.type === "video" ? (
+                <video
+                  src={item.url}
+                  controls
+                  className="w-full h-auto max-h-[500px]"
+                />
+              ) : null}
+            </motion.div>
+          ))}
+        </div>
+      ) : post.image && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -206,6 +242,7 @@ const PostCard = ({ post }) => {
           />
         </motion.div>
       )}
+
 
       {/* Post Stats */}
       <div className="px-4 py-2.5 flex items-center justify-between border-b border-gray-50 text-[11px] font-medium text-gray-500">

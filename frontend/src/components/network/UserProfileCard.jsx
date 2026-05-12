@@ -40,8 +40,13 @@ const UserProfileCard = ({
         <img
           src={person.avatar || "/avatar.svg"}
           alt={person.name}
+          onError={(e) => {
+            e.target.onerror = null; 
+            e.target.src = "/avatar.svg";
+          }}
           className="w-18 h-18 rounded-full border-2 border-white shadow-sm object-cover bg-white"
         />
+
       </div>
 
       {/* Content */}
@@ -77,7 +82,12 @@ const UserProfileCard = ({
                   src={person.avatar || "/avatar.svg"}
                   className="w-4 h-4 rounded-full border border-white flex-shrink-0"
                   alt=""
+                  onError={(e) => {
+                    e.target.onerror = null; 
+                    e.target.src = "/avatar.svg";
+                  }}
                 />
+
                 <span className="text-[10px] font-medium line-clamp-1">
                   {person.mutualName} and {person.mutualConnectionsCount} other
                   mutual connections

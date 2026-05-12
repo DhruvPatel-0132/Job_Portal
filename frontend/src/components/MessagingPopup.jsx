@@ -95,8 +95,13 @@ const MessagingPopup = () => {
                   <img
                     src="https://i.pravatar.cc/150?img=11"
                     alt="Me"
+                    onError={(e) => {
+                      e.target.onerror = null; 
+                      e.target.src = "/avatar.svg";
+                    }}
                     className="w-9 h-9 rounded-full border border-gray-200"
                   />
+
                   <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                 </div>
                 <span className="font-semibold text-[15px] text-gray-900">
@@ -142,6 +147,10 @@ const MessagingPopup = () => {
                     <img
                       src={contact.avatar}
                       alt={contact.name}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "/avatar.svg";
+                      }}
                       className="w-12 h-12 rounded-full border border-gray-200"
                     />
                     {contact.status === "online" && (

@@ -32,6 +32,6 @@ const articleSchema = new mongoose.Schema(
 );
 
 articleSchema.index({ title: "text", summary: "text" });
-articleSchema.index({ slug: 1 });
+
 
 module.exports = mongoose.model("Article", articleSchema);

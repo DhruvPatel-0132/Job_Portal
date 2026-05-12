@@ -56,8 +56,13 @@ const SidebarCompanyProfile = () => {
             src={avatar}
             alt="Company Logo"
             onClick={() => navigate("/profile")}
+            onError={(e) => {
+              e.target.onerror = null; 
+              e.target.src = "/avatar.svg";
+            }}
             className="w-16 h-16 rounded-2xl border-4 border-white object-cover shadow-sm cursor-pointer bg-white"
           />
+
         </motion.div>
       </div>
 

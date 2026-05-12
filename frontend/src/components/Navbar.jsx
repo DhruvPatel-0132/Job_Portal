@@ -156,6 +156,10 @@ const Navbar = () => {
                   className="h-6 w-6 rounded-full object-cover"
                   src={userData.avatar}
                   alt="User Avatar"
+                  onError={(e) => {
+                    e.target.onerror = null; 
+                    e.target.src = "/avatar.svg";
+                  }}
                 />
                 <div className="flex items-center mt-0.5">
                   <span className="text-xs hidden md:block">Me</span>
@@ -183,7 +187,12 @@ const Navbar = () => {
                         className="h-12 w-12 rounded-full object-cover border border-gray-200"
                         src={userData.avatar}
                         alt="User Avatar"
+                        onError={(e) => {
+                          e.target.onerror = null; 
+                          e.target.src = "/avatar.svg";
+                        }}
                       />
+
                       <div>
                         <p className="text-sm font-semibold text-gray-900">
                           {userData.name}

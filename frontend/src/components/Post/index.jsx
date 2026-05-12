@@ -39,7 +39,15 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
   }, [isOpen, initialType]);
 
   const handlePost = async () => {
-    if (!content.trim() && selectedMedia.length === 0) return;
+    // Basic guard: Allow if there's content OR media OR specialized data
+    const hasSpecializedData = 
+      (postType === "job_post" && jobData.title) || 
+      (postType === "project" && projectData.title) || 
+      (postType === "article" && articleData.title) || 
+      (postType === "achievement" && achievementData.title);
+
+    if (!content.trim() && selectedMedia.length === 0 && !hasSpecializedData) return;
+
 
     const postData = {
       postType,
@@ -189,8 +197,13 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
                   whileHover={{ scale: 1.1 }}
                   src={avatar}
                   alt="Avatar"
+                  onError={(e) => {
+                    e.target.onerror = null; 
+                    e.target.src = "/avatar.svg";
+                  }}
                   className="w-12 h-12 rounded-full object-cover border-2 border-gray-50 p-0.5"
                 />
+
                 <div>
                   <div className="font-bold text-[16px] text-gray-900">{name}</div>
                   <motion.button

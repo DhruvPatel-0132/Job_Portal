@@ -14,18 +14,20 @@ const createPost = async (userId, userRole, postData) => {
     let postType = postData.postType || "regular";
 
 
-    // If user is a company, we might want to post as the company
+    // If user is a company or hire, we might want to post as the company
     const company = await Company.findOne({ createdBy: userId });
-    if (userRole === "company" && company) {
+    if ((userRole === "company" || userRole === "hire") && company) {
       authorId = company._id;
       authorModel = "Company";
     }
+
 
     // Handle Specialized Post Types
     if (postType === "job_post" && postData.jobData) {
       const job = await JobPost.create({
         title: postData.jobData.title,
-        description: postData.jobData.description,
+        description: postData.jobData.description || postData.content,
+
         company: authorId,
         location: postData.jobData.location,
         employmentType: postData.jobData.type,
@@ -43,7 +45,8 @@ const createPost = async (userId, userRole, postData) => {
       const article = await Article.create({
         title: postData.articleData.title,
         summary: postData.articleData.summary,
-        content: postData.articleData.content,
+        content: postData.articleData.content || postData.content,
+
         tags: postData.articleData.tags || [],
         slug: postData.articleData.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now(),
         status: "published",
@@ -54,7 +57,8 @@ const createPost = async (userId, userRole, postData) => {
     } else if (postType === "project" && postData.projectData) {
       const project = await ShowcaseProject.create({
         title: postData.projectData.title,
-        description: postData.projectData.description,
+        description: postData.projectData.description || postData.content,
+
         techStack: (postData.projectData.tech || []).map(t => ({ name: t })),
         liveUrl: postData.projectData.live,
         projectStatus: postData.projectData.status,
@@ -130,7 +134,9 @@ const getPosts = async (query = {}) => {
       .populate({
         path: "author",
         select: "firstName lastName name logo avatar",
-      });
+      })
+      .populate("referenceId");
+
 
     return {
       status: 200,
