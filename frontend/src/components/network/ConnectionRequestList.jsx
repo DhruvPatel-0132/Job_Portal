@@ -21,6 +21,7 @@ const ConnectionRequestList = ({ requests, onAccept, onReject }) => {
             <img
               src={request.senderId?.avatar || "/avatar.svg"}
               alt={request.senderId?.firstName}
+              referrerPolicy="no-referrer"
               onError={(e) => {
                 e.target.onerror = null; 
                 e.target.src = "/avatar.svg";

@@ -32,6 +32,7 @@ const CompanyCard = ({
         <img
           src={company.avatar || "/avatar.svg"}
           alt={company.name}
+          referrerPolicy="no-referrer"
           onError={(e) => {
             e.target.onerror = null; 
             e.target.src = "/avatar.svg";

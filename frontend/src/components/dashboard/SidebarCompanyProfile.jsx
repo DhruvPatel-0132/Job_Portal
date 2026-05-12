@@ -55,6 +55,7 @@ const SidebarCompanyProfile = () => {
           <img
             src={avatar}
             alt="Company Logo"
+            referrerPolicy="no-referrer"
             onClick={() => navigate("/profile")}
             onError={(e) => {
               e.target.onerror = null; 
@@ -102,6 +103,17 @@ const SidebarCompanyProfile = () => {
           </span>
           <span className="text-[13px] text-blue-600 font-bold">
             {safeProfile.openJobs || 0}
+          </span>
+        </motion.div>
+        <motion.div
+          whileHover={{ x: 3, backgroundColor: "rgba(249, 250, 251, 1)" }}
+          className="px-4 py-1.5 cursor-pointer flex justify-between items-center transition-all group"
+        >
+          <span className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider group-hover:text-gray-700">
+            Total Posts
+          </span>
+          <span className="text-[13px] text-blue-600 font-bold">
+            {safeProfile.postsCount || 0}
           </span>
         </motion.div>
       </div>
@@ -152,7 +164,7 @@ const SidebarCompanyProfile = () => {
       <motion.div
         whileHover={{ backgroundColor: "rgba(249, 250, 251, 1)" }}
         onClick={() => navigate("/dashboard")}
-        className="px-4 py-3.5 cursor-pointer transition-all flex items-center justify-between group"
+        className="px-4 py-3.5 cursor-pointer transition-all flex items-center justify-between group border-b border-gray-50"
       >
         <span className="text-[12px] text-gray-700 font-bold flex items-center group-hover:text-black">
           <svg
@@ -163,6 +175,37 @@ const SidebarCompanyProfile = () => {
             <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
           </svg>
           Manage Jobs
+        </span>
+        <svg
+          className="w-3.5 h-3.5 text-gray-300 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={3}
+            d="M9 5l7 7-7 7"
+          />
+        </svg>
+      </motion.div>
+
+      <motion.div
+        whileHover={{ backgroundColor: "rgba(249, 250, 251, 1)" }}
+        onClick={() => navigate("/manage-posts")}
+        className="px-4 py-3.5 cursor-pointer transition-all flex items-center justify-between group"
+      >
+        <span className="text-[12px] text-gray-700 font-bold flex items-center group-hover:text-black">
+          <svg
+            className="w-4 h-4 mr-2.5 text-gray-400 group-hover:text-gray-600 transition-colors"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+          Manage Posts
         </span>
         <svg
           className="w-3.5 h-3.5 text-gray-300 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0"

@@ -71,6 +71,7 @@ export default function BasicSection({ editData, update }) {
                 <img
                   src={editData.avatar}
                   alt="Profile"
+                  referrerPolicy="no-referrer"
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -136,6 +137,7 @@ export default function BasicSection({ editData, update }) {
                 src={editData.banner} 
                 className="w-full h-full object-cover" 
                 alt="Banner Preview" 
+                referrerPolicy="no-referrer"
               />
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center gap-2">

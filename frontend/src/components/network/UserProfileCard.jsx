@@ -40,6 +40,7 @@ const UserProfileCard = ({
         <img
           src={person.avatar || "/avatar.svg"}
           alt={person.name}
+          referrerPolicy="no-referrer"
           onError={(e) => {
             e.target.onerror = null; 
             e.target.src = "/avatar.svg";
@@ -82,6 +83,7 @@ const UserProfileCard = ({
                   src={person.avatar || "/avatar.svg"}
                   className="w-4 h-4 rounded-full border border-white flex-shrink-0"
                   alt=""
+                  referrerPolicy="no-referrer"
                   onError={(e) => {
                     e.target.onerror = null; 
                     e.target.src = "/avatar.svg";

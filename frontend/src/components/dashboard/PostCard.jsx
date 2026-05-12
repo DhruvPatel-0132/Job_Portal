@@ -12,6 +12,26 @@ const PostCard = ({ post }) => {
   // Format relative time if createdAt exists
   const timeAgo = post.createdAt ? new Date(post.createdAt).toLocaleDateString() : post.timeAgo;
 
+  const formatLabel = (key) => {
+    const labels = {
+      full_time: "Full-time",
+      part_time: "Part-time",
+      internship: "Internship",
+      contract: "Contract",
+      freelance: "Freelance",
+      on_site: "On-site",
+      remote: "Remote",
+      hybrid: "Hybrid",
+      fresher: "Fresher",
+      junior: "Junior",
+      mid: "Mid-level",
+      senior: "Senior",
+      lead: "Lead",
+      executive: "Executive"
+    };
+    return labels[key] || key;
+  };
+
   const renderSpecializedContent = () => {
     if (!post.referenceId) return null;
 
@@ -29,12 +49,19 @@ const PostCard = ({ post }) => {
                   <Briefcase className="w-4 h-4" />
                   {post.referenceId.title}
                 </h4>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-blue-700 font-medium">
-                  <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {post.referenceId.location}</span>
-                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {post.referenceId.employmentType}</span>
-                  {post.referenceId.salary && (
-                    <span className="flex items-center gap-1">
-                      {post.referenceId.salary.min} - {post.referenceId.salary.max} {post.referenceId.salary.currency || "INR"}
+                <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2.5 text-xs text-blue-700 font-semibold">
+                  <span className="flex items-center gap-1.5 bg-blue-100/50 px-2 py-1 rounded-md">
+                    <MapPin className="w-3.5 h-3.5" /> {post.referenceId.location}
+                  </span>
+                  <span className="flex items-center gap-1.5 bg-blue-100/50 px-2 py-1 rounded-md">
+                    <Clock className="w-3.5 h-3.5" /> {formatLabel(post.referenceId.employmentType)}
+                  </span>
+                  <span className="flex items-center gap-1.5 bg-blue-100/50 px-2 py-1 rounded-md">
+                    <Briefcase className="w-3.5 h-3.5" /> {formatLabel(post.referenceId.workMode)}
+                  </span>
+                  {post.referenceId.salary && !post.referenceId.salary.hideSalary && (
+                    <span className="flex items-center gap-1.5 bg-green-100/50 text-green-700 px-2 py-1 rounded-md">
+                      <span className="font-bold">₹</span> {post.referenceId.salary.min.toLocaleString()} - {post.referenceId.salary.max.toLocaleString()}
                     </span>
                   )}
                 </div>
@@ -109,12 +136,21 @@ const PostCard = ({ post }) => {
               <h4 className="font-bold text-gray-900 text-lg group-hover:text-blue-600 transition-colors leading-tight">
                 {post.referenceId.title}
               </h4>
-              <div className="flex items-center gap-3 mt-3 text-xs text-gray-400 font-medium">
-                <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {post.referenceId.readTime || 0} min read</span>
-                <span>•</span>
+              {(post.referenceId.summary || post.referenceId.content) && (
+                <p className="text-sm text-gray-600 mt-2 line-clamp-2 leading-relaxed">
+                  {post.referenceId.summary || post.referenceId.content}
+                </p>
+              )}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-3 text-xs text-gray-400 font-medium">
+                <span className="flex items-center gap-1 shrink-0">
+                  <Clock className="w-3 h-3 text-blue-500" /> 
+                  {post.referenceId.readTime || 1} min read
+                </span>
                 {post.referenceId.tags && post.referenceId.tags.length > 0 && (
-                  <div className="flex gap-2">
-                    {post.referenceId.tags.map((tag, i) => <span key={i}>#{tag}</span>)}
+                  <div className="flex flex-wrap gap-x-2 gap-y-1 border-l border-gray-200 pl-3">
+                    {post.referenceId.tags.map((tag, i) => (
+                      <span key={i} className="text-blue-600 whitespace-nowrap">#{tag}</span>
+                    ))}
                   </div>
                 )}
               </div>
@@ -160,8 +196,9 @@ const PostCard = ({ post }) => {
           whileHover={{ scale: 1.05 }}
           src={authorAvatar}
           alt={authorName}
+          referrerPolicy="no-referrer"
           onError={(e) => {
-            e.target.onerror = null; 
+            e.target.onerror = null;
             e.target.src = "/avatar.svg";
           }}
           className="w-12 h-12 rounded-full object-cover mr-3 border border-gray-100 p-0.5"
@@ -174,11 +211,8 @@ const PostCard = ({ post }) => {
           <p className="text-xs text-gray-500 font-medium line-clamp-1">{post.author.headline}</p>
           <div className="flex items-center mt-0.5 space-x-1">
             <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">{timeAgo}</p>
-            <span className="text-gray-300 text-[10px]">•</span>
-            <svg className="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" />
-            </svg>
           </div>
+          
         </div>
         <motion.button
           whileHover={{ backgroundColor: "#f3f4f6" }}

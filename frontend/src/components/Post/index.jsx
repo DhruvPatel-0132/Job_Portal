@@ -15,23 +15,28 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
   const [selectedMedia, setSelectedMedia] = useState([]);
   const fileInputRef = useRef(null);
   const projectImageRef = useRef(null);
+  const articleImageRef = useRef(null);
 
   const [jobData, setJobData] = useState({
     title: "", location: "", type: "full_time", workMode: "on_site",
-    experienceLevel: "fresher", salaryMin: "", salaryMax: "", description: "", skills: []
+    experienceLevel: "fresher", salaryMin: "", salaryMax: "", description: "", skills: [],
+    industry: "", category: "", educationLevel: "", isNegotiable: false, hideSalary: false,
+    applicationUrl: "", applicationDeadline: "", benefits: ""
   });
   const [skillInput, setSkillInput] = useState("");
 
   const [projectData, setProjectData] = useState({
-    title: "", tech: [], live: "", status: "completed", description: "", images: []
+    title: "", tech: [], live: "", status: "completed", description: "", images: [],
+    githubUrl: "", demoVideoUrl: "", startDate: "", endDate: ""
   });
   const [techInput, setTechInput] = useState("");
 
-  const [articleData, setArticleData] = useState({ title: "", summary: "", tags: [], content: "" });
+  const [articleData, setArticleData] = useState({ title: "", summary: "", tags: [], content: "", coverImage: null });
   const [tagInput, setTagInput] = useState("");
 
   const [achievementData, setAchievementData] = useState({
-    title: "", type: "certification", issuer: "", date: "", credentialUrl: ""
+    title: "", type: "certification", issuer: "", date: "", credentialUrl: "",
+    expiryDate: "", doesNotExpire: false, credentialId: "", description: ""
   });
 
   useEffect(() => {
@@ -109,6 +114,26 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
       URL.revokeObjectURL(updatedImages[index].url);
       updatedImages.splice(index, 1);
       return { ...prev, images: updatedImages };
+    });
+  };
+  
+  const handleArticleCoverSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setArticleData(prev => ({
+        ...prev,
+        coverImage: {
+          file,
+          url: URL.createObjectURL(file)
+        }
+      }));
+    }
+  };
+
+  const removeArticleCover = () => {
+    setArticleData(prev => {
+      if (prev.coverImage) URL.revokeObjectURL(prev.coverImage.url);
+      return { ...prev, coverImage: null };
     });
   };
 
@@ -206,12 +231,6 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
 
                 <div>
                   <div className="font-bold text-[16px] text-gray-900">{name}</div>
-                  <motion.button
-                    whileHover={{ backgroundColor: "#f3f4f6" }}
-                    className="flex items-center gap-1.5 px-3 py-1 border border-gray-300 text-gray-600 rounded-full text-xs font-bold mt-0.5 transition-colors"
-                  >
-                    <Globe className="w-3 h-3" /> Anyone
-                  </motion.button>
                 </div>
               </div>
 
@@ -247,6 +266,9 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
                     setTagInput={setTagInput}
                     handleAddTag={handleAddTag}
                     removeTag={removeTag}
+                    articleImageRef={articleImageRef}
+                    handleArticleCoverSelect={handleArticleCoverSelect}
+                    removeArticleCover={removeArticleCover}
                     achievementData={achievementData}
                     setAchievementData={setAchievementData}
                   />

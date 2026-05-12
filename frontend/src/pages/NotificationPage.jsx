@@ -59,6 +59,7 @@ const NotificationItem = ({ notification, onClick }) => {
         <img
           src={notification.sender?.avatar || "/avatar.svg"}
           alt="Avatar"
+          referrerPolicy="no-referrer"
           className="w-14 h-14 rounded-full object-cover border border-gray-100 shadow-sm bg-white"
         />
         {!notification.isRead && (

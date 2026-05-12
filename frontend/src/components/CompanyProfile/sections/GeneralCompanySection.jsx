@@ -63,6 +63,7 @@ export default function GeneralCompanySection({ editData, update }) {
                 <img
                   src={editData.logo}
                   alt="Company Logo"
+                  referrerPolicy="no-referrer"
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -126,6 +127,7 @@ export default function GeneralCompanySection({ editData, update }) {
                 src={editData.banner}
                 className="w-full h-full object-cover"
                 alt="Banner Preview"
+                referrerPolicy="no-referrer"
               />
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center gap-2">

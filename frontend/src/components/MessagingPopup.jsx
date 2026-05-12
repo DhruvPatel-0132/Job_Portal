@@ -95,6 +95,7 @@ const MessagingPopup = () => {
                   <img
                     src="https://i.pravatar.cc/150?img=11"
                     alt="Me"
+                    referrerPolicy="no-referrer"
                     onError={(e) => {
                       e.target.onerror = null; 
                       e.target.src = "/avatar.svg";
@@ -147,6 +148,7 @@ const MessagingPopup = () => {
                     <img
                       src={contact.avatar}
                       alt={contact.name}
+                      referrerPolicy="no-referrer"
                       onError={(e) => {
                         e.target.onerror = null;
                         e.target.src = "/avatar.svg";

@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Briefcase, MapPin, Clock, X } from "lucide-react";
+import { Briefcase, MapPin, Clock, X, Globe, BarChart, Tag, Building2 } from "lucide-react";
 
 const JobForm = ({ 
   jobData, setJobData, skillInput, setSkillInput, handleAddSkill, removeSkill 
@@ -42,48 +42,135 @@ const JobForm = ({
             <option value="part_time">Part-time</option>
             <option value="internship">Internship</option>
             <option value="contract">Contract</option>
+            <option value="freelance">Freelance</option>
           </select>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <select
-          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none bg-white"
-          value={jobData.workMode}
-          onChange={(e) => setJobData({ ...jobData, workMode: e.target.value })}
-        >
-          <option value="on_site">On-site</option>
-          <option value="remote">Remote</option>
-          <option value="hybrid">Hybrid</option>
-        </select>
-        <select
-          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none bg-white"
-          value={jobData.experienceLevel}
-          onChange={(e) => setJobData({ ...jobData, experienceLevel: e.target.value })}
-        >
-          <option value="fresher">Fresher</option>
-          <option value="junior">Junior (1-2 yrs)</option>
-          <option value="mid">Mid (3-5 yrs)</option>
-          <option value="senior">Senior (5+ yrs)</option>
-        </select>
+        <div className="relative group">
+          <Building2 className="absolute left-3 top-3.5 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+          <input 
+            className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" 
+            placeholder="Industry (e.g. Tech, Finance)" 
+            value={jobData.industry}
+            onChange={(e) => setJobData({ ...jobData, industry: e.target.value })}
+          />
+        </div>
+        <div className="relative group">
+          <Tag className="absolute left-3 top-3.5 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+          <input 
+            className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" 
+            placeholder="Category (e.g. Engineering)" 
+            value={jobData.category}
+            onChange={(e) => setJobData({ ...jobData, category: e.target.value })}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <input
-          type="number"
-          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none"
-          placeholder="Min Salary"
-          value={jobData.salaryMin}
-          onChange={(e) => setJobData({ ...jobData, salaryMin: e.target.value })}
-        />
-        <input
-          type="number"
-          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none"
-          placeholder="Max Salary"
-          value={jobData.salaryMax}
-          onChange={(e) => setJobData({ ...jobData, salaryMax: e.target.value })}
-        />
+        <div className="relative">
+          <Globe className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+          <select
+            className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none appearance-none bg-white"
+            value={jobData.workMode}
+            onChange={(e) => setJobData({ ...jobData, workMode: e.target.value })}
+          >
+            <option value="on_site">On-site</option>
+            <option value="remote">Remote</option>
+            <option value="hybrid">Hybrid</option>
+          </select>
+        </div>
+        <div className="relative">
+          <BarChart className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+          <select
+            className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none appearance-none bg-white"
+            value={jobData.experienceLevel}
+            onChange={(e) => setJobData({ ...jobData, experienceLevel: e.target.value })}
+          >
+            <option value="fresher">Fresher</option>
+            <option value="junior">Junior (1-2 yrs)</option>
+            <option value="mid">Mid (3-5 yrs)</option>
+            <option value="senior">Senior (5+ yrs)</option>
+            <option value="lead">Lead</option>
+            <option value="executive">Executive</option>
+          </select>
+        </div>
       </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <input 
+          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none" 
+          placeholder="Education Level" 
+          value={jobData.educationLevel}
+          onChange={(e) => setJobData({ ...jobData, educationLevel: e.target.value })}
+        />
+        <div className="flex gap-2">
+          <input
+            type="number"
+            className="w-1/2 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none"
+            placeholder="Min Salary"
+            value={jobData.salaryMin}
+            onChange={(e) => setJobData({ ...jobData, salaryMin: e.target.value })}
+          />
+          <input
+            type="number"
+            className="w-1/2 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none"
+            placeholder="Max Salary"
+            value={jobData.salaryMax}
+            onChange={(e) => setJobData({ ...jobData, salaryMax: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center gap-4 px-1">
+        <label className="flex items-center gap-2 text-xs font-bold text-gray-500 cursor-pointer">
+          <input 
+            type="checkbox" 
+            checked={jobData.isNegotiable}
+            onChange={(e) => setJobData({ ...jobData, isNegotiable: e.target.checked })}
+            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+          />
+          Negotiable
+        </label>
+        <label className="flex items-center gap-2 text-xs font-bold text-gray-500 cursor-pointer">
+          <input 
+            type="checkbox" 
+            checked={jobData.hideSalary}
+            onChange={(e) => setJobData({ ...jobData, hideSalary: e.target.checked })}
+            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+          />
+          Hide Salary
+        </label>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1">
+          <label className="text-[10px] font-bold text-gray-400 uppercase ml-2">Application Link</label>
+          <input 
+            className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none text-sm h-[42px]" 
+            placeholder="https://company.com/jobs" 
+            value={jobData.applicationUrl}
+            onChange={(e) => setJobData({ ...jobData, applicationUrl: e.target.value })}
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+           <label className="text-[10px] font-bold text-gray-400 uppercase ml-2">Deadline</label>
+           <input
+            type="date"
+            className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none text-sm h-[42px]"
+            value={jobData.applicationDeadline}
+            onChange={(e) => setJobData({ ...jobData, applicationDeadline: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <input 
+        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none" 
+        placeholder="Benefits (e.g. Remote, Insurance, Stock Options)" 
+        value={jobData.benefits}
+        onChange={(e) => setJobData({ ...jobData, benefits: e.target.value })}
+      />
 
       <div className="space-y-3">
         <input

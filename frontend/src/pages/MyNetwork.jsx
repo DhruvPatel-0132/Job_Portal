@@ -81,6 +81,7 @@ const MyNetwork = () => {
                       <img
                         src={conn.avatar || "/avatar.svg"}
                         alt={conn.name}
+                        referrerPolicy="no-referrer"
                         className="w-14 h-14 rounded-full border border-gray-100 shadow-sm object-cover shrink-0"
                       />
                       <div className="flex-1 min-w-0">

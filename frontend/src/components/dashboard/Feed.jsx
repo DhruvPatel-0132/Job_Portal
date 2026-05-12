@@ -41,6 +41,7 @@ const Feed = () => {
           <img
             src={profile?.avatar || company?.logo || "/avatar.svg"}
             alt="Current User"
+            referrerPolicy="no-referrer"
             onError={(e) => {
               e.target.onerror = null; 
               e.target.src = "/avatar.svg";

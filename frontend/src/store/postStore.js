@@ -25,6 +25,16 @@ const usePostStore = create((set, get) => ({
         posts: [response.data.post, ...state.posts],
         loading: false,
       }));
+
+      // Update post count in authStore
+      const { useAuthStore } = await import("./authStore");
+      const currentProfile = useAuthStore.getState().profile;
+      if (currentProfile) {
+        useAuthStore.getState().setProfile({
+          ...currentProfile,
+          postsCount: (currentProfile.postsCount || 0) + 1
+        });
+      }
       
       return { success: true, post: response.data.post };
     } catch (error) {

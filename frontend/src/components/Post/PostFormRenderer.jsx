@@ -36,6 +36,9 @@ const PostFormRenderer = ({
   setTagInput,
   handleAddTag,
   removeTag,
+  articleImageRef,
+  handleArticleCoverSelect,
+  removeArticleCover,
   achievementData,
   setAchievementData
 }) => {
@@ -86,6 +89,9 @@ const PostFormRenderer = ({
           setTagInput={setTagInput}
           handleAddTag={handleAddTag}
           removeTag={removeTag}
+          articleImageRef={articleImageRef}
+          handleArticleCoverSelect={handleArticleCoverSelect}
+          removeArticleCover={removeArticleCover}
         />
       );
     case "achievement":
@@ -93,6 +99,10 @@ const PostFormRenderer = ({
         <AchievementForm 
           achievementData={achievementData}
           setAchievementData={setAchievementData}
+          skillInput={skillInput}
+          setSkillInput={setSkillInput}
+          handleAddSkill={handleAddSkill}
+          removeSkill={removeSkill}
         />
       );
     case "regular":

@@ -156,6 +156,7 @@ const Navbar = () => {
                   className="h-6 w-6 rounded-full object-cover"
                   src={userData.avatar}
                   alt="User Avatar"
+                  referrerPolicy="no-referrer"
                   onError={(e) => {
                     e.target.onerror = null; 
                     e.target.src = "/avatar.svg";
@@ -187,6 +188,7 @@ const Navbar = () => {
                         className="h-12 w-12 rounded-full object-cover border border-gray-200"
                         src={userData.avatar}
                         alt="User Avatar"
+                        referrerPolicy="no-referrer"
                         onError={(e) => {
                           e.target.onerror = null; 
                           e.target.src = "/avatar.svg";

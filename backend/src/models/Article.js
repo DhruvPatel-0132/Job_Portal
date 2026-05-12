@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const articleSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true },
-    slug: { type: String, required: true, unique: true }, // SEO friendly URL
+    seoSlug: { type: String, required: true, unique: true }, // SEO friendly URL
     
     bannerImage: {
       url: String,

@@ -27,28 +27,40 @@ const createPost = async (userId, userRole, postData) => {
       const job = await JobPost.create({
         title: postData.jobData.title,
         description: postData.jobData.description || postData.content,
-
         company: authorId,
+        industry: postData.jobData.industry,
+        category: postData.jobData.category,
         location: postData.jobData.location,
         employmentType: postData.jobData.type,
         workMode: postData.jobData.workMode,
         experienceLevel: postData.jobData.experienceLevel,
+        educationLevel: postData.jobData.educationLevel,
         skillsRequired: postData.jobData.skills || [],
         salary: {
           min: Number(postData.jobData.salaryMin) || 0,
           max: Number(postData.jobData.salaryMax) || 0,
-        }
+          isNegotiable: postData.jobData.isNegotiable || false,
+          hideSalary: postData.jobData.hideSalary || false,
+        },
+        applicationUrl: postData.jobData.applicationUrl,
+        applicationDeadline: (postData.jobData.applicationDeadline && postData.jobData.applicationDeadline.trim()) ? new Date(postData.jobData.applicationDeadline) : null,
+        benefits: postData.jobData.benefits ? postData.jobData.benefits.split(",").map(b => b.trim()) : [],
       });
       referenceId = job._id;
       referenceModel = "JobPost";
     } else if (postType === "article" && postData.articleData) {
+      const content = postData.articleData.content || postData.content || "";
+      const wordCount = content.trim().split(/\s+/).length;
+      const readTime = Math.max(1, Math.ceil(wordCount / 200));
+
       const article = await Article.create({
         title: postData.articleData.title,
         summary: postData.articleData.summary,
-        content: postData.articleData.content || postData.content,
-
+        content: content,
         tags: postData.articleData.tags || [],
-        slug: postData.articleData.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now(),
+        seoSlug: postData.articleData.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now(),
+        bannerImage: postData.articleData.coverImage ? { url: postData.articleData.coverImage.url } : null,
+        readTime: readTime,
         status: "published",
         publishedAt: new Date()
       });
@@ -58,24 +70,31 @@ const createPost = async (userId, userRole, postData) => {
       const project = await ShowcaseProject.create({
         title: postData.projectData.title,
         description: postData.projectData.description || postData.content,
-
         techStack: (postData.projectData.tech || []).map(t => ({ name: t })),
+        githubUrl: postData.projectData.githubUrl,
         liveUrl: postData.projectData.live,
+        demoVideoUrl: postData.projectData.demoVideoUrl,
         projectStatus: postData.projectData.status,
+        startDate: (postData.projectData.startDate && postData.projectData.startDate.trim()) ? new Date(postData.projectData.startDate) : null,
+        endDate: (postData.projectData.endDate && postData.projectData.endDate.trim()) ? new Date(postData.projectData.endDate) : null,
         owner: userId,
         gallery: (postData.projectData.images || []).map(img => ({ url: img.url }))
       });
       referenceId = project._id;
       referenceModel = "ShowcaseProject";
-      // Update postType to match model enum if needed
       postType = "showcase_project";
     } else if (postType === "achievement" && postData.achievementData) {
       const achievement = await Achievement.create({
         title: postData.achievementData.title,
         type: postData.achievementData.type,
         issuer: { name: postData.achievementData.issuer },
-        issueDate: new Date(postData.achievementData.date),
+        issueDate: (postData.achievementData.date && postData.achievementData.date.trim()) ? new Date(postData.achievementData.date) : new Date(),
+        expiryDate: (postData.achievementData.expiryDate && postData.achievementData.expiryDate.trim()) ? new Date(postData.achievementData.expiryDate) : null,
+        doesNotExpire: postData.achievementData.doesNotExpire || false,
+        credentialId: postData.achievementData.credentialId,
         credentialUrl: postData.achievementData.credentialUrl,
+        description: postData.achievementData.description,
+        skills: postData.achievementData.skills || [],
       });
       referenceId = achievement._id;
       referenceModel = "Achievement";
@@ -92,7 +111,6 @@ const createPost = async (userId, userRole, postData) => {
       media: postData.media || [],
       hashtags: postData.hashtags || [],
       mentions: postData.mentions || [],
-      visibility: postData.visibility || "public",
       referenceId,
       referenceModel
     });

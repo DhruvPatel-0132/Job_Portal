@@ -45,13 +45,6 @@ const postSchema = new mongoose.Schema(
     hashtags: [{ type: String, lowercase: true }],
     mentions: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     
-    // Visibility Controls
-    visibility: {
-      type: String,
-      enum: ["public", "connections", "private", "members_only"],
-      default: "public",
-    },
-
     // Polymorphic Reference to specialized content
     referenceId: {
       type: mongoose.Schema.Types.ObjectId,

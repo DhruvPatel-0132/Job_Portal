@@ -2,6 +2,8 @@ const User = require("../models/User");
 const Profile = require("../models/Profile");
 const ProfessionalDetails = require("../models/ProfessionalDetails");
 const Connection = require("../models/Connection");
+const Post = require("../models/Post");
+const Company = require("../models/Company");
 
 // Get current user profile
 const getProfile = async (req, res) => {
@@ -20,14 +22,30 @@ const getProfile = async (req, res) => {
     const profDetails = await ProfessionalDetails.findOne({ userId: req.user.id });
 
     // Fetch connections count
-    const Connection = require("../models/Connection");
     const connectionsCount = await Connection.countDocuments({
       $or: [{ user1: req.user.id }, { user2: req.user.id }]
+    });
+
+    // Fetch posts count
+    let authorId = req.user.id;
+    let authorModel = "User";
+
+    const company = await Company.findOne({ createdBy: req.user.id });
+    if ((req.user.role === "company" || req.user.role === "hire") && company) {
+      authorId = company._id;
+      authorModel = "Company";
+    }
+
+    const postsCount = await Post.countDocuments({
+      author: authorId,
+      authorModel: authorModel,
+      isDeleted: false
     });
 
     // Convert profile to object to add extra fields
     const profileObj = profile.toObject();
     profileObj.connections = connectionsCount;
+    profileObj.postsCount = postsCount;
 
     if (profDetails) {
       profileObj.hireType = profDetails.hireType;
@@ -224,6 +242,24 @@ const updateProfile = async (req, res) => {
     });
 
     // =========================
+    // POSTS COUNT
+    // =========================
+    let authorIdForCount = req.user.id;
+    let authorModelForCount = "User";
+
+    const userCompany = await Company.findOne({ createdBy: req.user.id });
+    if ((req.user.role === "company" || req.user.role === "hire") && userCompany) {
+      authorIdForCount = userCompany._id;
+      authorModelForCount = "Company";
+    }
+
+    const postsCount = await Post.countDocuments({
+      author: authorIdForCount,
+      authorModel: authorModelForCount,
+      isDeleted: false
+    });
+
+    // =========================
     // FINAL RESPONSE
     // =========================
     return res.status(200).json({
@@ -236,6 +272,7 @@ const updateProfile = async (req, res) => {
         professionalDetails,
 
         connections: connectionsCount,
+        postsCount: postsCount,
       },
     });
   } catch (error) {
