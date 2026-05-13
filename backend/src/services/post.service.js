@@ -216,8 +216,56 @@ const getUserPosts = async (userId) => {
   }
 };
 
+const incrementPostViews = async (postId, userId) => {
+  try {
+    // Only increment if userId is provided and user hasn't viewed it yet
+    const post = await Post.findOneAndUpdate(
+      { 
+        _id: postId, 
+        "stats.viewedBy": { $ne: userId } 
+      },
+      { 
+        $inc: { "stats.viewsCount": 1 },
+        $push: { "stats.viewedBy": userId }
+      },
+      { new: true }
+    );
+
+    // If post is null, it either doesn't exist or user already viewed it
+    if (!post) {
+      const existingPost = await Post.findById(postId);
+      if (!existingPost) {
+        return {
+          status: 404,
+          response: { success: false, message: "Post not found" },
+        };
+      }
+      return {
+        status: 200,
+        response: { success: true, viewsCount: existingPost.stats.viewsCount, message: "View already recorded" },
+      };
+    }
+
+    return {
+      status: 200,
+      response: { success: true, viewsCount: post.stats.viewsCount },
+    };
+  } catch (error) {
+    console.error("Increment Views Service Error:", error);
+    return {
+      status: 500,
+      response: {
+        success: false,
+        message: "Failed to increment views",
+        error: error.message,
+      },
+    };
+  }
+};
+
 module.exports = {
   createPost,
   getPosts,
   getUserPosts,
+  incrementPostViews,
 };

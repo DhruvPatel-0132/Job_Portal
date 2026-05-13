@@ -1,18 +1,30 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import SidebarContent from "../components/dashboard/SidebarContent";
 import PostCard from "../components/dashboard/PostCard";
+import PostDetailModal from "../components/dashboard/PostDetailModal";
 import usePostStore from "../store/postStore";
 import { useAuthStore } from "../store/authStore";
 import { Loader2, AlertCircle, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 const ManagePosts = () => {
-  const { userPosts, loading, error, fetchUserPosts } = usePostStore();
+  const { userPosts, loading, error, fetchUserPosts, incrementViews } = usePostStore();
   const { user } = useAuthStore();
+
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   useEffect(() => {
     fetchUserPosts();
   }, [fetchUserPosts]);
+
+  const handleOpenDetail = async (post) => {
+    setSelectedPost(post);
+    setIsDetailModalOpen(true);
+    
+    // Increment views in backend (optional for self, but usually counted)
+    await incrementViews(post._id);
+  };
 
   return (
     <main className="max-w-[1080px] mx-auto px-4 py-6">
@@ -63,7 +75,7 @@ const ManagePosts = () => {
                     transition={{ duration: 0.3 }}
                     className="relative group"
                   >
-                    <PostCard post={post} />
+                    <PostCard post={post} onOpen={handleOpenDetail} />
                   </motion.div>
                 ))}
               </AnimatePresence>
@@ -80,8 +92,14 @@ const ManagePosts = () => {
                 <span className="text-lg font-bold text-blue-900">{userPosts.length}</span>
               </div>
               <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-100">
-                <span className="text-sm font-medium text-green-700">Total Reach</span>
+                <span className="text-sm font-medium text-green-700">Total Reach (Views)</span>
                 <span className="text-lg font-bold text-green-900">
+                  {userPosts.reduce((acc, p) => acc + (p.stats?.viewsCount || 0), 0)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-amber-50 rounded-lg border border-amber-100">
+                <span className="text-sm font-medium text-amber-700">Total Likes</span>
+                <span className="text-lg font-bold text-amber-900">
                   {userPosts.reduce((acc, p) => acc + (p.stats?.likesCount || 0), 0)}
                 </span>
               </div>
@@ -89,6 +107,12 @@ const ManagePosts = () => {
           </div>
         </div>
       </div>
+
+      <PostDetailModal 
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        post={selectedPost}
+      />
     </main>
   );
 };

@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import PostCard from "./PostCard";
 import CreatePostModal from "./CreatePostModal";
+import PostDetailModal from "./PostDetailModal";
 import { useAuthStore } from "../../store/authStore";
 import { motion, AnimatePresence } from "motion/react";
 import { useProfileStore } from "../../store/profileStore";
@@ -10,19 +11,31 @@ import usePostStore from "../../store/postStore";
 const Feed = () => {
   const { user, company, profile: authProfile } = useAuthStore();
   const { profile: storeProfile } = useProfileStore();
-  const { posts, loading, fetchPosts } = usePostStore();
+  const { posts, loading, fetchPosts, incrementViews } = usePostStore();
   
   const profile = storeProfile || authProfile;
   const role = user?.role;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [initialType, setInitialType] = useState("regular");
+  
+  // Post Detail Modal State
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
   const observer = useRef();
 
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
 
+  const handleOpenDetail = async (post) => {
+    setSelectedPost(post);
+    setIsDetailModalOpen(true);
+    
+    // Increment views in backend
+    await incrementViews(post._id);
+  };
 
   // Infinite scroll functionality (Placeholder for future implementation)
   const lastPostElementRef = useCallback(
@@ -164,7 +177,7 @@ const Feed = () => {
                 transition={{ delay: index * 0.1 }}
                 ref={posts.length === index + 1 ? lastPostElementRef : null}
               >
-                <PostCard post={post} />
+                <PostCard post={post} onOpen={handleOpenDetail} />
               </motion.div>
             ))
           ) : !loading && (
@@ -201,6 +214,13 @@ const Feed = () => {
         profile={profile}
         company={company}
         initialType={initialType}
+      />
+
+      {/* Post Detail Modal */}
+      <PostDetailModal 
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        post={selectedPost}
       />
     </div>
   );

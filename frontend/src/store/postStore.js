@@ -55,6 +55,31 @@ const usePostStore = create((set, get) => ({
     }
   },
 
+  incrementViews: async (postId) => {
+    try {
+      const response = await api.patch(`/posts/${postId}/view`);
+      if (response.data.success) {
+        // Update the view count in the local state for immediate feedback
+        set((state) => ({
+          posts: state.posts.map((post) =>
+            post._id === postId
+              ? { ...post, stats: { ...post.stats, viewsCount: response.data.viewsCount } }
+              : post
+          ),
+          userPosts: state.userPosts.map((post) =>
+            post._id === postId
+              ? { ...post, stats: { ...post.stats, viewsCount: response.data.viewsCount } }
+              : post
+          ),
+        }));
+      }
+      return { success: true, viewsCount: response.data.viewsCount };
+    } catch (error) {
+      console.error("Failed to increment views:", error);
+      return { success: false };
+    }
+  },
+
 }));
 
 

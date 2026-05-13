@@ -62,6 +62,7 @@ const postSchema = new mongoose.Schema(
       sharesCount: { type: Number, default: 0 },
       savesCount: { type: Number, default: 0 },
       viewsCount: { type: Number, default: 0 },
+      viewedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     },
 
     // Audit & Moderation

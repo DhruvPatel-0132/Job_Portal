@@ -4,6 +4,7 @@ const {
   createPostController,
   getPostsController,
   getUserPostsController,
+  incrementPostViewsController,
 } = require("../controllers/post.controller");
 const authMiddleware = require("../middleware/auth.middleware");
 
@@ -15,5 +16,8 @@ router.get("/", authMiddleware, getPostsController);
 
 // Get my posts
 router.get("/me", authMiddleware, getUserPostsController);
+
+// Increment post views
+router.patch("/:id/view", authMiddleware, incrementPostViewsController);
 
 module.exports = router;

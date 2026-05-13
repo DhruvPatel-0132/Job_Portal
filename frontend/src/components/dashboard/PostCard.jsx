@@ -2,7 +2,7 @@ import React from "react";
 import { ThumbsUp, MessageSquare, Send, MoreHorizontal, Briefcase, Award, Code, FileText, ExternalLink, Clock, MapPin } from "lucide-react";
 import { motion } from "motion/react";
 
-const PostCard = ({ post }) => {
+const PostCard = ({ post, onOpen }) => {
   const isCompany = post.authorModel === "Company";
   const authorName = isCompany
     ? post.author.name
@@ -186,9 +186,9 @@ const PostCard = ({ post }) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      // whileHover={{ y: -2 }}
       transition={{ duration: 0.3 }}
-      className="bg-white rounded-xl border border-gray-200 mb-4 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+      onClick={() => onOpen && onOpen(post)}
+      className="bg-white rounded-xl border border-gray-200 mb-4 shadow-sm hover:shadow-md transition-all overflow-hidden cursor-pointer active:scale-[0.99]"
     >
       {/* Post Header */}
       <div className="flex items-center px-4 py-3">
@@ -296,6 +296,10 @@ const PostCard = ({ post }) => {
         <div className="flex space-x-3">
           <span className="hover:text-blue-600 hover:underline cursor-pointer">
             {post.stats?.commentsCount || 0} comments
+          </span>
+          <span>•</span>
+          <span className="hover:text-blue-600 hover:underline cursor-pointer">
+            {post.stats?.viewsCount || 0} views
           </span>
         </div>
       </div>
