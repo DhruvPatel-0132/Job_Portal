@@ -12,13 +12,13 @@ const Feed = () => {
   const { user, company, profile: authProfile } = useAuthStore();
   const { profile: storeProfile } = useProfileStore();
   const { posts, loading, fetchPosts, incrementViews } = usePostStore();
-  
+
   const profile = storeProfile || authProfile;
   const role = user?.role;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [initialType, setInitialType] = useState("regular");
-  
+
   // Post Detail Modal State
   const [selectedPost, setSelectedPost] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -32,7 +32,7 @@ const Feed = () => {
   const handleOpenDetail = async (post) => {
     setSelectedPost(post);
     setIsDetailModalOpen(true);
-    
+
     // Increment views in backend
     await incrementViews(post._id);
   };
@@ -56,7 +56,7 @@ const Feed = () => {
             alt="Current User"
             referrerPolicy="no-referrer"
             onError={(e) => {
-              e.target.onerror = null; 
+              e.target.onerror = null;
               e.target.src = "/avatar.svg";
             }}
             className="w-12 h-12 rounded-full object-cover p-1 border border-gray-200"
@@ -181,8 +181,8 @@ const Feed = () => {
               </motion.div>
             ))
           ) : !loading && (
-            <motion.div 
-              initial={{ opacity: 0 }} 
+            <motion.div
+              initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="flex flex-col items-center justify-center py-12 px-4 bg-white rounded-lg border border-gray-200 shadow-sm"
             >
@@ -217,7 +217,7 @@ const Feed = () => {
       />
 
       {/* Post Detail Modal */}
-      <PostDetailModal 
+      <PostDetailModal
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
         post={selectedPost}

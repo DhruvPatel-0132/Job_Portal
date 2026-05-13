@@ -67,6 +67,7 @@ const PostFormRenderer = ({
         />
       );
     case "project":
+    case "showcase_project":
       return (
         <ProjectForm 
           projectData={projectData}

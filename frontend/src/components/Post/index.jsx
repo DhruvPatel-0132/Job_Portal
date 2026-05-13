@@ -8,10 +8,10 @@ import usePostStore from "../../store/postStore";
 import { uploadToCloudinary } from "../../utils/cloudinary";
 
 
-const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "regular" }) => {
+const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "regular", editingPost = null }) => {
   const [postType, setPostType] = useState(initialType);
   const [content, setContent] = useState("");
-  const { createPost, loading } = usePostStore();
+  const { createPost, updatePost, loading } = usePostStore();
 
   const [selectedMedia, setSelectedMedia] = useState([]);
   const fileInputRef = useRef(null);
@@ -39,20 +39,90 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
     title: "", type: "certification", issuer: "", date: "", credentialUrl: "",
     expiryDate: "", doesNotExpire: false, credentialId: "", description: ""
   });
-  
+
   const [isMediaUploading, setIsMediaUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
-    if (isOpen) setPostType(initialType);
-  }, [isOpen, initialType]);
+    if (isOpen) {
+      if (editingPost) {
+        setPostType(editingPost.postType);
+        setContent(editingPost.content || "");
+        setSelectedMedia(editingPost.media || []);
+
+        if (editingPost.postType === "job_post" && editingPost.referenceId) {
+          const job = editingPost.referenceId;
+          setJobData({
+            title: job.title || "",
+            location: job.location || "",
+            type: job.employmentType || "full_time",
+            workMode: job.workMode || "on_site",
+            experienceLevel: job.experienceLevel || "fresher",
+            salaryMin: job.salary?.min || "",
+            salaryMax: job.salary?.max || "",
+            description: job.description || "",
+            skills: job.skillsRequired || [],
+            industry: job.industry || "",
+            category: job.category || "",
+            educationLevel: job.educationLevel || "",
+            isNegotiable: job.salary?.isNegotiable || false,
+            hideSalary: job.salary?.hideSalary || false,
+            applicationUrl: job.applicationUrl || "",
+            applicationDeadline: job.applicationDeadline ? new Date(job.applicationDeadline).toISOString().split('T')[0] : "",
+            benefits: job.benefits ? job.benefits.join(", ") : ""
+          });
+        } else if (editingPost.postType === "showcase_project" && editingPost.referenceId) {
+          const project = editingPost.referenceId;
+          setProjectData({
+            title: project.title || "",
+            tech: project.techStack ? project.techStack.map(t => t.name || t) : [],
+            live: project.liveUrl || "",
+            status: project.projectStatus || "completed",
+            description: project.description || "",
+            images: project.gallery || [],
+            githubUrl: project.githubUrl || "",
+            demoVideoUrl: project.demoVideoUrl || "",
+            startDate: project.startDate ? new Date(project.startDate).toISOString().split('T')[0] : "",
+            endDate: project.endDate ? new Date(project.endDate).toISOString().split('T')[0] : ""
+          });
+        } else if (editingPost.postType === "article" && editingPost.referenceId) {
+          const article = editingPost.referenceId;
+          setArticleData({
+            title: article.title || "",
+            summary: article.summary || "",
+            tags: article.tags || [],
+            content: article.content || "",
+            coverImage: article.bannerImage || null
+          });
+        } else if (editingPost.postType === "achievement" && editingPost.referenceId) {
+          const achievement = editingPost.referenceId;
+          setAchievementData({
+            title: achievement.title || "",
+            type: achievement.type || "certification",
+            issuer: achievement.issuer?.name || achievement.issuer || "",
+            date: achievement.issueDate ? new Date(achievement.issueDate).toISOString().split('T')[0] : "",
+            credentialUrl: achievement.credentialUrl || "",
+            expiryDate: achievement.expiryDate ? new Date(achievement.expiryDate).toISOString().split('T')[0] : "",
+            doesNotExpire: achievement.doesNotExpire || false,
+            credentialId: achievement.credentialId || "",
+            description: achievement.description || ""
+          });
+        }
+      } else {
+        setPostType(initialType);
+        setContent("");
+        setSelectedMedia([]);
+        // Reset other states if needed
+      }
+    }
+  }, [isOpen, initialType, editingPost]);
 
   const handlePost = async () => {
     // Basic guard: Allow if there's content OR media OR specialized data
-    const hasSpecializedData = 
-      (postType === "job_post" && jobData.title) || 
-      (postType === "project" && projectData.title) || 
-      (postType === "article" && articleData.title) || 
+    const hasSpecializedData =
+      (postType === "job_post" && jobData.title) ||
+      (postType === "project" || postType === "showcase_project" && projectData.title) ||
+      (postType === "article" && articleData.title) ||
       (postType === "achievement" && achievementData.title);
 
     if (!content.trim() && selectedMedia.length === 0 && !hasSpecializedData) return;
@@ -61,9 +131,9 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
     setUploadProgress(10);
 
     try {
-      let finalObjectId = null;
+      let finalObjectId = editingPost?._id || null;
 
-      // 1. Upload Main Media
+      // 1. Upload Main Media (only if new file selected)
       const uploadedMedia = await Promise.all(
         selectedMedia.map(async (m, index) => {
           if (m.file) {
@@ -72,13 +142,13 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
             setUploadProgress(prev => Math.min(prev + 20, 90));
             return { url: result.url, type: m.type, publicId: result.publicId };
           }
-          return { url: m.url, type: m.type };
+          return { url: m.url, type: m.type, publicId: m.publicId };
         })
       );
 
       // 2. Upload Project Images
       let uploadedProjectImages = [];
-      if (postType === "project" && projectData.images.length > 0) {
+      if ((postType === "project" || postType === "showcase_project") && projectData.images.length > 0) {
         uploadedProjectImages = await Promise.all(
           projectData.images.map(async (img) => {
             if (img.file) {
@@ -87,7 +157,7 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
               setUploadProgress(prev => Math.min(prev + 20, 90));
               return { url: result.url, publicId: result.publicId };
             }
-            return { url: img.url };
+            return { url: img.url, publicId: img.publicId };
           })
         );
       }
@@ -99,24 +169,30 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
         if (!finalObjectId) finalObjectId = result.objectId;
         setUploadProgress(prev => Math.min(prev + 20, 90));
         uploadedArticleCover = { url: result.url, publicId: result.publicId };
-      } else if (articleData.coverImage?.url) {
-        uploadedArticleCover = { url: articleData.coverImage.url };
+      } else if (articleData.coverImage) {
+        uploadedArticleCover = { url: articleData.coverImage.url, publicId: articleData.coverImage.publicId };
       }
 
       setUploadProgress(95);
 
       const postData = {
-        _id: finalObjectId, // Use the pre-generated ID
-        postType,
+        _id: finalObjectId,
+        postType: postType === "project" ? "showcase_project" : postType,
         content,
         media: uploadedMedia,
         jobData: postType === "job_post" ? jobData : null,
-        projectData: postType === "project" ? { ...projectData, images: uploadedProjectImages } : null,
+        projectData: (postType === "project" || postType === "showcase_project") ? { ...projectData, images: uploadedProjectImages } : null,
         articleData: postType === "article" ? { ...articleData, coverImage: uploadedArticleCover } : null,
         achievementData: postType === "achievement" ? achievementData : null,
       };
 
-      const result = await createPost(postData);
+      let result;
+      if (editingPost) {
+        result = await updatePost(editingPost._id, postData);
+      } else {
+        result = await createPost(postData);
+      }
+
       setUploadProgress(100);
       if (result.success) {
         setContent("");
@@ -126,8 +202,8 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
         onClose();
       }
     } catch (error) {
-      console.error("Failed to upload media or create post:", error);
-      alert("Something went wrong while uploading media. Please try again.");
+      console.error("Failed to upload media or save post:", error);
+      alert("Something went wrong while processing your post. Please try again.");
     } finally {
       setIsMediaUploading(false);
       setUploadProgress(0);
@@ -146,7 +222,7 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
       url: URL.createObjectURL(file),
       type: file.type.startsWith('image/') ? 'image' : 'video'
     }];
-    
+
     // Revoke old URLs to prevent memory leaks
     selectedMedia.forEach(m => URL.revokeObjectURL(m.url));
     setSelectedMedia(newMedia);
@@ -171,7 +247,7 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
       file,
       url: URL.createObjectURL(file)
     }];
-    
+
     projectData.images.forEach(img => URL.revokeObjectURL(img.url));
     setProjectData(prev => ({
       ...prev,
@@ -187,7 +263,7 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
       return { ...prev, images: updatedImages };
     });
   };
-  
+
   const handleArticleCoverSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -327,7 +403,7 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
                       <p className="text-gray-500 text-sm mt-1">Please wait while we process your media.</p>
                     </div>
                     <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                      <motion.div 
+                      <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${uploadProgress}%` }}
                         className="h-full bg-black"
@@ -346,7 +422,7 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
                   src={avatar}
                   alt="Avatar"
                   onError={(e) => {
-                    e.target.onerror = null; 
+                    e.target.onerror = null;
                     e.target.src = "/avatar.svg";
                   }}
                   className="w-12 h-12 rounded-full object-cover border-2 border-gray-50 p-0.5"
@@ -359,7 +435,7 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
 
               <div className="space-y-4">
                 <AnimatePresence mode="wait">
-                  <PostFormRenderer 
+                  <PostFormRenderer
                     postType={postType}
                     content={content}
                     setContent={setContent}
@@ -399,11 +475,11 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
               </div>
             </div>
 
-            <PostFooter 
-              postType={postType} 
-              setPostType={setPostType} 
-              role={role} 
-              handlePost={handlePost} 
+            <PostFooter
+              postType={postType}
+              setPostType={setPostType}
+              role={role}
+              handlePost={handlePost}
               loading={loading || isMediaUploading}
             />
 

@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "motion/react";
-import { 
-  Image as ImageIcon, Briefcase, FileText, Code, Award, MessageSquare 
+import {
+  Image as ImageIcon, Briefcase, FileText, Code, Award, MessageSquare
 } from "lucide-react";
 import ToolbarButton from "./ToolbarButton";
 
@@ -11,7 +11,8 @@ const PostFooter = ({ postType, setPostType, role, handlePost, loading }) => {
     switch (postType) {
       case "job_post": return "Post Job";
       case "article": return "Publish";
-      case "project": return "Showcase";
+      case "project":
+      case "showcase_project": return "Showcase";
       case "achievement": return "Add";
       default: return "Post";
     }
@@ -73,9 +74,8 @@ const PostFooter = ({ postType, setPostType, role, handlePost, loading }) => {
           whileTap={!loading ? { scale: 0.95 } : {}}
           onClick={handlePost}
           disabled={loading}
-          className={`px-8 py-2.5 bg-blue-600 text-white font-bold rounded-full transition-all shadow-lg shadow-blue-200 ${
-            loading ? "opacity-70 cursor-not-allowed" : "hover:bg-blue-700"
-          }`}
+          className={`px-8 py-2.5 bg-blue-600 text-white font-bold rounded-full transition-all shadow-lg shadow-blue-200 ${loading ? "opacity-70 cursor-not-allowed" : "hover:bg-blue-700"
+            }`}
         >
           {loading ? "Posting..." : getPostButtonLabel()}
         </motion.button>

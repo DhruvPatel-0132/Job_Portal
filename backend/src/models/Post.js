@@ -44,7 +44,7 @@ const postSchema = new mongoose.Schema(
     // Discovery & Context
     hashtags: [{ type: String, lowercase: true }],
     mentions: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    
+
     // Polymorphic Reference to specialized content
     referenceId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -69,13 +69,14 @@ const postSchema = new mongoose.Schema(
     isEdited: { type: Boolean, default: false },
     editedAt: Date,
     isDeleted: { type: Boolean, default: false },
+    isArchived: { type: Boolean, default: false },
     moderationStatus: {
       type: String,
       enum: ["pending", "approved", "rejected", "flagged"],
       default: "approved",
     },
   },
-  { 
+  {
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true }

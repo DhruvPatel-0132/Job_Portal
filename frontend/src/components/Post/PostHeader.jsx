@@ -8,7 +8,8 @@ const PostHeader = ({ postType, onClose }) => {
       case "media": return "Create a media post";
       case "job_post": return "Create a job post";
       case "article": return "Write an article";
-      case "project": return "Showcase your project";
+      case "project":
+      case "showcase_project": return "Showcase your project";
       case "achievement": return "Share an achievement";
       default: return "Create a post";
     }

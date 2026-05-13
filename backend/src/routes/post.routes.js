@@ -5,6 +5,9 @@ const {
   getPostsController,
   getUserPostsController,
   incrementPostViewsController,
+  updatePostController,
+  deletePostController,
+  archivePostController,
 } = require("../controllers/post.controller");
 const authMiddleware = require("../middleware/auth.middleware");
 
@@ -16,6 +19,15 @@ router.get("/", authMiddleware, getPostsController);
 
 // Get my posts
 router.get("/me", authMiddleware, getUserPostsController);
+
+// Edit a post
+router.put("/:id", authMiddleware, updatePostController);
+
+// Delete a post
+router.delete("/:id", authMiddleware, deletePostController);
+
+// Archive a post
+router.patch("/:id/archive", authMiddleware, archivePostController);
 
 // Increment post views
 router.patch("/:id/view", authMiddleware, incrementPostViewsController);

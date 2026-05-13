@@ -1,8 +1,52 @@
-import React from "react";
-import { ThumbsUp, MessageSquare, Send, MoreHorizontal, Briefcase, Award, Code, FileText, ExternalLink, Clock, MapPin } from "lucide-react";
-import { motion } from "motion/react";
+import React, { useState, useRef, useEffect } from "react";
+import { ThumbsUp, MessageSquare, Send, MoreHorizontal, Briefcase, Award, Code, FileText, ExternalLink, Clock, MapPin, Edit, Trash2, Archive } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { useAuthStore } from "../../store/authStore";
+import usePostStore from "../../store/postStore";
+import PostModal from "../Post";
 
 const PostCard = ({ post, onOpen }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const menuRef = useRef(null);
+  const CONTENT_LIMIT = 200;
+
+  const { user, profile: userProfile, company: userCompany } = useAuthStore();
+  const { deletePost, archivePost } = usePostStore();
+
+  const isOwner = user && (
+    post.author._id === user._id || 
+    (userCompany && post.author._id === userCompany._id) ||
+    post.author === user._id ||
+    (userCompany && post.author === userCompany._id)
+  );
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleDelete = async () => {
+    if (window.confirm("Are you sure you want to delete this post?")) {
+      await deletePost(post._id);
+    }
+    setShowMenu(false);
+  };
+
+  const handleArchive = async () => {
+    await archivePost(post._id);
+    setShowMenu(false);
+  };
+
+  const isLongText = post.content && post.content.length > CONTENT_LIMIT;
+  const displayedContent = isExpanded ? post.content : post.content?.slice(0, CONTENT_LIMIT);
+
   const isCompany = post.authorModel === "Company";
   const authorName = isCompany
     ? post.author.name
@@ -78,6 +122,7 @@ const PostCard = ({ post, onOpen }) => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={(e) => e.stopPropagation()}
                 className="px-4 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-full shadow-lg shadow-blue-200"
               >
                 Apply
@@ -102,7 +147,13 @@ const PostCard = ({ post, onOpen }) => {
             </p>
             <div className="mt-4 flex items-center gap-4">
               {post.referenceId.liveUrl && (
-                <a href={post.referenceId.liveUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-600 font-bold flex items-center gap-1 hover:underline">
+                <a
+                  href={post.referenceId.liveUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-xs text-blue-600 font-bold flex items-center gap-1 hover:underline"
+                >
                   <ExternalLink className="w-3 h-3" /> Live Demo
                 </a>
               )}
@@ -183,144 +234,236 @@ const PostCard = ({ post, onOpen }) => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      onClick={() => onOpen && onOpen(post)}
-      className="bg-white rounded-xl border border-gray-200 mb-4 shadow-sm hover:shadow-md transition-all overflow-hidden cursor-pointer active:scale-[0.99]"
-    >
-      {/* Post Header */}
-      <div className="flex items-center px-4 py-3">
-        <motion.img
-          whileHover={{ scale: 1.05 }}
-          src={authorAvatar}
-          alt={authorName}
-          referrerPolicy="no-referrer"
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = "/avatar.svg";
-          }}
-          className="w-12 h-12 rounded-full object-cover mr-3 border border-gray-100 p-0.5"
-        />
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        onClick={() => {
+          if (!isExpanded && onOpen) {
+            onOpen(post);
+          }
+        }}
+        className={`bg-white rounded-xl border border-gray-200 mb-4 shadow-sm hover:shadow-md transition-all overflow-hidden active:scale-[0.99] ${!isExpanded ? 'cursor-pointer' : 'cursor-default'} ${post.isArchived ? 'opacity-75 grayscale-[0.2]' : ''}`}
+      >
+        {/* Post Header */}
+        <div className="flex items-center px-4 py-3">
+          <motion.img
+            whileHover={{ scale: 1.05 }}
+            src={authorAvatar}
+            alt={authorName}
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = "/avatar.svg";
+            }}
+            className="w-12 h-12 rounded-full object-cover mr-3 border border-gray-100 p-0.5"
+          />
 
-        <div className="flex-1">
-          <h3 className="text-sm font-bold text-gray-900 hover:text-blue-600 hover:underline cursor-pointer transition-colors">
-            {authorName}
-          </h3>
-          <p className="text-xs text-gray-500 font-medium line-clamp-1">{post.author.headline}</p>
-          <div className="flex items-center mt-0.5 space-x-1">
-            <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">{timeAgo}</p>
+          <div className="flex-1">
+            <h3 className="text-sm font-bold text-gray-900 hover:text-blue-600 hover:underline cursor-pointer transition-colors">
+              {authorName}
+            </h3>
+            <p className="text-xs text-gray-500 font-medium line-clamp-1">{post.author.headline}</p>
+            <div className="flex items-center mt-0.5 space-x-1">
+              <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">{timeAgo}</p>
+              {post.isEdited && <span className="text-[10px] text-gray-300">• Edited</span>}
+              {post.isArchived && <span className="text-[10px] text-amber-500 font-bold ml-2 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100">Archived</span>}
+            </div>
           </div>
 
-        </div>
-        <motion.button
-          whileHover={{ backgroundColor: "#f3f4f6" }}
-          whileTap={{ scale: 0.9 }}
-          className="text-gray-400 p-2 rounded-full transition-colors focus:outline-none"
-        >
-          <MoreHorizontal className="w-5 h-5" />
-        </motion.button>
-      </div>
-
-      {/* Post Content */}
-      {(post.content || post.referenceId) && (
-        <div className="px-4 pb-3 space-y-3">
-          {post.content && (
-            <p className="text-[14.5px] leading-relaxed text-gray-800 whitespace-pre-line font-normal">
-              {post.content}
-            </p>
-          )}
-
-          {/* Render polymorphic content based on postType */}
-          {renderSpecializedContent()}
-        </div>
-      )}
-
-      {/* Post Media (Images/Videos) */}
-      {(post.media && post.media.length > 0) ? (
-        <div className="mt-1 overflow-hidden relative py-2 flex justify-center">
-          {post.media.map((item, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="relative w-[85%] max-w-[500px]"
+          {/* 3 Dots Menu for Owners */}
+          <div className="relative" ref={menuRef}>
+            <motion.button
+              whileHover={{ backgroundColor: "#f3f4f6" }}
+              whileTap={{ scale: 0.9 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMenu(!showMenu);
+              }}
+              className="text-gray-400 p-2 rounded-full transition-colors focus:outline-none"
             >
-              {item.type === "image" ? (
-                <img
-                  src={item.url}
-                  alt="Post content"
-                  className="w-full h-auto rounded-lg shadow-xl"
-                />
-              ) : item.type === "video" ? (
-                <video
-                  src={item.url}
-                  controls
-                  className="w-full h-auto rounded-lg shadow-xl"
-                />
-              ) : null}
-            </motion.div>
-          ))}
-        </div>
-      ) : post.image && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mt-1 relative overflow-hidden py-2 flex justify-center"
-        >
-          <div className="w-[85%] max-w-[500px]">
-            <img
-              src={post.image}
-              alt="Post content"
-              className="w-full h-auto rounded-lg shadow-xl"
-            />
+              <MoreHorizontal className="w-5 h-5" />
+            </motion.button>
+
+            <AnimatePresence>
+              {showMenu && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {isOwner ? (
+                    <>
+                      <button
+                        onClick={() => {
+                          setIsEditModalOpen(true);
+                          setShowMenu(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <Edit className="w-4 h-4 text-blue-500" />
+                        Edit Post
+                      </button>
+                      <button
+                        onClick={handleArchive}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <Archive className={`w-4 h-4 ${post.isArchived ? 'text-amber-500' : 'text-gray-400'}`} />
+                        {post.isArchived ? "Unarchive Post" : "Archive Post"}
+                      </button>
+                      <div className="h-px bg-gray-100" />
+                      <button
+                        onClick={handleDelete}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Delete Post
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      onClick={() => setShowMenu(false)}
+                    >
+                      <FileText className="w-4 h-4 text-gray-400" />
+                      Report Post
+                    </button>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-        </motion.div>
-      )}
+        </div>
+
+        {/* Post Content */}
+        {(post.content || post.referenceId) && (
+          <div className="px-4 pb-3 space-y-3">
+            {post.content && (
+              <div className="relative">
+                <p className="text-[14.5px] leading-relaxed text-gray-800 whitespace-pre-line font-normal">
+                  {displayedContent}
+                  {!isExpanded && isLongText && <span className="text-gray-400">...</span>}
+                </p>
+                {isLongText && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsExpanded((prev) => !prev);
+                    }}
+                    className="text-blue-600 font-bold hover:text-blue-700 transition-colors mt-2 py-2 px-3 -ml-3 rounded-lg hover:bg-blue-50 focus:outline-none block w-fit hover:underline text-sm relative z-20 cursor-pointer"
+                  >
+                    {isExpanded ? "Show less" : "Show more"}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Render polymorphic content based on postType */}
+            {renderSpecializedContent()}
+          </div>
+        )}
+
+        {/* Post Media (Images/Videos) */}
+        {(post.media && post.media.length > 0) ? (
+          <div className="mt-1 overflow-hidden relative py-2 flex justify-center">
+            {post.media.map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="relative w-[85%] max-w-[500px]"
+              >
+                {item.type === "image" ? (
+                  <img
+                    src={item.url}
+                    alt="Post content"
+                    className="w-full h-auto rounded-lg shadow-xl"
+                  />
+                ) : item.type === "video" ? (
+                  <video
+                    src={item.url}
+                    controls
+                    className="w-full h-auto rounded-lg shadow-xl"
+                  />
+                ) : null}
+              </motion.div>
+            ))}
+          </div>
+        ) : post.image && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-1 relative overflow-hidden py-2 flex justify-center"
+          >
+            <div className="w-[85%] max-w-[500px]">
+              <img
+                src={post.image}
+                alt="Post content"
+                className="w-full h-auto rounded-lg shadow-xl"
+              />
+            </div>
+          </motion.div>
+        )}
 
 
-      {/* Post Stats */}
-      <div className="px-4 py-2.5 flex items-center justify-between border-b border-gray-50 text-[11px] font-medium text-gray-500">
-        <div className="flex items-center space-x-1.5">
-          <div className="flex -space-x-1">
-            <span className="flex items-center justify-center w-4 h-4 bg-blue-500 rounded-full ring-2 ring-white">
-              <ThumbsUp className="w-2.5 h-2.5 text-white" />
+        {/* Post Stats */}
+        <div className="px-4 py-2.5 flex items-center justify-between border-b border-gray-50 text-[11px] font-medium text-gray-500">
+          <div className="flex items-center space-x-1.5">
+            <div className="flex -space-x-1">
+              <span className="flex items-center justify-center w-4 h-4 bg-blue-500 rounded-full ring-2 ring-white">
+                <ThumbsUp className="w-2.5 h-2.5 text-white" />
+              </span>
+              <span className="flex items-center justify-center w-4 h-4 bg-red-500 rounded-full ring-2 ring-white">
+                <div className="w-1.5 h-1.5 bg-white rounded-full" />
+              </span>
+            </div>
+            <span className="hover:text-blue-600 hover:underline cursor-pointer">{post.stats?.likesCount || 0}</span>
+          </div>
+          <div className="flex space-x-3">
+            <span className="hover:text-blue-600 hover:underline cursor-pointer">
+              {post.stats?.commentsCount || 0} comments
             </span>
-            <span className="flex items-center justify-center w-4 h-4 bg-red-500 rounded-full ring-2 ring-white">
-              <div className="w-1.5 h-1.5 bg-white rounded-full" />
+            <span>•</span>
+            <span className="hover:text-blue-600 hover:underline cursor-pointer">
+              {post.stats?.viewsCount || 0} views
             </span>
           </div>
-          <span className="hover:text-blue-600 hover:underline cursor-pointer">{post.stats?.likesCount || 0}</span>
         </div>
-        <div className="flex space-x-3">
-          <span className="hover:text-blue-600 hover:underline cursor-pointer">
-            {post.stats?.commentsCount || 0} comments
-          </span>
-          <span>•</span>
-          <span className="hover:text-blue-600 hover:underline cursor-pointer">
-            {post.stats?.viewsCount || 0} views
-          </span>
-        </div>
-      </div>
 
-      {/* Post Actions */}
-      <div className="px-2 py-1 flex items-center justify-around sm:justify-start sm:space-x-1">
-        <ActionButton icon={<ThumbsUp className="w-5 h-5" />} label="Like" />
-        <ActionButton
-          icon={<MessageSquare className="w-5 h-5" />}
-          label="Comment"
-        />
-        <ActionButton icon={<Send className="w-5 h-5" />} label="Send" />
-      </div>
-    </motion.div>
+        {/* Post Actions */}
+        <div className="px-2 py-1 flex items-center justify-around sm:justify-start sm:space-x-1">
+          <ActionButton icon={<ThumbsUp className="w-5 h-5" />} label="Like" onClick={(e) => e.stopPropagation()} />
+          <ActionButton
+            icon={<MessageSquare className="w-5 h-5" />}
+            label="Comment"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <ActionButton icon={<Send className="w-5 h-5" />} label="Send" onClick={(e) => e.stopPropagation()} />
+        </div>
+      </motion.div>
+
+      {/* Edit Post Modal */}
+      <PostModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        editingPost={post}
+        role={user?.role}
+        profile={userProfile}
+        company={userCompany}
+      />
+    </>
   );
 };
 
-const ActionButton = ({ icon, label }) => (
+const ActionButton = ({ icon, label, onClick }) => (
   <motion.button
     whileHover={{ backgroundColor: "rgba(0,0,0,0.04)" }}
     whileTap={{ scale: 0.95 }}
+    onClick={onClick}
     className="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg text-gray-600 font-semibold transition-all group"
   >
     <span className="group-hover:text-blue-600 transition-colors">{icon}</span>
