@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const articleSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true },
-    slug: { type: String, required: true, unique: true }, // SEO friendly URL
+    seoSlug: { type: String, required: true, unique: true }, // SEO friendly URL
     
     bannerImage: {
       url: String,
@@ -32,6 +32,6 @@ const articleSchema = new mongoose.Schema(
 );
 
 articleSchema.index({ title: "text", summary: "text" });
-articleSchema.index({ slug: 1 });
+
 
 module.exports = mongoose.model("Article", articleSchema);

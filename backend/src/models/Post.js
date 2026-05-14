@@ -44,13 +44,6 @@ const postSchema = new mongoose.Schema(
     // Discovery & Context
     hashtags: [{ type: String, lowercase: true }],
     mentions: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    
-    // Visibility Controls
-    visibility: {
-      type: String,
-      enum: ["public", "connections", "private", "members_only"],
-      default: "public",
-    },
 
     // Polymorphic Reference to specialized content
     referenceId: {
@@ -69,19 +62,21 @@ const postSchema = new mongoose.Schema(
       sharesCount: { type: Number, default: 0 },
       savesCount: { type: Number, default: 0 },
       viewsCount: { type: Number, default: 0 },
+      viewedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     },
 
     // Audit & Moderation
     isEdited: { type: Boolean, default: false },
     editedAt: Date,
     isDeleted: { type: Boolean, default: false },
+    isArchived: { type: Boolean, default: false },
     moderationStatus: {
       type: String,
       enum: ["pending", "approved", "rejected", "flagged"],
       default: "approved",
     },
   },
-  { 
+  {
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true }

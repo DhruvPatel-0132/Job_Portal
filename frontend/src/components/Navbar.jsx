@@ -170,6 +170,11 @@ const Navbar = () => {
                   className="h-6 w-6 rounded-full object-cover"
                   src={userData.avatar}
                   alt="User Avatar"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    e.target.onerror = null; 
+                    e.target.src = "/avatar.svg";
+                  }}
                 />
                 <div className="flex items-center mt-0.5">
                   <span className="text-xs hidden md:block">Me</span>
@@ -197,7 +202,13 @@ const Navbar = () => {
                         className="h-12 w-12 rounded-full object-cover border border-gray-200"
                         src={userData.avatar}
                         alt="User Avatar"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          e.target.onerror = null; 
+                          e.target.src = "/avatar.svg";
+                        }}
                       />
+
                       <div>
                         <p className="text-sm font-semibold text-gray-900">
                           {userData.name}
@@ -224,6 +235,12 @@ const Navbar = () => {
                     >
                       Settings &amp; Privacy
                     </a>
+                    <Link
+                      to="/manage-posts"
+                      className="block px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Manage Posts
+                    </Link>
                     <a
                       href="#"
                       className="block px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100"

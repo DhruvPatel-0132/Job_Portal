@@ -76,18 +76,19 @@ const MyNetwork = () => {
                   {connections.map((conn) => (
                     <div
                       key={conn._id}
-                      className="p-4 flex items-center gap-3 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors"
+                      className="p-4 flex items-center gap-3 w-full border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors"
                     >
                       <img
                         src={conn.avatar || "/avatar.svg"}
                         alt={conn.name}
-                        className="w-14 h-14 rounded-full border border-gray-100 shadow-sm object-cover"
+                        referrerPolicy="no-referrer"
+                        className="w-14 h-14 rounded-full border border-gray-100 shadow-sm object-cover shrink-0"
                       />
                       <div className="flex-1 min-w-0">
                         <h3 className="text-sm font-bold text-gray-900 hover:text-blue-600 hover:underline cursor-pointer truncate">
                           {conn.name}
                         </h3>
-                        <p className="text-xs text-gray-500 truncate mt-0.5">
+                        <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">
                           {conn.headline || "No headline available"}
                         </p>
                       </div>

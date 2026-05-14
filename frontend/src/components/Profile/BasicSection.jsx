@@ -14,8 +14,8 @@ export default function BasicSection({ editData, update }) {
     if (file) {
       try {
         setIsUploading((prev) => ({ ...prev, avatar: true }));
-        const url = await uploadToCloudinary(file);
-        update("avatar", url);
+        const result = await uploadToCloudinary(file, "profile");
+        update("avatar", result.url);
       } catch (error) {
         console.error("Avatar upload failed:", error);
         alert("Failed to upload avatar.");
@@ -30,8 +30,8 @@ export default function BasicSection({ editData, update }) {
     if (file) {
       try {
         setIsUploading((prev) => ({ ...prev, banner: true }));
-        const url = await uploadToCloudinary(file);
-        update("banner", url);
+        const result = await uploadToCloudinary(file, "profile");
+        update("banner", result.url);
       } catch (error) {
         console.error("Banner upload failed:", error);
         alert("Failed to upload banner.");
@@ -71,6 +71,7 @@ export default function BasicSection({ editData, update }) {
                 <img
                   src={editData.avatar}
                   alt="Profile"
+                  referrerPolicy="no-referrer"
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -136,6 +137,7 @@ export default function BasicSection({ editData, update }) {
                 src={editData.banner} 
                 className="w-full h-full object-cover" 
                 alt="Banner Preview" 
+                referrerPolicy="no-referrer"
               />
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center gap-2">

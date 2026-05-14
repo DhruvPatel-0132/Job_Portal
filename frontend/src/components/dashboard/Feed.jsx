@@ -2,162 +2,45 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import PostCard from "./PostCard";
 import CreatePostModal from "./CreatePostModal";
+import PostDetailModal from "./PostDetailModal";
 import { useAuthStore } from "../../store/authStore";
 import { motion, AnimatePresence } from "motion/react";
 import { useProfileStore } from "../../store/profileStore";
-
-const dummyPosts = [
-  {
-    id: 1,
-    author: {
-      firstName: "John",
-      lastName: "Doe",
-      avatar: "/avatar.svg",
-      headline: "Software Engineer | Tech Enthusiast",
-    },
-    authorModel: "User",
-    postType: "regular",
-    createdAt: new Date(Date.now() - 7200000).toISOString(), // 2h ago
-    content:
-      "Just deployed my first React application to production! The developer experience with modern tools is incredible. #reactjs #webdev #milestone",
-    stats: { likesCount: 124, commentsCount: 15, sharesCount: 5 },
-  },
-  {
-    id: 2,
-    author: {
-      name: "TechCorp",
-      avatar: "/post-image.svg",
-      logo: "/post-image.svg",
-      headline: "Innovating the Future",
-    },
-    authorModel: "Company",
-    postType: "job_post",
-    createdAt: new Date(Date.now() - 18000000).toISOString(), // 5h ago
-    content:
-      "We are looking for talented frontend engineers to join our growing team!",
-    stats: { likesCount: 342, commentsCount: 45, sharesCount: 82 },
-    referenceId: {
-      title: "Senior Frontend Engineer",
-      location: "San Francisco, CA",
-      employmentType: "Full-time",
-      salaryRange: { min: 120000, max: 180000, currency: "USD" },
-      skillsRequired: ["React", "TypeScript", "Tailwind CSS"],
-    },
-  },
-  {
-    id: 3,
-    author: {
-      firstName: "Alex",
-      lastName: "Johnson",
-      avatar: "/avatar.svg",
-      headline: "UX/UI Designer",
-    },
-    authorModel: "User",
-    postType: "showcase_project",
-    createdAt: new Date(Date.now() - 86400000).toISOString(), // 1d ago
-    content:
-      "Excited to share my latest project: A decentralized marketplace for digital assets.",
-    stats: { likesCount: 89, commentsCount: 12, sharesCount: 3 },
-    referenceId: {
-      title: "NFT Marketplace",
-      description:
-        "A secure and transparent platform for trading unique digital collectibles using blockchain technology.",
-      liveUrl: "https://example.com",
-      githubUrl: "https://github.com",
-      techStack: [
-        { name: "Solidity" },
-        { name: "React" },
-        { name: "Ether.js" },
-      ],
-    },
-  },
-  {
-    id: 4,
-    author: {
-      firstName: "Sarah",
-      lastName: "Williams",
-      avatar: "/avatar.svg",
-      headline: "Data Scientist",
-    },
-    authorModel: "User",
-    postType: "article",
-    createdAt: new Date(Date.now() - 172800000).toISOString(), // 2d ago
-    content: "Thoughts on the future of AI in healthcare.",
-    stats: { likesCount: 567, commentsCount: 82, sharesCount: 45 },
-    referenceId: {
-      title: "AI in Healthcare: A New Era",
-      bannerImage: "/post-image.svg",
-      readTime: 8,
-      tags: ["AI", "Healthcare", "Technology"],
-    },
-  },
-  {
-    id: 5,
-    author: {
-      firstName: "Michael",
-      lastName: "Brown",
-      avatar: "/avatar.svg",
-      headline: "Frontend Architect",
-    },
-    authorModel: "User",
-    postType: "achievement",
-    createdAt: new Date(Date.now() - 259200000).toISOString(), // 3d ago
-    content:
-      "Honored to receive the Google Developer Expert certification in Web Technologies!",
-    stats: { likesCount: 210, commentsCount: 24, sharesCount: 12 },
-    referenceId: {
-      title: "Google Developer Expert",
-      issuer: "Google",
-      issueDate: new Date().toISOString(),
-    },
-  },
-];
+import usePostStore from "../../store/postStore";
 
 const Feed = () => {
   const { user, company, profile: authProfile } = useAuthStore();
   const { profile: storeProfile } = useProfileStore();
+  const { posts, loading, fetchPosts, incrementViews } = usePostStore();
+
   const profile = storeProfile || authProfile;
   const role = user?.role;
 
-  const [posts, setPosts] = useState(dummyPosts);
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [initialType, setInitialType] = useState("regular");
+
+  // Post Detail Modal State
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
   const observer = useRef();
 
-  // Infinite scroll functionality defined (without actual implementation)
-  const loadMorePosts = useCallback(() => {
-    if (loading) return;
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
 
-    // TODO: Implement actual API call for infinite scrolling here
-    /*
-    setLoading(true);
-    fetch(`/api/posts?page=${page + 1}`)
-      .then(res => res.json())
-      .then(data => {
-        setPosts(prev => [...prev, ...data]);
-        setPage(prev => prev + 1);
-        setLoading(false);
-      });
-    */
-  }, [loading, page]);
+  const handleOpenDetail = async (post) => {
+    setSelectedPost(post);
+    setIsDetailModalOpen(true);
 
-  const lastPostElementRef = useCallback(
-    (node) => {
-      if (loading) return;
-      if (observer.current) observer.current.disconnect();
+    // Increment views in backend
+    await incrementViews(post._id);
+  };
 
-      observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
-          // loadMorePosts(); // Uncomment when API is ready
-        }
-      });
-
-      if (node) observer.current.observe(node);
-    },
-    [loading, loadMorePosts],
-  );
+  // Infinite scroll functionality (Placeholder for future implementation)
+  const lastPostElementRef = useCallback((node) => {
+    // Logic for infinite scroll would go here
+  }, []);
 
   return (
     <div className="flex flex-col w-full">
@@ -167,8 +50,14 @@ const Feed = () => {
           <img
             src={profile?.avatar || company?.logo || "/avatar.svg"}
             alt="Current User"
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = "/avatar.svg";
+            }}
             className="w-12 h-12 rounded-full object-cover p-1 border border-gray-200"
           />
+
           <button
             onClick={() => {
               setInitialType("regular");
@@ -293,17 +182,47 @@ const Feed = () => {
       {/* Feed Posts */}
       <div className="flex flex-col">
         <AnimatePresence>
-          {posts.map((post, index) => (
-            <motion.div
-              key={post.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              ref={posts.length === index + 1 ? lastPostElementRef : null}
-            >
-              <PostCard post={post} />
-            </motion.div>
-          ))}
+          {posts.length > 0
+            ? posts.map((post, index) => (
+                <motion.div
+                  key={post._id || post.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  ref={posts.length === index + 1 ? lastPostElementRef : null}
+                >
+                  <PostCard post={post} onOpen={handleOpenDetail} />
+                </motion.div>
+              ))
+            : !loading && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex flex-col items-center justify-center py-12 px-4 bg-white rounded-lg border border-gray-200 shadow-sm"
+                >
+                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                    <svg
+                      className="w-8 h-8 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l2 2h2a2 2 0 012 2v10a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    No posts yet
+                  </h3>
+                  <p className="text-gray-500 text-center mt-1">
+                    Be the first to share something with your network!
+                  </p>
+                </motion.div>
+              )}
         </AnimatePresence>
       </div>
 
@@ -322,6 +241,13 @@ const Feed = () => {
         profile={profile}
         company={company}
         initialType={initialType}
+      />
+
+      {/* Post Detail Modal */}
+      <PostDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        post={selectedPost}
       />
     </div>
   );

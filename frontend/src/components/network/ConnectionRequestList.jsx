@@ -21,8 +21,14 @@ const ConnectionRequestList = ({ requests, onAccept, onReject }) => {
             <img
               src={request.senderId?.avatar || "/avatar.svg"}
               alt={request.senderId?.firstName}
+              referrerPolicy="no-referrer"
+              onError={(e) => {
+                e.target.onerror = null; 
+                e.target.src = "/avatar.svg";
+              }}
               className="w-14 h-14 rounded-full border border-gray-100 shadow-sm object-cover"
             />
+
             <div className="flex-1 min-w-0">
               <h3 className="text-sm font-bold text-gray-900 truncate hover:text-blue-600 hover:underline cursor-pointer">
                 {request.senderId?.firstName} {request.senderId?.lastName}

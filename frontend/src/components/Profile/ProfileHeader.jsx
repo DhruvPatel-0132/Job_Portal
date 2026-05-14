@@ -23,9 +23,14 @@ export default function ProfileHeader({ profile, onEdit }) {
 
         <motion.img
           src={profile.avatar || "/avatar.svg"}
+          onError={(e) => {
+            e.target.onerror = null; 
+            e.target.src = "/avatar.svg";
+          }}
           className="w-24 h-24 rounded-full border-4 border-white absolute -top-12 left-6 object-cover bg-gray-100"
           whileHover={{ scale: 1.05 }}
         />
+
 
         <div className="mt-10">
           <h1 className="text-2xl font-bold">{profile.fullName}</h1>

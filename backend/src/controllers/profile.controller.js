@@ -2,6 +2,8 @@ const User = require("../models/User");
 const Profile = require("../models/Profile");
 const ProfessionalDetails = require("../models/ProfessionalDetails");
 const Connection = require("../models/Connection");
+const Post = require("../models/Post");
+const Company = require("../models/Company");
 
 // Get current user profile
 const getProfile = async (req, res) => {
@@ -22,14 +24,30 @@ const getProfile = async (req, res) => {
     });
 
     // Fetch connections count
-    const Connection = require("../models/Connection");
     const connectionsCount = await Connection.countDocuments({
       $or: [{ user1: req.user.id }, { user2: req.user.id }],
+    });
+
+    // Fetch posts count
+    let authorId = req.user.id;
+    let authorModel = "User";
+
+    const company = await Company.findOne({ createdBy: req.user.id });
+    if ((req.user.role === "company" || req.user.role === "hire") && company) {
+      authorId = company._id;
+      authorModel = "Company";
+    }
+
+    const postsCount = await Post.countDocuments({
+      author: authorId,
+      authorModel: authorModel,
+      isDeleted: false,
     });
 
     // Convert profile to object to add extra fields
     const profileObj = profile.toObject();
     profileObj.connections = connectionsCount;
+    profileObj.postsCount = postsCount;
 
     if (profDetails) {
       profileObj.hireType = profDetails.hireType;
@@ -46,7 +64,6 @@ const getProfile = async (req, res) => {
   }
 };
 
-// Update current user profile
 const updateProfile = async (req, res) => {
   try {
     // =========================
@@ -64,14 +81,16 @@ const updateProfile = async (req, res) => {
     delete updateData.isOnboarded;
 
     // =========================
-    // VALIDATION
+    // GET CURRENT USER
     // =========================
-    // if (updateData.email && updateData.phone) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Update either email or phone, not both",
-    //   });
-    // }
+    const existingUser = await User.findById(req.user.id);
+
+    if (!existingUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
     // =========================
     // USER UPDATE DATA
@@ -87,14 +106,52 @@ const updateProfile = async (req, res) => {
       }
     });
 
-    // Sync email -> emailOrPhone
-    if (updateData.email) {
-      userData.emailOrPhone = updateData.email;
+    // =========================
+    // EMAIL / PHONE LOGIC
+    // =========================
+
+    /*
+      IMPORTANT RULE:
+
+      If user originally registered with EMAIL:
+      -> emailOrPhone should ALWAYS remain email
+      -> adding/updating phone should NOT change login field
+
+      If user originally registered with PHONE:
+      -> emailOrPhone should ALWAYS remain phone
+      -> adding/updating email should NOT change login field
+    */
+
+    const currentLogin = existingUser.emailOrPhone;
+
+    const isEmailLogin = currentLogin.includes("@");
+
+    // Store extra fields in profile only
+    if (updateData.email !== undefined) {
+      updateData.email = updateData.email;
     }
 
-    // Sync phone -> emailOrPhone
-    if (updateData.phone) {
-      userData.emailOrPhone = updateData.phone;
+    if (updateData.phone !== undefined) {
+      updateData.phone = updateData.phone;
+    }
+
+    // ONLY update login credential type user registered with
+    if (isEmailLogin) {
+      // User registered with EMAIL
+
+      if (updateData.email) {
+        userData.emailOrPhone = updateData.email;
+      }
+
+      // phone update will NOT affect login
+    } else {
+      // User registered with PHONE
+
+      if (updateData.phone) {
+        userData.emailOrPhone = updateData.phone;
+      }
+
+      // email update will NOT affect login
     }
 
     // =========================
@@ -109,13 +166,6 @@ const updateProfile = async (req, res) => {
         new: true,
       },
     ).select("-password");
-
-    if (!updatedUser) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
 
     // =========================
     // PROFESSIONAL DETAILS
@@ -193,6 +243,27 @@ const updateProfile = async (req, res) => {
     });
 
     // =========================
+    // POSTS COUNT
+    // =========================
+    let authorIdForCount = req.user.id;
+    let authorModelForCount = "User";
+
+    const userCompany = await Company.findOne({ createdBy: req.user.id });
+    if (
+      (req.user.role === "company" || req.user.role === "hire") &&
+      userCompany
+    ) {
+      authorIdForCount = userCompany._id;
+      authorModelForCount = "Company";
+    }
+
+    const postsCount = await Post.countDocuments({
+      author: authorIdForCount,
+      authorModel: authorModelForCount,
+      isDeleted: false,
+    });
+
+    // =========================
     // FINAL RESPONSE
     // =========================
     return res.status(200).json({
@@ -205,6 +276,7 @@ const updateProfile = async (req, res) => {
         professionalDetails,
 
         connections: connectionsCount,
+        postsCount: postsCount,
       },
     });
   } catch (error) {

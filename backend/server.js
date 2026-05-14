@@ -16,6 +16,8 @@ const requestRoutes = require("./src/routes/request.routes");
 const connectionRoutes = require("./src/routes/connection.routes");
 const resumeRoutes = require("./src/routes/resume.routes");
 const notificationRoutes = require("./src/routes/notification.routes");
+const postRoutes = require("./src/routes/post.routes");
+
 
 const app = express();
 
@@ -35,6 +37,8 @@ app.use("/api/requests", requestRoutes);
 app.use("/api/connections", connectionRoutes);
 app.use("/api/resume", resumeRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/posts", postRoutes);
+
 
 /* DB */
 connectDB();
