@@ -1,5 +1,17 @@
 import React from "react";
-import { ThumbsUp, MessageSquare, Send, MoreHorizontal, Briefcase, Award, Code, FileText, ExternalLink, Clock, MapPin } from "lucide-react";
+import {
+  ThumbsUp,
+  MessageSquare,
+  Send,
+  MoreHorizontal,
+  Briefcase,
+  Award,
+  Code,
+  FileText,
+  ExternalLink,
+  Clock,
+  MapPin,
+} from "lucide-react";
 import { motion } from "motion/react";
 
 const PostCard = ({ post }) => {
@@ -10,7 +22,9 @@ const PostCard = ({ post }) => {
   const authorAvatar = post.author.avatar || post.author.logo || "/avatar.svg";
 
   // Format relative time if createdAt exists
-  const timeAgo = post.createdAt ? new Date(post.createdAt).toLocaleDateString() : post.timeAgo;
+  const timeAgo = post.createdAt
+    ? new Date(post.createdAt).toLocaleDateString()
+    : post.timeAgo;
 
   const renderSpecializedContent = () => {
     if (!post.referenceId) return null;
@@ -19,8 +33,8 @@ const PostCard = ({ post }) => {
       case "job_post":
         return (
           <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
+            // initial={{ opacity: 0, scale: 0.98 }}
+            // animate={{ opacity: 1, scale: 1 }}
             className="mt-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100/50 group cursor-pointer hover:bg-blue-50 transition-colors"
           >
             <div className="flex justify-between items-start">
@@ -30,12 +44,20 @@ const PostCard = ({ post }) => {
                   {post.referenceId.title}
                 </h4>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-blue-700 font-medium">
-                  <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {post.referenceId.location}</span>
-                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {post.referenceId.employmentType}</span>
+                  <span className="flex items-center gap-1">
+                    <MapPin className="w-3 h-3" /> {post.referenceId.location}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />{" "}
+                    {post.referenceId.employmentType}
+                  </span>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {post.referenceId.skillsRequired?.map((skill, i) => (
-                    <span key={i} className="px-2.5 py-1 bg-white border border-blue-200 text-blue-600 text-[10px] font-bold rounded-lg shadow-sm">
+                    <span
+                      key={i}
+                      className="px-2.5 py-1 bg-white border border-blue-200 text-blue-600 text-[10px] font-bold rounded-lg shadow-sm"
+                    >
                       {skill}
                     </span>
                   ))}
@@ -68,13 +90,21 @@ const PostCard = ({ post }) => {
             </p>
             <div className="mt-4 flex items-center gap-4">
               {post.referenceId.liveUrl && (
-                <a href={post.referenceId.liveUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-600 font-bold flex items-center gap-1 hover:underline">
+                <a
+                  href={post.referenceId.liveUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs text-blue-600 font-bold flex items-center gap-1 hover:underline"
+                >
                   <ExternalLink className="w-3 h-3" /> Live Demo
                 </a>
               )}
               <div className="flex gap-2">
                 {post.referenceId.techStack?.map((tech, i) => (
-                  <span key={i} className="text-[10px] bg-white border px-2 py-0.5 rounded text-gray-500 font-medium">
+                  <span
+                    key={i}
+                    className="text-[10px] bg-white border px-2 py-0.5 rounded text-gray-500 font-medium"
+                  >
                     {tech.name}
                   </span>
                 ))}
@@ -92,8 +122,14 @@ const PostCard = ({ post }) => {
           >
             {post.referenceId.bannerImage && (
               <div className="relative h-40 overflow-hidden">
-                <img src={post.referenceId.bannerImage} alt={post.referenceId.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                <div className="absolute top-3 left-3 px-2 py-1 bg-black/50 backdrop-blur-md text-white text-[10px] font-bold rounded uppercase tracking-wider">Article</div>
+                <img
+                  src={post.referenceId.bannerImage}
+                  alt={post.referenceId.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute top-3 left-3 px-2 py-1 bg-black/50 backdrop-blur-md text-white text-[10px] font-bold rounded uppercase tracking-wider">
+                  Article
+                </div>
               </div>
             )}
             <div className="p-4">
@@ -101,10 +137,15 @@ const PostCard = ({ post }) => {
                 {post.referenceId.title}
               </h4>
               <div className="flex items-center gap-3 mt-3 text-xs text-gray-400 font-medium">
-                <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {post.referenceId.readTime} min read</span>
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3 h-3" /> {post.referenceId.readTime} min
+                  read
+                </span>
                 <span>•</span>
                 <div className="flex gap-2">
-                  {post.referenceId.tags?.map((tag, i) => <span key={i}>#{tag}</span>)}
+                  {post.referenceId.tags?.map((tag, i) => (
+                    <span key={i}>#{tag}</span>
+                  ))}
                 </div>
               </div>
             </div>
@@ -122,9 +163,15 @@ const PostCard = ({ post }) => {
               <Award className="w-8 h-8 text-amber-600" />
             </div>
             <div>
-              <h4 className="font-bold text-amber-900 leading-tight">{post.referenceId.title}</h4>
-              <p className="text-sm text-amber-800/80 font-medium">{post.referenceId.issuer}</p>
-              <p className="text-[10px] text-amber-600 font-bold mt-1 uppercase">Achievement Unlocked</p>
+              <h4 className="font-bold text-amber-900 leading-tight">
+                {post.referenceId.title}
+              </h4>
+              <p className="text-sm text-amber-800/80 font-medium">
+                {post.referenceId.issuer}
+              </p>
+              <p className="text-[10px] text-amber-600 font-bold mt-1 uppercase">
+                Achievement Unlocked
+              </p>
             </div>
           </motion.div>
         );
@@ -138,7 +185,6 @@ const PostCard = ({ post }) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -2 }}
       transition={{ duration: 0.3 }}
       className="bg-white rounded-xl border border-gray-200 mb-4 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
     >
@@ -154,11 +200,19 @@ const PostCard = ({ post }) => {
           <h3 className="text-sm font-bold text-gray-900 hover:text-blue-600 hover:underline cursor-pointer transition-colors">
             {authorName}
           </h3>
-          <p className="text-xs text-gray-500 font-medium line-clamp-1">{post.author.headline}</p>
+          <p className="text-xs text-gray-500 font-medium line-clamp-1">
+            {post.author.headline}
+          </p>
           <div className="flex items-center mt-0.5 space-x-1">
-            <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">{timeAgo}</p>
+            <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">
+              {timeAgo}
+            </p>
             <span className="text-gray-300 text-[10px]">•</span>
-            <svg className="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-3 h-3 text-gray-400"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" />
             </svg>
           </div>
@@ -208,7 +262,9 @@ const PostCard = ({ post }) => {
               <div className="w-1.5 h-1.5 bg-white rounded-full" />
             </span>
           </div>
-          <span className="hover:text-blue-600 hover:underline cursor-pointer">{post.stats?.likesCount || 0}</span>
+          <span className="hover:text-blue-600 hover:underline cursor-pointer">
+            {post.stats?.likesCount || 0}
+          </span>
         </div>
         <div className="flex space-x-3">
           <span className="hover:text-blue-600 hover:underline cursor-pointer">
@@ -237,7 +293,9 @@ const ActionButton = ({ icon, label }) => (
     className="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg text-gray-600 font-semibold transition-all group"
   >
     <span className="group-hover:text-blue-600 transition-colors">{icon}</span>
-    <span className="text-sm hidden sm:block group-hover:text-blue-600 transition-colors">{label}</span>
+    <span className="text-sm hidden sm:block group-hover:text-blue-600 transition-colors">
+      {label}
+    </span>
   </motion.button>
 );
 

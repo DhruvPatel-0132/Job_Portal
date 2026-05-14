@@ -9,20 +9,32 @@ import { useProfileStore } from "../../store/profileStore";
 const dummyPosts = [
   {
     id: 1,
-    author: { firstName: "John", lastName: "Doe", avatar: "/avatar.svg", headline: "Software Engineer | Tech Enthusiast" },
+    author: {
+      firstName: "John",
+      lastName: "Doe",
+      avatar: "/avatar.svg",
+      headline: "Software Engineer | Tech Enthusiast",
+    },
     authorModel: "User",
     postType: "regular",
     createdAt: new Date(Date.now() - 7200000).toISOString(), // 2h ago
-    content: "Just deployed my first React application to production! The developer experience with modern tools is incredible. #reactjs #webdev #milestone",
+    content:
+      "Just deployed my first React application to production! The developer experience with modern tools is incredible. #reactjs #webdev #milestone",
     stats: { likesCount: 124, commentsCount: 15, sharesCount: 5 },
   },
   {
     id: 2,
-    author: { name: "TechCorp", avatar: "/post-image.svg", logo: "/post-image.svg", headline: "Innovating the Future" },
+    author: {
+      name: "TechCorp",
+      avatar: "/post-image.svg",
+      logo: "/post-image.svg",
+      headline: "Innovating the Future",
+    },
     authorModel: "Company",
     postType: "job_post",
     createdAt: new Date(Date.now() - 18000000).toISOString(), // 5h ago
-    content: "We are looking for talented frontend engineers to join our growing team!",
+    content:
+      "We are looking for talented frontend engineers to join our growing team!",
     stats: { likesCount: 342, commentsCount: 45, sharesCount: 82 },
     referenceId: {
       title: "Senior Frontend Engineer",
@@ -30,27 +42,43 @@ const dummyPosts = [
       employmentType: "Full-time",
       salaryRange: { min: 120000, max: 180000, currency: "USD" },
       skillsRequired: ["React", "TypeScript", "Tailwind CSS"],
-    }
+    },
   },
   {
     id: 3,
-    author: { firstName: "Alex", lastName: "Johnson", avatar: "/avatar.svg", headline: "UX/UI Designer" },
+    author: {
+      firstName: "Alex",
+      lastName: "Johnson",
+      avatar: "/avatar.svg",
+      headline: "UX/UI Designer",
+    },
     authorModel: "User",
     postType: "showcase_project",
     createdAt: new Date(Date.now() - 86400000).toISOString(), // 1d ago
-    content: "Excited to share my latest project: A decentralized marketplace for digital assets.",
+    content:
+      "Excited to share my latest project: A decentralized marketplace for digital assets.",
     stats: { likesCount: 89, commentsCount: 12, sharesCount: 3 },
     referenceId: {
       title: "NFT Marketplace",
-      description: "A secure and transparent platform for trading unique digital collectibles using blockchain technology.",
+      description:
+        "A secure and transparent platform for trading unique digital collectibles using blockchain technology.",
       liveUrl: "https://example.com",
       githubUrl: "https://github.com",
-      techStack: [{ name: "Solidity" }, { name: "React" }, { name: "Ether.js" }],
-    }
+      techStack: [
+        { name: "Solidity" },
+        { name: "React" },
+        { name: "Ether.js" },
+      ],
+    },
   },
   {
     id: 4,
-    author: { firstName: "Sarah", lastName: "Williams", avatar: "/avatar.svg", headline: "Data Scientist" },
+    author: {
+      firstName: "Sarah",
+      lastName: "Williams",
+      avatar: "/avatar.svg",
+      headline: "Data Scientist",
+    },
     authorModel: "User",
     postType: "article",
     createdAt: new Date(Date.now() - 172800000).toISOString(), // 2d ago
@@ -61,24 +89,29 @@ const dummyPosts = [
       bannerImage: "/post-image.svg",
       readTime: 8,
       tags: ["AI", "Healthcare", "Technology"],
-    }
+    },
   },
   {
     id: 5,
-    author: { firstName: "Michael", lastName: "Brown", avatar: "/avatar.svg", headline: "Frontend Architect" },
+    author: {
+      firstName: "Michael",
+      lastName: "Brown",
+      avatar: "/avatar.svg",
+      headline: "Frontend Architect",
+    },
     authorModel: "User",
     postType: "achievement",
     createdAt: new Date(Date.now() - 259200000).toISOString(), // 3d ago
-    content: "Honored to receive the Google Developer Expert certification in Web Technologies!",
+    content:
+      "Honored to receive the Google Developer Expert certification in Web Technologies!",
     stats: { likesCount: 210, commentsCount: 24, sharesCount: 12 },
     referenceId: {
       title: "Google Developer Expert",
       issuer: "Google",
       issueDate: new Date().toISOString(),
-    }
-  }
+    },
+  },
 ];
-
 
 const Feed = () => {
   const { user, company, profile: authProfile } = useAuthStore();
@@ -137,7 +170,10 @@ const Feed = () => {
             className="w-12 h-12 rounded-full object-cover p-1 border border-gray-200"
           />
           <button
-            onClick={() => { setInitialType("regular"); setIsModalOpen(true); }}
+            onClick={() => {
+              setInitialType("regular");
+              setIsModalOpen(true);
+            }}
             className="flex-1 bg-white border border-gray-300 rounded-full text-left px-4 text-gray-500 font-medium hover:bg-gray-50 transition-colors"
           >
             Start a post
@@ -147,7 +183,10 @@ const Feed = () => {
           {role === "job_seeker" ? (
             <>
               <button
-                onClick={() => { setInitialType("project"); setIsModalOpen(true); }}
+                onClick={() => {
+                  setInitialType("project");
+                  setIsModalOpen(true);
+                }}
                 className="flex items-center space-x-2 text-gray-500 hover:bg-gray-100 p-2 rounded-md transition-colors"
               >
                 <svg
@@ -160,7 +199,10 @@ const Feed = () => {
                 <span className="text-sm font-medium">Showcase Projects</span>
               </button>
               <button
-                onClick={() => { setInitialType("achievement"); setIsModalOpen(true); }}
+                onClick={() => {
+                  setInitialType("achievement");
+                  setIsModalOpen(true);
+                }}
                 className="flex items-center space-x-2 text-gray-500 hover:bg-gray-100 p-2 rounded-md transition-colors"
               >
                 <svg
@@ -183,7 +225,10 @@ const Feed = () => {
           ) : role === "hire" || role === "company" ? (
             <>
               <button
-                onClick={() => { setInitialType("media"); setIsModalOpen(true); }}
+                onClick={() => {
+                  setInitialType("media");
+                  setIsModalOpen(true);
+                }}
                 className="flex items-center space-x-2 text-gray-500 hover:bg-gray-100 p-2 rounded-md transition-colors"
               >
                 <svg
@@ -200,7 +245,10 @@ const Feed = () => {
                 <span className="text-sm font-medium">Media</span>
               </button>
               <button
-                onClick={() => { setInitialType("article"); setIsModalOpen(true); }}
+                onClick={() => {
+                  setInitialType("article");
+                  setIsModalOpen(true);
+                }}
                 className="flex items-center space-x-2 text-gray-500 hover:bg-gray-100 p-2 rounded-md transition-colors"
               >
                 <svg
@@ -217,7 +265,10 @@ const Feed = () => {
                 <span className="text-sm font-medium">Write Article</span>
               </button>
               <button
-                onClick={() => { setInitialType("job_post"); setIsModalOpen(true); }}
+                onClick={() => {
+                  setInitialType("job_post");
+                  setIsModalOpen(true);
+                }}
                 className="flex items-center space-x-2 text-gray-500 hover:bg-gray-100 p-2 rounded-md transition-colors"
               >
                 <svg

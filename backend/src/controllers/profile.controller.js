@@ -17,12 +17,14 @@ const getProfile = async (req, res) => {
     }
 
     // Fetch professional details from separate model
-    const profDetails = await ProfessionalDetails.findOne({ userId: req.user.id });
+    const profDetails = await ProfessionalDetails.findOne({
+      userId: req.user.id,
+    });
 
     // Fetch connections count
     const Connection = require("../models/Connection");
     const connectionsCount = await Connection.countDocuments({
-      $or: [{ user1: req.user.id }, { user2: req.user.id }]
+      $or: [{ user1: req.user.id }, { user2: req.user.id }],
     });
 
     // Convert profile to object to add extra fields
@@ -64,12 +66,12 @@ const updateProfile = async (req, res) => {
     // =========================
     // VALIDATION
     // =========================
-    if (updateData.email && updateData.phone) {
-      return res.status(400).json({
-        success: false,
-        message: "Update either email or phone, not both",
-      });
-    }
+    // if (updateData.email && updateData.phone) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Update either email or phone, not both",
+    //   });
+    // }
 
     // =========================
     // USER UPDATE DATA
@@ -105,7 +107,7 @@ const updateProfile = async (req, res) => {
       },
       {
         new: true,
-      }
+      },
     ).select("-password");
 
     if (!updatedUser) {
@@ -148,7 +150,7 @@ const updateProfile = async (req, res) => {
           {
             new: true,
             upsert: true,
-          }
+          },
         );
       }
     }
@@ -173,16 +175,15 @@ const updateProfile = async (req, res) => {
       {
         new: true,
         upsert: true,
-      }
+      },
     );
 
     // =========================
     // FETCH PROFESSIONAL DETAILS
     // =========================
-    const professionalDetails =
-      await ProfessionalDetails.findOne({
-        userId: req.user.id,
-      });
+    const professionalDetails = await ProfessionalDetails.findOne({
+      userId: req.user.id,
+    });
 
     // =========================
     // CONNECTION COUNT
@@ -215,7 +216,5 @@ const updateProfile = async (req, res) => {
     });
   }
 };
-
-
 
 module.exports = { getProfile, updateProfile };

@@ -20,8 +20,13 @@ const Navbar = () => {
   const location = useLocation();
 
   const { user, company, profile: authProfile, token } = useAuthStore();
-  const { profile: storeProfile, fetchProfile, clearProfile } = useProfileStore();
-  const { unreadCount, fetchUnreadCount, fetchNotifications } = useNotificationStore();
+  const {
+    profile: storeProfile,
+    fetchProfile,
+    clearProfile,
+  } = useProfileStore();
+  const { unreadCount, fetchUnreadCount, fetchNotifications } =
+    useNotificationStore();
   const { pendingIncomingCount, fetchPendingIncomingCount } = useNetworkStore();
 
   const profile = storeProfile || authProfile;
@@ -30,7 +35,11 @@ const Navbar = () => {
   useEffect(() => {
     if (user) {
       // If profile belongs to a different user, clear it first then re-fetch
-      if (storeProfile && storeProfile.userId && storeProfile.userId !== user.id) {
+      if (
+        storeProfile &&
+        storeProfile.userId &&
+        storeProfile.userId !== user.id
+      ) {
         clearProfile();
       }
       fetchProfile();
@@ -53,7 +62,12 @@ const Navbar = () => {
 
       return () => clearInterval(intervalId);
     }
-  }, [authToken, fetchUnreadCount, fetchNotifications, fetchPendingIncomingCount]);
+  }, [
+    authToken,
+    fetchUnreadCount,
+    fetchNotifications,
+    fetchPendingIncomingCount,
+  ]);
 
   const isCompany = user?.role === "company";
 
@@ -126,6 +140,7 @@ const Navbar = () => {
                 label="My Network"
                 to="/network"
                 active={location.pathname === "/network"}
+                badgeCount={pendingIncomingCount}
               />
             )}
             <NavItem
