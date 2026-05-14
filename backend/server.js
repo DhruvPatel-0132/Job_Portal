@@ -18,8 +18,11 @@ const resumeRoutes = require("./src/routes/resume.routes");
 const notificationRoutes = require("./src/routes/notification.routes");
 const postRoutes = require("./src/routes/post.routes");
 
+const http = require("http");
+const { initSocket } = require("./src/config/socket");
 
 const app = express();
+const server = http.createServer(app);
 
 /* MIDDLEWARE */
 app.use(cors());
@@ -43,9 +46,12 @@ app.use("/api/posts", postRoutes);
 /* DB */
 connectDB();
 
+/* SOCKET */
+initSocket(server);
+
 /* SERVER */
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

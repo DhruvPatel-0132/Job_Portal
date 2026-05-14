@@ -20,8 +20,13 @@ const Navbar = () => {
   const location = useLocation();
 
   const { user, company, profile: authProfile, token } = useAuthStore();
-  const { profile: storeProfile, fetchProfile, clearProfile } = useProfileStore();
-  const { unreadCount, fetchUnreadCount, fetchNotifications } = useNotificationStore();
+  const {
+    profile: storeProfile,
+    fetchProfile,
+    clearProfile,
+  } = useProfileStore();
+  const { unreadCount, fetchUnreadCount, fetchNotifications } =
+    useNotificationStore();
   const { pendingIncomingCount, fetchPendingIncomingCount } = useNetworkStore();
 
   const profile = storeProfile || authProfile;
@@ -30,7 +35,11 @@ const Navbar = () => {
   useEffect(() => {
     if (user) {
       // If profile belongs to a different user, clear it first then re-fetch
-      if (storeProfile && storeProfile.userId && storeProfile.userId !== user.id) {
+      if (
+        storeProfile &&
+        storeProfile.userId &&
+        storeProfile.userId !== user.id
+      ) {
         clearProfile();
       }
       fetchProfile();
@@ -44,16 +53,13 @@ const Navbar = () => {
       fetchUnreadCount();
       fetchNotifications();
       fetchPendingIncomingCount();
-
-      const intervalId = setInterval(() => {
-        fetchUnreadCount();
-        fetchNotifications();
-        fetchPendingIncomingCount();
-      }, 150000000);
-
-      return () => clearInterval(intervalId);
     }
-  }, [authToken, fetchUnreadCount, fetchNotifications, fetchPendingIncomingCount]);
+  }, [
+    authToken,
+    fetchUnreadCount,
+    fetchNotifications,
+    fetchPendingIncomingCount,
+  ]);
 
   const isCompany = user?.role === "company";
 
@@ -86,6 +92,9 @@ const Navbar = () => {
   const handleLogout = async () => {
     clearProfile();
     await logout();
+    import("../store/socketStore").then(({ default: useSocketStore }) => {
+      useSocketStore.getState().disconnectSocket();
+    });
     navigate("/");
   };
 
@@ -97,7 +106,7 @@ const Navbar = () => {
           <div className="flex items-center gap-2 mr-4">
             <Link to="/dashboard" className="flex-shrink-0">
               <img
-                src="../public/logo.png"
+                src="/Logo.png"
                 alt="Logo"
                 className="w-11 h-11 object-contain rounded"
               />
@@ -158,7 +167,7 @@ const Navbar = () => {
                   alt="User Avatar"
                   referrerPolicy="no-referrer"
                   onError={(e) => {
-                    e.target.onerror = null; 
+                    e.target.onerror = null;
                     e.target.src = "/avatar.svg";
                   }}
                 />
@@ -190,7 +199,7 @@ const Navbar = () => {
                         alt="User Avatar"
                         referrerPolicy="no-referrer"
                         onError={(e) => {
-                          e.target.onerror = null; 
+                          e.target.onerror = null;
                           e.target.src = "/avatar.svg";
                         }}
                       />

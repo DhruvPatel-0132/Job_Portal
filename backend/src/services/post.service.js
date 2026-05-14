@@ -126,6 +126,9 @@ const createPost = async (userId, userRole, postData) => {
       select: "firstName lastName name logo avatar",
     });
 
+    const { emitToAll } = require("../config/socket");
+    emitToAll("new_post", savedPost);
+
     return {
       status: 201,
       response: {

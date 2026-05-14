@@ -42,7 +42,7 @@ const Footer = () => {
 
       <div className="mt-5 flex flex-col items-center justify-center lg:flex-row lg:justify-start text-xs text-black-400 group cursor-pointer">
         <img
-          src="../public/NamedLogo.png"
+          src="/NamedLogo.png"
           alt="Job Portal Logo"
           className="h-5 w-auto object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-300"
         />

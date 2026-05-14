@@ -27,7 +27,7 @@ const PostCard = ({ post, onOpen }) => {
   const { deletePost, archivePost, toggleReaction } = usePostStore();
 
   const isOwner = user && (
-    post.author._id === user._id ||
+    post.author._id === user._id ||  
     (userCompany && post.author._id === userCompany._id) ||
     post.author === user._id ||
     (userCompany && post.author === userCompany._id)
