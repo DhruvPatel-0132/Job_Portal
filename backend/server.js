@@ -17,6 +17,7 @@ const connectionRoutes = require("./src/routes/connection.routes");
 const resumeRoutes = require("./src/routes/resume.routes");
 const notificationRoutes = require("./src/routes/notification.routes");
 const postRoutes = require("./src/routes/post.routes");
+const messageRoutes = require("./src/routes/message.routes");
 
 const http = require("http");
 const { initSocket } = require("./src/config/socket");
@@ -41,6 +42,7 @@ app.use("/api/connections", connectionRoutes);
 app.use("/api/resume", resumeRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/messages", messageRoutes);
 
 
 /* DB */
