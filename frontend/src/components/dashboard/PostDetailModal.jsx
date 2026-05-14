@@ -2,7 +2,25 @@ import React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, ThumbsUp, MessageSquare, Send, Briefcase, Award, Code, FileText, ExternalLink, Clock, MapPin, Calendar, Globe, User } from "lucide-react";
 
+import { useAuthStore } from "../../store/authStore";
+import usePostStore from "../../store/postStore";
+
 const PostDetailModal = ({ isOpen, onClose, post }) => {
+  const [showReactions, setShowReactions] = React.useState(false);
+  const reactionTimeoutRef = React.useRef(null);
+  
+  const { user } = useAuthStore();
+  const { toggleReaction } = usePostStore();
+
+  const REACTION_TYPES = [
+    { type: "like", icon: "👍", label: "Like", color: "text-blue-600" },
+    { type: "celebrate", icon: "👏", label: "Celebrate", color: "text-green-600" },
+    { type: "support", icon: "🤝", label: "Support", color: "text-purple-600" },
+    { type: "love", icon: "❤️", label: "Love", color: "text-red-600" },
+    { type: "insightful", icon: "💡", label: "Insightful", color: "text-yellow-600" },
+    { type: "funny", icon: "😄", label: "Funny", color: "text-orange-600" }
+  ];
+
   if (!post) return null;
 
   const isCompany = post.authorModel === "Company";
@@ -312,10 +330,61 @@ const PostDetailModal = ({ isOpen, onClose, post }) => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <button className="flex-1 py-2.5 flex items-center justify-center gap-2 hover:bg-gray-50 rounded-xl font-bold text-gray-600 transition-colors">
-                      <ThumbsUp className="w-5 h-5" /> Like
-                    </button>
+                  <div className="flex items-center gap-2 relative">
+                    <AnimatePresence>
+                      {showReactions && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                          className="absolute bottom-full left-0 mb-2 bg-white rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.15)] border border-gray-100 flex items-center px-3 py-2 z-50 gap-2"
+                          onMouseEnter={() => {
+                            clearTimeout(reactionTimeoutRef.current);
+                            setShowReactions(true);
+                          }}
+                          onMouseLeave={() => {
+                            reactionTimeoutRef.current = setTimeout(() => setShowReactions(false), 300);
+                          }}
+                        >
+                          {REACTION_TYPES.map((reaction) => (
+                            <motion.button
+                              key={reaction.type}
+                              whileHover={{ scale: 1.3, originY: 1 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => {
+                                setShowReactions(false);
+                                toggleReaction(post._id, reaction.type);
+                              }}
+                              className="text-2xl hover:bg-gray-50 rounded-full p-1 transition-colors relative group/reaction"
+                            >
+                              {reaction.icon}
+                              <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover/reaction:opacity-100 whitespace-nowrap transition-opacity">
+                                {reaction.label}
+                              </span>
+                            </motion.button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <div 
+                      className="flex-1"
+                      onMouseEnter={() => {
+                        clearTimeout(reactionTimeoutRef.current);
+                        setShowReactions(true);
+                      }}
+                      onMouseLeave={() => {
+                        reactionTimeoutRef.current = setTimeout(() => setShowReactions(false), 300);
+                      }}
+                    >
+                      <button 
+                        onClick={() => toggleReaction(post._id, "like")}
+                        className={`w-full py-2.5 flex items-center justify-center gap-2 hover:bg-gray-50 rounded-xl font-bold transition-colors ${post.stats?.likedBy?.includes(user?._id) ? 'text-blue-600' : 'text-gray-600'}`}
+                      >
+                        <ThumbsUp className={`w-5 h-5 ${post.stats?.likedBy?.includes(user?._id) ? 'fill-current' : ''}`} /> 
+                        Like
+                      </button>
+                    </div>
                     <button className="flex-1 py-2.5 flex items-center justify-center gap-2 hover:bg-gray-50 rounded-xl font-bold text-gray-600 transition-colors">
                       <MessageSquare className="w-5 h-5" /> Comment
                     </button>

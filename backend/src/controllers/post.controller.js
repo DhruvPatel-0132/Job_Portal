@@ -6,6 +6,7 @@ const {
   updatePost,
   deletePost,
   archivePost,
+  toggleReaction,
 } = require("../services/post.service");
 
 const createPostController = async (req, res) => {
@@ -116,6 +117,23 @@ const archivePostController = async (req, res) => {
   }
 };
 
+const toggleReactionController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const { reactionType } = req.body;
+
+    const { status, response } = await toggleReaction(id, userId, reactionType);
+    return res.status(status).json(response);
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createPostController,
   getPostsController,
@@ -124,4 +142,5 @@ module.exports = {
   updatePostController,
   deletePostController,
   archivePostController,
+  toggleReactionController,
 };

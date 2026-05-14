@@ -49,7 +49,7 @@ const Navbar = () => {
         fetchUnreadCount();
         fetchNotifications();
         fetchPendingIncomingCount();
-      }, 15000);
+      }, 150000000);
 
       return () => clearInterval(intervalId);
     }

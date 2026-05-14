@@ -149,6 +149,44 @@ const usePostStore = create((set, get) => ({
     }
   },
 
+  toggleReaction: async (postId, reactionType = "like") => {
+    try {
+      const response = await api.post(`/posts/${postId}/react`, { reactionType });
+      if (response.data.success) {
+        set((state) => ({
+          posts: state.posts.map((post) =>
+            post._id === postId
+              ? {
+                  ...post,
+                  stats: {
+                    ...post.stats,
+                    likesCount: response.data.likesCount,
+                    likedBy: response.data.likedBy,
+                  },
+                }
+              : post
+          ),
+          userPosts: state.userPosts.map((post) =>
+            post._id === postId
+              ? {
+                  ...post,
+                  stats: {
+                    ...post.stats,
+                    likesCount: response.data.likesCount,
+                    likedBy: response.data.likedBy,
+                  },
+                }
+              : post
+          ),
+        }));
+      }
+      return response.data;
+    } catch (error) {
+      console.error("Failed to toggle reaction:", error);
+      return { success: false };
+    }
+  },
+
 }));
 
 export default usePostStore;

@@ -4,6 +4,7 @@ const JobPost = require("../models/JobPost");
 const Article = require("../models/Article");
 const ShowcaseProject = require("../models/ShowcaseProject");
 const Achievement = require("../models/Achievement");
+const Reaction = require("../models/Reaction");
 
 const createPost = async (userId, userRole, postData) => {
   try {
@@ -443,6 +444,57 @@ const archivePost = async (postId, userId) => {
   }
 };
 
+const toggleReaction = async (postId, userId, reactionType = "like") => {
+  try {
+    const post = await Post.findById(postId);
+    if (!post) {
+      return { status: 404, response: { success: false, message: "Post not found" } };
+    }
+
+    const existingReaction = await Reaction.findOne({ post: postId, user: userId });
+
+    if (existingReaction) {
+      if (existingReaction.reactionType === reactionType) {
+        // Remove reaction
+        await Reaction.deleteOne({ _id: existingReaction._id });
+        post.stats.likesCount = Math.max(0, post.stats.likesCount - 1);
+        post.stats.likedBy = post.stats.likedBy.filter(id => id.toString() !== userId.toString());
+        await post.save();
+        return {
+          status: 200,
+          response: { success: true, message: "Reaction removed", likesCount: post.stats.likesCount, likedBy: post.stats.likedBy, userReaction: null },
+        };
+      } else {
+        // Change reaction
+        existingReaction.reactionType = reactionType;
+        await existingReaction.save();
+        return {
+          status: 200,
+          response: { success: true, message: "Reaction updated", likesCount: post.stats.likesCount, likedBy: post.stats.likedBy, userReaction: reactionType },
+        };
+      }
+    } else {
+      // Add reaction
+      await Reaction.create({ post: postId, user: userId, reactionType });
+      post.stats.likesCount += 1;
+      if (!post.stats.likedBy.includes(userId)) {
+        post.stats.likedBy.push(userId);
+      }
+      await post.save();
+      return {
+        status: 201,
+        response: { success: true, message: "Reaction added", likesCount: post.stats.likesCount, likedBy: post.stats.likedBy, userReaction: reactionType },
+      };
+    }
+  } catch (error) {
+    console.error("Toggle Reaction Service Error:", error);
+    return {
+      status: 500,
+      response: { success: false, message: "Failed to toggle reaction", error: error.message },
+    };
+  }
+};
+
 module.exports = {
   createPost,
   getPosts,
@@ -451,4 +503,5 @@ module.exports = {
   updatePost,
   deletePost,
   archivePost,
+  toggleReaction,
 };
