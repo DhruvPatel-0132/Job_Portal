@@ -63,6 +63,7 @@ const postSchema = new mongoose.Schema(
       savesCount: { type: Number, default: 0 },
       viewsCount: { type: Number, default: 0 },
       viewedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+      likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     },
 
     // Audit & Moderation

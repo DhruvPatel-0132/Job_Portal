@@ -2,8 +2,31 @@ import React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, ThumbsUp, MessageSquare, Send, Briefcase, Award, Code, FileText, ExternalLink, Clock, MapPin, Calendar, Globe, User } from "lucide-react";
 
+import { useAuthStore } from "../../store/authStore";
+import usePostStore from "../../store/postStore";
+import CommentSection from "../Post/CommentSection";
+
 const PostDetailModal = ({ isOpen, onClose, post }) => {
+  const [showReactions, setShowReactions] = React.useState(false);
+  const [showComments, setShowComments] = React.useState(false);
+  const reactionTimeoutRef = React.useRef(null);
+
+  const { user } = useAuthStore();
+  const { toggleReaction } = usePostStore();
+
+  const REACTION_TYPES = [
+    { type: "like", icon: "👍", label: "Like", color: "text-blue-600" },
+    { type: "celebrate", icon: "👏", label: "Celebrate", color: "text-green-600" },
+    { type: "support", icon: "🤝", label: "Support", color: "text-purple-600" },
+    { type: "love", icon: "❤️", label: "Love", color: "text-red-600" },
+    { type: "insightful", icon: "💡", label: "Insightful", color: "text-yellow-600" },
+    { type: "funny", icon: "😄", label: "Funny", color: "text-orange-600" }
+  ];
+
   if (!post) return null;
+
+  const userReaction = post.stats?.userReaction || null;
+  const currentReaction = REACTION_TYPES.find(r => r.type === userReaction) || null;
 
   const isCompany = post.authorModel === "Company";
   const authorName = isCompany
@@ -11,6 +34,14 @@ const PostDetailModal = ({ isOpen, onClose, post }) => {
     : `${post.author.firstName || ""} ${post.author.lastName || ""}`.trim();
   const authorAvatar = post.author.avatar || post.author.logo || "/avatar.svg";
   const timeAgo = post.createdAt ? new Date(post.createdAt).toLocaleDateString() : "";
+
+  const userCompany = user?.company;
+  const isOwner = user && (
+    post.author._id === user._id ||
+    (userCompany && post.author._id === userCompany._id) ||
+    post.author === user._id ||
+    (userCompany && post.author === userCompany._id)
+  );
 
   const formatLabel = (key) => {
     const labels = {
@@ -107,7 +138,7 @@ const PostDetailModal = ({ isOpen, onClose, post }) => {
             <div className="bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
               <h2 className="text-2xl font-bold text-indigo-900 mb-2">{project.title}</h2>
               <p className="text-sm text-indigo-700 font-medium">{project.projectStatus || "Active"}</p>
-              
+
               <div className="flex gap-4 mt-4">
                 {project.liveUrl && (
                   <a href={project.liveUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold shadow-md">
@@ -161,7 +192,7 @@ const PostDetailModal = ({ isOpen, onClose, post }) => {
             {article.bannerImage?.url && (
               <img src={article.bannerImage.url} className="w-full h-64 md:h-96 object-cover rounded-2xl shadow-md" alt={article.title} />
             )}
-            
+
             <div className="space-y-4">
               <h2 className="text-3xl font-extrabold text-gray-900 leading-tight">{article.title}</h2>
               <div className="flex items-center gap-4 text-sm text-gray-500 font-medium">
@@ -202,7 +233,7 @@ const PostDetailModal = ({ isOpen, onClose, post }) => {
                 <h2 className="text-2xl font-bold text-amber-900">{achievement.title}</h2>
                 <p className="text-lg font-semibold text-amber-700 mt-1">{achievement.issuer?.name || achievement.issuer}</p>
                 <div className="flex items-center justify-center gap-2 mt-2 text-sm text-amber-600 font-bold uppercase tracking-widest">
-                   <Calendar className="w-4 h-4" /> {new Date(achievement.issueDate).toLocaleDateString()}
+                  <Calendar className="w-4 h-4" /> {new Date(achievement.issueDate).toLocaleDateString()}
                 </div>
               </div>
             </div>
@@ -213,9 +244,9 @@ const PostDetailModal = ({ isOpen, onClose, post }) => {
             </div>
 
             {achievement.credentialUrl && (
-              <a 
-                href={achievement.credentialUrl} 
-                target="_blank" 
+              <a
+                href={achievement.credentialUrl}
+                target="_blank"
                 rel="noreferrer"
                 className="flex items-center justify-center gap-2 w-full py-4 border-2 border-amber-200 text-amber-700 font-bold rounded-2xl hover:bg-amber-50 transition-colors"
               >
@@ -228,27 +259,27 @@ const PostDetailModal = ({ isOpen, onClose, post }) => {
       default:
         return (
           <div className="space-y-4">
-             {post.content && (
-               <p className="text-gray-800 text-lg leading-relaxed whitespace-pre-line">{post.content}</p>
-             )}
-             
-             {post.media && post.media.length > 0 ? (
-               <div className="space-y-4">
-                 {post.media.map((item, i) => (
-                   <div key={i} className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
-                      {item.type === "image" ? (
-                        <img src={item.url} className="w-full h-auto" alt="Post content" />
-                      ) : (
-                        <video src={item.url} controls className="w-full h-auto" />
-                      )}
-                   </div>
-                 ))}
-               </div>
-             ) : post.image && (
-                <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
-                   <img src={post.image} className="w-full h-auto" alt="Post content" />
-                </div>
-             )}
+            {post.content && (
+              <p className="text-gray-800 text-lg leading-relaxed whitespace-pre-line">{post.content}</p>
+            )}
+
+            {post.media && post.media.length > 0 ? (
+              <div className="space-y-4">
+                {post.media.map((item, i) => (
+                  <div key={i} className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+                    {item.type === "image" ? (
+                      <img src={item.url} className="w-full h-auto" alt="Post content" />
+                    ) : (
+                      <video src={item.url} controls className="w-full h-auto" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : post.image && (
+              <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+                <img src={post.image} className="w-full h-auto" alt="Post content" />
+              </div>
+            )}
           </div>
         );
     }
@@ -276,54 +307,117 @@ const PostDetailModal = ({ isOpen, onClose, post }) => {
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-white sticky top-0 z-10">
-               <div className="flex items-center gap-3">
-                  <img src={authorAvatar} className="w-10 h-10 rounded-full object-cover border border-gray-100" alt={authorName} />
-                  <div>
-                    <h4 className="text-sm font-bold text-gray-900">{authorName}</h4>
-                    <p className="text-[11px] text-gray-500 font-medium">{timeAgo}</p>
-                  </div>
-               </div>
-               <button 
+              <div className="flex items-center gap-3">
+                <img src={authorAvatar} className="w-10 h-10 rounded-full object-cover border border-gray-100" alt={authorName} />
+                <div>
+                  <h4 className="text-sm font-bold text-gray-900">{authorName}</h4>
+                  <p className="text-[11px] text-gray-500 font-medium">{timeAgo}</p>
+                </div>
+              </div>
+              <button
                 onClick={onClose}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-               >
-                 <X className="w-6 h-6 text-gray-400" />
-               </button>
+              >
+                <X className="w-6 h-6 text-gray-400" />
+              </button>
             </div>
 
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
-               {renderSpecializedDetails()}
+              {renderSpecializedDetails()}
 
-               {/* Standard Post Footer inside detail */}
-               <div className="mt-12 pt-6 border-t border-gray-100">
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+              {/* Standard Post Footer inside detail */}
+              <div className="mt-12 pt-6 border-t-2 border-gray-100">
+                <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                  {(post.stats?.likesCount > 0) && (
                     <div className="flex items-center gap-2">
-                       <div className="flex -space-x-1">
-                          <span className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center ring-2 ring-white">
-                            <ThumbsUp className="w-3 h-3 text-white" />
-                          </span>
-                       </div>
-                       <span className="font-semibold text-gray-700">{post.stats?.likesCount || 0} Likes</span>
+                      <div className="flex -space-x-1">
+                        <span className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center ring-2 ring-white">
+                          <ThumbsUp className="w-3 h-3 text-white" />
+                        </span>
+                      </div>
+                      <span className="font-semibold text-gray-700">{post.stats.likesCount} Likes</span>
                     </div>
-                    <div className="flex gap-4 font-semibold">
-                       <span>{post.stats?.commentsCount || 0} Comments</span>
-                       <span>{post.stats?.viewsCount || 0} Views</span>
-                    </div>
+                  )}
+                  <div className="flex gap-4 font-semibold ml-auto">
+                    <span>{post.stats?.commentsCount || 0} Comments</span>
+                    <span>{post.stats?.viewsCount || 0} Views</span>
                   </div>
+                </div>
 
-                  <div className="flex items-center gap-2">
-                    <button className="flex-1 py-2.5 flex items-center justify-center gap-2 hover:bg-gray-50 rounded-xl font-bold text-gray-600 transition-colors">
-                      <ThumbsUp className="w-5 h-5" /> Like
-                    </button>
-                    <button className="flex-1 py-2.5 flex items-center justify-center gap-2 hover:bg-gray-50 rounded-xl font-bold text-gray-600 transition-colors">
-                      <MessageSquare className="w-5 h-5" /> Comment
-                    </button>
-                    <button className="flex-1 py-2.5 flex items-center justify-center gap-2 hover:bg-gray-50 rounded-xl font-bold text-gray-600 transition-colors">
-                      <Send className="w-5 h-5" /> Send
+                <div className="flex items-center gap-2 relative">
+                  <AnimatePresence>
+                    {showReactions && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                        className="absolute bottom-full left-0 mb-2 bg-white rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.15)] border border-gray-100 flex items-center px-3 py-2 z-50 gap-2"
+                        onMouseEnter={() => {
+                          clearTimeout(reactionTimeoutRef.current);
+                          setShowReactions(true);
+                        }}
+                        onMouseLeave={() => {
+                          reactionTimeoutRef.current = setTimeout(() => setShowReactions(false), 300);
+                        }}
+                      >
+                        {REACTION_TYPES.map((reaction) => (
+                          <motion.button
+                            key={reaction.type}
+                            whileHover={{ scale: 1.3, originY: 1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => {
+                              setShowReactions(false);
+                              toggleReaction(post._id, reaction.type);
+                            }}
+                            className="text-2xl hover:bg-gray-50 rounded-full p-1 transition-colors relative group/reaction"
+                          >
+                            {reaction.icon}
+                            <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover/reaction:opacity-100 whitespace-nowrap transition-opacity">
+                              {reaction.label}
+                            </span>
+                          </motion.button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <div
+                    className="flex-1"
+                    onMouseEnter={() => {
+                      clearTimeout(reactionTimeoutRef.current);
+                      setShowReactions(true);
+                    }}
+                    onMouseLeave={() => {
+                      reactionTimeoutRef.current = setTimeout(() => setShowReactions(false), 300);
+                    }}
+                  >
+                    <button
+                      onClick={() => toggleReaction(post._id, currentReaction ? currentReaction.type : "like")}
+                      className={`w-full py-2.5 flex items-center justify-center gap-2 hover:bg-gray-50 rounded-xl font-bold transition-colors ${currentReaction ? currentReaction.color : 'text-gray-600'}`}
+                    >
+                      {currentReaction
+                        ? <span className="text-lg leading-none">{currentReaction.icon}</span>
+                        : <ThumbsUp className="w-5 h-5" />}
+                      {currentReaction ? currentReaction.label : "Like"}
                     </button>
                   </div>
-               </div>
+                  <button
+                    onClick={() => setShowComments(!showComments)}
+                    className="flex-1 py-2.5 flex items-center justify-center gap-2 hover:bg-gray-50 rounded-xl font-bold text-gray-600 transition-colors"
+                  >
+                    <MessageSquare className="w-5 h-5" /> Comment
+                  </button>
+                  <button className="flex-1 py-2.5 flex items-center justify-center gap-2 hover:bg-gray-50 rounded-xl font-bold text-gray-600 transition-colors">
+                    <Send className="w-5 h-5" /> Send
+                  </button>
+                </div>
+
+                {/* Comment Section */}
+                <AnimatePresence>
+                  {showComments && <div className="mt-4"><CommentSection postId={post._id} currentUserAvatar={isOwner ? authorAvatar : undefined} /></div>}
+                </AnimatePresence>
+              </div>
             </div>
           </motion.div>
         </div>

@@ -4,19 +4,33 @@ import { motion, AnimatePresence } from "motion/react";
 import { useAuthStore } from "../../store/authStore";
 import usePostStore from "../../store/postStore";
 import PostModal from "../Post";
+import CommentSection from "../Post/CommentSection";
 
 const PostCard = ({ post, onOpen }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [showReactions, setShowReactions] = useState(false);
+  const [showComments, setShowComments] = useState(false);
   const menuRef = useRef(null);
+  const reactionTimeoutRef = useRef(null);
+  const cardRef = useRef(null);
   const CONTENT_LIMIT = 200;
 
+  const REACTION_TYPES = [
+    { type: "like", icon: "👍", label: "Like", color: "text-blue-600" },
+    { type: "celebrate", icon: "👏", label: "Celebrate", color: "text-green-600" },
+    { type: "support", icon: "🤝", label: "Support", color: "text-purple-600" },
+    { type: "love", icon: "❤️", label: "Love", color: "text-red-600" },
+    { type: "insightful", icon: "💡", label: "Insightful", color: "text-yellow-600" },
+    { type: "funny", icon: "😄", label: "Funny", color: "text-orange-600" }
+  ];
+
   const { user, profile: userProfile, company: userCompany } = useAuthStore();
-  const { deletePost, archivePost } = usePostStore();
+  const { deletePost, archivePost, toggleReaction } = usePostStore();
 
   const isOwner = user && (
-    post.author._id === user._id ||  
+    post.author._id === user._id ||
     (userCompany && post.author._id === userCompany._id) ||
     post.author === user._id ||
     (userCompany && post.author === userCompany._id)
@@ -43,6 +57,28 @@ const PostCard = ({ post, onOpen }) => {
     await archivePost(post._id);
     setShowMenu(false);
   };
+
+  const handleLike = async (e, type = "like") => {
+    e.stopPropagation();
+    if (!user) return;
+    setShowReactions(false);
+    await toggleReaction(post._id, type);
+  };
+
+  const handleMouseEnterReaction = () => {
+    clearTimeout(reactionTimeoutRef.current);
+    setShowReactions(true);
+  };
+
+  const handleMouseLeaveReaction = () => {
+    reactionTimeoutRef.current = setTimeout(() => {
+      setShowReactions(false);
+    }, 300);
+  };
+
+  const hasLiked = post.stats?.likedBy?.includes(user?._id);
+  const userReaction = post.stats?.userReaction || null;
+  const currentReaction = REACTION_TYPES.find(r => r.type === userReaction) || null;
 
   const isLongText = post.content && post.content.length > CONTENT_LIMIT;
   const displayedContent = isExpanded ? post.content : post.content?.slice(0, CONTENT_LIMIT);
@@ -241,6 +277,7 @@ const PostCard = ({ post, onOpen }) => {
   return (
     <>
       <motion.div
+        ref={cardRef}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -348,21 +385,83 @@ const PostCard = ({ post, onOpen }) => {
           <div className="px-4 pb-3 space-y-3">
             {post.content && (
               <div className="relative">
-                <p className="text-[14.5px] leading-relaxed text-gray-800 whitespace-pre-line font-normal">
-                  {displayedContent}
-                  {!isExpanded && isLongText && <span className="text-gray-400">...</span>}
-                </p>
+                <motion.div
+                  animate={{ height: isExpanded ? "auto" : "auto" }}
+                  transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+                >
+                  <motion.p
+                    className="text-[14.5px] leading-relaxed text-gray-800 whitespace-pre-line font-normal"
+                    layout
+                  >
+                    <motion.span
+                      key={isExpanded ? "full" : "truncated"}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      {displayedContent}
+                    </motion.span>
+                    <AnimatePresence>
+                      {!isExpanded && isLongText && (
+                        <motion.span
+                          className="text-gray-400"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.15 }}
+                        >
+                          ...
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </motion.p>
+                </motion.div>
+
                 {isLongText && (
-                  <button
+                  <motion.button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
+                      const collapsing = isExpanded;
                       setIsExpanded((prev) => !prev);
+                      if (collapsing && cardRef.current) {
+                        setTimeout(() => {
+                          const cardTop = cardRef.current.getBoundingClientRect().top + window.pageYOffset - 70;
+                          window.scrollTo({ top: cardTop, behavior: "smooth" });
+                        }, 50);
+                      }
                     }}
-                    className="text-blue-600 font-bold hover:text-blue-700 transition-colors mt-2 py-2 px-3 -ml-3 rounded-lg hover:bg-blue-50 focus:outline-none block w-fit hover:underline text-sm relative z-20 cursor-pointer"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.96 }}
+                    className="flex items-center gap-1.5 text-blue-600 font-bold mt-1 py-1 px-2 -ml-2 rounded-md hover:bg-blue-50 focus:outline-none w-fit text-sm relative z-20 cursor-pointer select-none"
                   >
-                    {isExpanded ? "Show less" : "Show more"}
-                  </button>
+                    <AnimatePresence mode="wait">
+                      <motion.span
+                        key={isExpanded ? "less" : "more"}
+                        initial={{ opacity: 0, y: isExpanded ? 4 : -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: isExpanded ? -4 : 4 }}
+                        transition={{ duration: 0.18 }}
+                        className="leading-none"
+                      >
+                        {isExpanded ? "Show less" : "Show more"}
+                      </motion.span>
+                    </AnimatePresence>  
+                    <motion.svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="w-4 h-4"
+                      animate={{ rotate: isExpanded ? 180 : 0, y: isExpanded ? -1 : 1 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                    >
+                      <polyline points="6 9 12 15 18 9" />
+                    </motion.svg>
+                  </motion.button>
                 )}
               </div>
             )}
@@ -416,19 +515,21 @@ const PostCard = ({ post, onOpen }) => {
 
 
         {/* Post Stats */}
-        <div className="px-4 py-2.5 flex items-center justify-between border-b border-gray-50 text-[11px] font-medium text-gray-500">
-          <div className="flex items-center space-x-1.5">
-            <div className="flex -space-x-1">
-              <span className="flex items-center justify-center w-4 h-4 bg-blue-500 rounded-full ring-2 ring-white">
-                <ThumbsUp className="w-2.5 h-2.5 text-white" />
-              </span>
-              <span className="flex items-center justify-center w-4 h-4 bg-red-500 rounded-full ring-2 ring-white">
-                <div className="w-1.5 h-1.5 bg-white rounded-full" />
-              </span>
+        <div className="mx-4 px-1 py-2.5 flex items-center justify-between border-b-2 border-t-2 border-gray-100 text-[11px] font-medium text-gray-500">
+          {(post.stats?.likesCount > 0) && (
+            <div className="flex items-center space-x-1.5">
+              <div className="flex -space-x-1">
+                <span className="flex items-center justify-center w-4 h-4 bg-blue-500 rounded-full ring-2 ring-white">
+                  <ThumbsUp className="w-2.5 h-2.5 text-white" />
+                </span>
+                <span className="flex items-center justify-center w-4 h-4 bg-red-500 rounded-full ring-2 ring-white">
+                  <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                </span>
+              </div>
+              <span className="hover:text-blue-600 hover:underline cursor-pointer">{post.stats.likesCount}</span>
             </div>
-            <span className="hover:text-blue-600 hover:underline cursor-pointer">{post.stats?.likesCount || 0}</span>
-          </div>
-          <div className="flex space-x-3">
+          )}
+          <div className="flex space-x-3 ml-auto">
             <span className="hover:text-blue-600 hover:underline cursor-pointer">
               {post.stats?.commentsCount || 0} comments
             </span>
@@ -440,15 +541,69 @@ const PostCard = ({ post, onOpen }) => {
         </div>
 
         {/* Post Actions */}
-        <div className="px-2 py-1 flex items-center justify-around sm:justify-start sm:space-x-1">
-          <ActionButton icon={<ThumbsUp className="w-5 h-5" />} label="Like" onClick={(e) => e.stopPropagation()} />
+        <div className="px-2 py-1 flex items-center justify-around sm:justify-start sm:space-x-1 relative">
+
+          <AnimatePresence>
+            {showReactions && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                className="absolute bottom-full left-2 mb-2 bg-white rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.15)] border border-gray-100 flex items-center px-3 py-2 z-50 gap-2"
+                onMouseEnter={handleMouseEnterReaction}
+                onMouseLeave={handleMouseLeaveReaction}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {REACTION_TYPES.map((reaction) => (
+                  <motion.button
+                    key={reaction.type}
+                    whileHover={{ scale: 1.3, originY: 1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={(e) => handleLike(e, reaction.type)}
+                    className="text-2xl hover:bg-gray-50 rounded-full p-1 transition-colors relative group/reaction"
+                  >
+                    {reaction.icon}
+                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover/reaction:opacity-100 whitespace-nowrap transition-opacity">
+                      {reaction.label}
+                    </span>
+                  </motion.button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div
+            onMouseEnter={handleMouseEnterReaction}
+            onMouseLeave={handleMouseLeaveReaction}
+            className="flex-1 sm:flex-none flex"
+          >
+            <ActionButton
+              icon={
+                currentReaction
+                  ? <span className="text-lg leading-none">{currentReaction.icon}</span>
+                  : <ThumbsUp className="w-5 h-5" />
+              }
+              label={currentReaction ? currentReaction.label : "Like"}
+              onClick={(e) => handleLike(e, currentReaction ? currentReaction.type : "like")}
+              active={!!currentReaction}
+              activeColor={currentReaction ? currentReaction.color : "text-blue-600"}
+            />
+          </div>
           <ActionButton
             icon={<MessageSquare className="w-5 h-5" />}
             label="Comment"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowComments(!showComments);
+            }}
           />
           <ActionButton icon={<Send className="w-5 h-5" />} label="Send" onClick={(e) => e.stopPropagation()} />
         </div>
+
+        {/* Comment Section */}
+        <AnimatePresence>
+          {showComments && <CommentSection postId={post._id} currentUserAvatar={isOwner ? authorAvatar : undefined} />}
+        </AnimatePresence>
       </motion.div>
 
       {/* Edit Post Modal */}
@@ -464,15 +619,15 @@ const PostCard = ({ post, onOpen }) => {
   );
 };
 
-const ActionButton = ({ icon, label, onClick }) => (
+const ActionButton = ({ icon, label, onClick, active, activeColor }) => (
   <motion.button
     whileHover={{ backgroundColor: "rgba(0,0,0,0.04)" }}
     whileTap={{ scale: 0.95 }}
     onClick={onClick}
-    className="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg text-gray-600 font-semibold transition-all group"
+    className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg font-semibold transition-all group ${active ? activeColor : 'text-gray-600'}`}
   >
-    <span className="group-hover:text-blue-600 transition-colors">{icon}</span>
-    <span className="text-sm hidden sm:block group-hover:text-blue-600 transition-colors">{label}</span>
+    <span className={`transition-colors ${active ? activeColor : 'group-hover:text-blue-600'}`}>{icon}</span>
+    <span className={`text-sm hidden sm:block transition-colors ${active ? activeColor : 'group-hover:text-blue-600'}`}>{label}</span>
   </motion.button>
 );
 

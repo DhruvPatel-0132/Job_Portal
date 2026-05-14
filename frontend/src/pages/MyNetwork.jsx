@@ -1,6 +1,7 @@
 import { Send } from "lucide-react";
 import Footer from "../components/dashboard/Footer";
 import { useNetworkStore } from "../store/networkStore";
+import { useMessageStore } from "../store/messageStore";
 import ConnectionRequestList from "../components/network/ConnectionRequestList";
 import UserProfileCard from "../components/network/UserProfileCard";
 import CompanyCard from "../components/network/CompanyCard";
@@ -8,6 +9,7 @@ import SidebarContent from "../components/dashboard/SidebarContent";
 import { useEffect } from "react";
 
 const MyNetwork = () => {
+  const { setActiveConversation } = useMessageStore();
   const {
     networkUsers,
     requests,
@@ -93,7 +95,15 @@ const MyNetwork = () => {
                         </p>
                       </div>
                       <div className="flex gap-2 ml-4 shrink-0">
-                        <button className="px-4 py-1.5 border text-white bg-blue-600 rounded-full text-sm font-bold transition-all flex items-center align-center gap-1">
+                        <button 
+                          onClick={() => setActiveConversation({
+                            _id: conn._id,
+                            fullName: conn.name,
+                            avatar: conn.avatar || "/avatar.svg",
+                            headline: conn.headline
+                          })}
+                          className="px-4 py-1.5 border text-white bg-blue-600 rounded-full text-sm font-bold transition-all flex items-center align-center gap-1"
+                        >
                           <Send className="h-4 w-4" />
                           Message
                         </button>
