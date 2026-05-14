@@ -14,6 +14,7 @@ import ManagePosts from "./pages/ManagePosts";
 
 /* ✅ USE ZUSTAND */
 import { useAuthStore } from "./store/authStore";
+import useSocketStore from "./store/socketStore";
 import NotificationPage from "./pages/NotificationPage";
 import MyNetwork from "./pages/MyNetwork";
 import { useEffect } from "react";
@@ -45,13 +46,17 @@ function NetworkRouteWrapper() {
 
 export default function App() {
   const { fetchUser, token } = useAuthStore();
+  const { connectSocket } = useSocketStore();
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
-    if (storedToken || token) {
+    const activeToken = storedToken || token;
+    
+    if (activeToken) {
       fetchUser();
+      connectSocket(activeToken);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Routes>

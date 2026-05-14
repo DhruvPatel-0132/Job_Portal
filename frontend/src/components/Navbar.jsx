@@ -53,14 +53,6 @@ const Navbar = () => {
       fetchUnreadCount();
       fetchNotifications();
       fetchPendingIncomingCount();
-
-      const intervalId = setInterval(() => {
-        fetchUnreadCount();
-        fetchNotifications();
-        fetchPendingIncomingCount();
-      }, 15000);
-
-      return () => clearInterval(intervalId);
     }
   }, [
     authToken,
@@ -100,6 +92,9 @@ const Navbar = () => {
   const handleLogout = async () => {
     clearProfile();
     await logout();
+    import("../store/socketStore").then(({ default: useSocketStore }) => {
+      useSocketStore.getState().disconnectSocket();
+    });
     navigate("/");
   };
 
@@ -111,7 +106,7 @@ const Navbar = () => {
           <div className="flex items-center gap-2 mr-4">
             <Link to="/dashboard" className="flex-shrink-0">
               <img
-                src="../public/logo.png"
+                src="/Logo.png"
                 alt="Logo"
                 className="w-11 h-11 object-contain rounded"
               />
@@ -172,7 +167,7 @@ const Navbar = () => {
                   alt="User Avatar"
                   referrerPolicy="no-referrer"
                   onError={(e) => {
-                    e.target.onerror = null; 
+                    e.target.onerror = null;
                     e.target.src = "/avatar.svg";
                   }}
                 />
@@ -204,7 +199,7 @@ const Navbar = () => {
                         alt="User Avatar"
                         referrerPolicy="no-referrer"
                         onError={(e) => {
-                          e.target.onerror = null; 
+                          e.target.onerror = null;
                           e.target.src = "/avatar.svg";
                         }}
                       />
