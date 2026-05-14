@@ -1,13 +1,13 @@
 import React, { useEffect } from "react";
 import Navbar from "../components/Navbar";
-import SidebarProfile from "../components/dashboard/SidebarProfile";
-import SidebarCompanyProfile from "../components/dashboard/SidebarCompanyProfile";
-import Feed from "../components/dashboard/Feed";
-import JobRecommendations from "../components/dashboard/JobRecommendations";
-import ProfileProgress from "../components/dashboard/ProfileProgress";
+import SidebarProfile from "../components/Dashboard/SidebarProfile";
+import SidebarCompanyProfile from "../components/Dashboard/SidebarCompanyProfile";
+import Feed from "../components/Dashboard/Feed";
+import JobRecommendations from "../components/Dashboard/JobRecommendations";
+import ProfileProgress from "../components/Dashboard/ProfileProgress";
 import CompanyProgress from "../components/CompanyProfile/CompanyProgress";
 import { useAuthStore } from "../store/authStore";
-import SidebarContent from "../components/dashboard/SidebarContent";
+import SidebarContent from "../components/Dashboard/SidebarContent";
 
 const Dashboard = () => {
   const { user, profile, company, token } = useAuthStore();

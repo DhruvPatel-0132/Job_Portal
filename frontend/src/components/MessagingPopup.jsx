@@ -37,10 +37,10 @@ const MessagingPopup = () => {
             animate={{ x: 0 }}
             exit={{ x: 100 }}
             transition={{ duration: 0.3 }}
-            className="fixed top-1/5 right-0 -translate-y-1/2 z-[90] cursor-pointer"
+            className="fixed top-[20%] right-0 -translate-y-1/2 z-[90] cursor-pointer"
             onClick={() => setIsOpen(true)}
           >
-            <div className="bg-white border border-gray-200 border-r-0 rounded-l-xl shadow-[0_4px_15px_rgba(0,0,0,0.1)] py-4 px-3 flex flex-col items-center gap-3 hover:bg-gray-50 transition-colors group">
+            <div className="bg-white border border-gray-200 border-r-0 rounded-l-xl shadow-[0_4px_15px_rgba(0,0,0,0.1)] py-4 w-[60px] flex flex-col items-center gap-3 hover:bg-gray-50 transition-colors group">
               <MessageSquare className="w-5 h-5 text-gray-500 group-hover:text-[#0a66c2] transition-colors" />
               <span
                 className="text-[13px] font-semibold text-gray-700 tracking-wider group-hover:text-[#0a66c2] transition-colors"
