@@ -327,17 +327,19 @@ const PostDetailModal = ({ isOpen, onClose, post }) => {
               {renderSpecializedDetails()}
 
               {/* Standard Post Footer inside detail */}
-              <div className="mt-12 pt-6 border-t border-gray-100">
+              <div className="mt-12 pt-6 border-t-2 border-gray-100">
                 <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="flex -space-x-1">
-                      <span className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center ring-2 ring-white">
-                        <ThumbsUp className="w-3 h-3 text-white" />
-                      </span>
+                  {(post.stats?.likesCount > 0) && (
+                    <div className="flex items-center gap-2">
+                      <div className="flex -space-x-1">
+                        <span className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center ring-2 ring-white">
+                          <ThumbsUp className="w-3 h-3 text-white" />
+                        </span>
+                      </div>
+                      <span className="font-semibold text-gray-700">{post.stats.likesCount} Likes</span>
                     </div>
-                    <span className="font-semibold text-gray-700">{post.stats?.likesCount || 0} Likes</span>
-                  </div>
-                  <div className="flex gap-4 font-semibold">
+                  )}
+                  <div className="flex gap-4 font-semibold ml-auto">
                     <span>{post.stats?.commentsCount || 0} Comments</span>
                     <span>{post.stats?.viewsCount || 0} Views</span>
                   </div>
@@ -400,7 +402,7 @@ const PostDetailModal = ({ isOpen, onClose, post }) => {
                       {currentReaction ? currentReaction.label : "Like"}
                     </button>
                   </div>
-                  <button 
+                  <button
                     onClick={() => setShowComments(!showComments)}
                     className="flex-1 py-2.5 flex items-center justify-center gap-2 hover:bg-gray-50 rounded-xl font-bold text-gray-600 transition-colors"
                   >
@@ -410,7 +412,7 @@ const PostDetailModal = ({ isOpen, onClose, post }) => {
                     <Send className="w-5 h-5" /> Send
                   </button>
                 </div>
-                
+
                 {/* Comment Section */}
                 <AnimatePresence>
                   {showComments && <div className="mt-4"><CommentSection postId={post._id} currentUserAvatar={isOwner ? authorAvatar : undefined} /></div>}

@@ -14,6 +14,7 @@ const PostCard = ({ post, onOpen }) => {
   const [showComments, setShowComments] = useState(false);
   const menuRef = useRef(null);
   const reactionTimeoutRef = useRef(null);
+  const cardRef = useRef(null);
   const CONTENT_LIMIT = 200;
 
   const REACTION_TYPES = [
@@ -276,6 +277,7 @@ const PostCard = ({ post, onOpen }) => {
   return (
     <>
       <motion.div
+        ref={cardRef}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -383,21 +385,83 @@ const PostCard = ({ post, onOpen }) => {
           <div className="px-4 pb-3 space-y-3">
             {post.content && (
               <div className="relative">
-                <p className="text-[14.5px] leading-relaxed text-gray-800 whitespace-pre-line font-normal">
-                  {displayedContent}
-                  {!isExpanded && isLongText && <span className="text-gray-400">...</span>}
-                </p>
+                <motion.div
+                  animate={{ height: isExpanded ? "auto" : "auto" }}
+                  transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+                >
+                  <motion.p
+                    className="text-[14.5px] leading-relaxed text-gray-800 whitespace-pre-line font-normal"
+                    layout
+                  >
+                    <motion.span
+                      key={isExpanded ? "full" : "truncated"}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      {displayedContent}
+                    </motion.span>
+                    <AnimatePresence>
+                      {!isExpanded && isLongText && (
+                        <motion.span
+                          className="text-gray-400"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.15 }}
+                        >
+                          ...
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </motion.p>
+                </motion.div>
+
                 {isLongText && (
-                  <button
+                  <motion.button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
+                      const collapsing = isExpanded;
                       setIsExpanded((prev) => !prev);
+                      if (collapsing && cardRef.current) {
+                        setTimeout(() => {
+                          const cardTop = cardRef.current.getBoundingClientRect().top + window.pageYOffset - 70;
+                          window.scrollTo({ top: cardTop, behavior: "smooth" });
+                        }, 50);
+                      }
                     }}
-                    className="text-blue-600 font-bold hover:text-blue-700 transition-colors mt-2 py-2 px-3 -ml-3 rounded-lg hover:bg-blue-50 focus:outline-none block w-fit hover:underline text-sm relative z-20 cursor-pointer"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.96 }}
+                    className="flex items-center gap-1.5 text-blue-600 font-bold mt-1 py-1 px-2 -ml-2 rounded-md hover:bg-blue-50 focus:outline-none w-fit text-sm relative z-20 cursor-pointer select-none"
                   >
-                    {isExpanded ? "Show less" : "Show more"}
-                  </button>
+                    <AnimatePresence mode="wait">
+                      <motion.span
+                        key={isExpanded ? "less" : "more"}
+                        initial={{ opacity: 0, y: isExpanded ? 4 : -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: isExpanded ? -4 : 4 }}
+                        transition={{ duration: 0.18 }}
+                        className="leading-none"
+                      >
+                        {isExpanded ? "Show less" : "Show more"}
+                      </motion.span>
+                    </AnimatePresence>  
+                    <motion.svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="w-4 h-4"
+                      animate={{ rotate: isExpanded ? 180 : 0, y: isExpanded ? -1 : 1 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                    >
+                      <polyline points="6 9 12 15 18 9" />
+                    </motion.svg>
+                  </motion.button>
                 )}
               </div>
             )}
@@ -451,19 +515,21 @@ const PostCard = ({ post, onOpen }) => {
 
 
         {/* Post Stats */}
-        <div className="px-4 py-2.5 flex items-center justify-between border-b border-gray-50 text-[11px] font-medium text-gray-500">
-          <div className="flex items-center space-x-1.5">
-            <div className="flex -space-x-1">
-              <span className="flex items-center justify-center w-4 h-4 bg-blue-500 rounded-full ring-2 ring-white">
-                <ThumbsUp className="w-2.5 h-2.5 text-white" />
-              </span>
-              <span className="flex items-center justify-center w-4 h-4 bg-red-500 rounded-full ring-2 ring-white">
-                <div className="w-1.5 h-1.5 bg-white rounded-full" />
-              </span>
+        <div className="mx-4 px-1 py-2.5 flex items-center justify-between border-b-2 border-t-2 border-gray-100 text-[11px] font-medium text-gray-500">
+          {(post.stats?.likesCount > 0) && (
+            <div className="flex items-center space-x-1.5">
+              <div className="flex -space-x-1">
+                <span className="flex items-center justify-center w-4 h-4 bg-blue-500 rounded-full ring-2 ring-white">
+                  <ThumbsUp className="w-2.5 h-2.5 text-white" />
+                </span>
+                <span className="flex items-center justify-center w-4 h-4 bg-red-500 rounded-full ring-2 ring-white">
+                  <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                </span>
+              </div>
+              <span className="hover:text-blue-600 hover:underline cursor-pointer">{post.stats.likesCount}</span>
             </div>
-            <span className="hover:text-blue-600 hover:underline cursor-pointer">{post.stats?.likesCount || 0}</span>
-          </div>
-          <div className="flex space-x-3">
+          )}
+          <div className="flex space-x-3 ml-auto">
             <span className="hover:text-blue-600 hover:underline cursor-pointer">
               {post.stats?.commentsCount || 0} comments
             </span>
@@ -533,7 +599,7 @@ const PostCard = ({ post, onOpen }) => {
           />
           <ActionButton icon={<Send className="w-5 h-5" />} label="Send" onClick={(e) => e.stopPropagation()} />
         </div>
-        
+
         {/* Comment Section */}
         <AnimatePresence>
           {showComments && <CommentSection postId={post._id} currentUserAvatar={isOwner ? authorAvatar : undefined} />}
