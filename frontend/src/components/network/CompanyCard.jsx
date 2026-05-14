@@ -32,8 +32,14 @@ const CompanyCard = ({
         <img
           src={company.avatar || "/avatar.svg"}
           alt={company.name}
+          referrerPolicy="no-referrer"
+          onError={(e) => {
+            e.target.onerror = null; 
+            e.target.src = "/avatar.svg";
+          }}
           className="w-18 h-18 rounded-md border-2 border-white shadow-sm object-cover bg-white"
         />
+
       </div>
 
       {/* Content */}

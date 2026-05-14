@@ -5,6 +5,7 @@ import SidebarProfile from "../components/dashboard/SidebarProfile";
 import Footer from "../components/dashboard/Footer";
 import { useProfileStore } from "../store/profileStore";
 import { useNotificationStore } from "../store/notificationStore";
+import SidebarContent from "../components/dashboard/SidebarContent";
 
 const getNotificationMessage = (notification) => {
   const senderName = notification?.sender?.fullName || "Someone";
@@ -58,6 +59,7 @@ const NotificationItem = ({ notification, onClick }) => {
         <img
           src={notification.sender?.avatar || "/avatar.svg"}
           alt="Avatar"
+          referrerPolicy="no-referrer"
           className="w-14 h-14 rounded-full object-cover border border-gray-100 shadow-sm bg-white"
         />
         {!notification.isRead && (
@@ -118,7 +120,7 @@ const NotificationPage = () => {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left Sidebar */}
           <div className="w-full lg:w-[225px] flex-shrink-0 space-y-3 self-start lg:sticky lg:top-[72px]">
-            <SidebarProfile profile={profile} />
+            <SidebarContent />
           </div>
 
           {/* Center Feed */}

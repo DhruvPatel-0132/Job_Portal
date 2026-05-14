@@ -2,6 +2,7 @@ const User = require("../models/User");
 const Profile = require("../models/Profile");
 const Company = require("../models/Company");
 const ProfessionalDetails = require("../models/ProfessionalDetails");
+const Post = require("../models/Post");
 
 /* GET CURRENT USER + PROFILE */
 exports.getMe = async (req, res) => {
@@ -29,8 +30,25 @@ exports.getMe = async (req, res) => {
       $or: [{ user1: userId }, { user2: userId }]
     });
 
+    // Fetch posts count
+    let authorIdForCount = userId;
+    let authorModelForCount = "User";
+
+    const userCompany = await Company.findOne({ createdBy: userId });
+    if ((user.role === "company" || user.role === "hire") && userCompany) {
+      authorIdForCount = userCompany._id;
+      authorModelForCount = "Company";
+    }
+
+    const postsCount = await Post.countDocuments({
+      author: authorIdForCount,
+      authorModel: authorModelForCount,
+      isDeleted: false
+    });
+
     const profileObj = profile ? profile.toObject() : {};
     profileObj.connections = connectionsCount;
+    profileObj.postsCount = postsCount;
 
     res.status(200).json({
       success: true,
@@ -142,7 +160,7 @@ exports.getAllUsers = async (req, res) => {
     // Fetch companies for company users
     const companyUsers = users.filter(u => u.role === "company");
     const companyUserIds = companyUsers.map(u => u._id);
-    const companies = await require("../models/Company").find({ createdBy: { $in: companyUserIds } }).select("_id createdBy name logo banner tagline");
+    const companies = await require("../models/Company").find({ createdBy: { $in: companyUserIds } }).select("_id createdBy name logo banner tagline followersCount");
 
     // Map profiles to users
     const usersWithProfiles = users.map(user => {
@@ -157,7 +175,8 @@ exports.getAllUsers = async (req, res) => {
         avatar: user.role === "company" && userCompany?.logo ? userCompany.logo : (user.avatar || userProfile?.avatar || "/avatar.svg"),
         headline: user.role === "company" && userCompany?.tagline ? userCompany.tagline : (userProfile?.headline || "No headline available"),
         banner: user.role === "company" && userCompany?.banner ? userCompany.banner : (userProfile?.banner || ""),
-        companyId: userCompany ? userCompany._id : null
+        companyId: userCompany ? userCompany._id : null,
+        followersCount: userCompany?.followersCount || 0
       };
     });
 

@@ -10,6 +10,7 @@ import CompanyProfile from "./pages/CompanyProfile";
 import Jobs from "./pages/Jobs";
 import Onboarding from "./pages/Onboarding";
 import MainLayout from "./components/MainLayout";
+import ManagePosts from "./pages/ManagePosts";
 
 /* ✅ USE ZUSTAND */
 import { useAuthStore } from "./store/authStore";
@@ -31,6 +32,15 @@ function PrivateRoute({ children }) {
 function ProfileRouteWrapper() {
   const user = useAuthStore((state) => state.user);
   return user?.role === "company" ? <CompanyProfile /> : <Profile />;
+}
+
+// Wrapper for Network Route to hide for company
+function NetworkRouteWrapper() {
+  const user = useAuthStore((state) => state.user);
+  if (user?.role === "company") {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <MyNetwork />;
 }
 
 export default function App() {
@@ -62,7 +72,8 @@ export default function App() {
         <Route path="/profile" element={<ProfileRouteWrapper />} />
         <Route path="/jobs" element={<Jobs />} />
         <Route path="/notification" element={<NotificationPage />} />
-        <Route path="/network" element={<MyNetwork />} />
+        <Route path="/network" element={<NetworkRouteWrapper />} />
+        <Route path="/manage-posts" element={<ManagePosts />} />
       </Route>
     </Routes>
   );

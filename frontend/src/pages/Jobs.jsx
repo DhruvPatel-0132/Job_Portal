@@ -228,13 +228,17 @@ const Jobs = () => {
                   key={job.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
+                  whileHover={{ y: -4, shadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group"
+                  className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm transition-all group relative overflow-hidden"
                 >
                   <div className="flex items-center gap-5 cursor-pointer" onClick={() => toggleJob(job.id)}>
-                    <div className="w-12 h-12 rounded-xl bg-gray-50 p-2 flex items-center justify-center border border-gray-100 group-hover:bg-white transition-colors shrink-0">
+                    <motion.div 
+                      whileHover={{ scale: 1.05 }}
+                      className="w-12 h-12 rounded-xl bg-gray-50 p-2 flex items-center justify-center border border-gray-100 group-hover:bg-white transition-colors shrink-0"
+                    >
                       <img src={job.logo} alt={job.company} className="w-full h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-300" />
-                    </div>
+                    </motion.div>
                     
                     <div className="flex-1">
                       <div className="flex justify-between items-start">
@@ -249,20 +253,27 @@ const Jobs = () => {
                         </div>
                         <div className="flex items-center gap-3">
                           {atsScore && (
-                            <div className="flex items-center gap-2">
+                            <motion.div 
+                              initial={{ scale: 0.9, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              className="flex items-center gap-2"
+                            >
                               <div className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter">
                                 {Math.round((job.skills.filter(s => userSkills.includes(s)).length / job.skills.length) * 100) || 0}% Match
                               </div>
-                            </div>
+                            </motion.div>
                           )}
-                          <button className="text-gray-400 hover:text-blue-600 transition-colors p-1 rounded-full hover:bg-gray-50">
-                            {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                          </button>
+                          <motion.button 
+                            animate={{ rotate: isExpanded ? 180 : 0 }}
+                            className="text-gray-400 hover:text-blue-600 transition-colors p-1 rounded-full hover:bg-gray-50"
+                          >
+                            <ChevronDown size={16} />
+                          </motion.button>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-4 mt-3 text-[11px] text-gray-400">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 group-hover:text-gray-600 transition-colors">
                           <MapPin size={12} />
                           {job.location}
                         </div>
@@ -270,7 +281,7 @@ const Jobs = () => {
                           <DollarSign size={12} />
                           {job.salary}
                         </div>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 group-hover:text-gray-600 transition-colors">
                           <Briefcase size={12} />
                           {job.type}
                         </div>
@@ -292,12 +303,20 @@ const Jobs = () => {
                             {job.description}
                           </p>
                           <div className="mt-4 flex gap-3">
-                            <button className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-xs font-bold hover:bg-blue-700 transition-colors">
+                            <motion.button 
+                              whileHover={{ scale: 1, backgroundColor: "#1d4ed8" }}
+                              whileTap={{ scale: 0.98 }}
+                              className="flex-1 bg-blue-600 text-white py-2.5 rounded-xl text-xs font-bold transition-colors shadow-sm"
+                            >
                               Apply Now
-                            </button>
-                            <button className="px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-xs font-bold hover:bg-gray-50 transition-colors">
+                            </motion.button>
+                            <motion.button 
+                              whileHover={{ scale: 1.02, backgroundColor: "#f9fafb" }}
+                              whileTap={{ scale: 0.98 }}
+                              className="px-6 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl text-xs font-bold transition-colors"
+                            >
                               Save
-                            </button>
+                            </motion.button>
                           </div>
                         </div>
                       </motion.div>
@@ -307,9 +326,13 @@ const Jobs = () => {
               )})}
             </div>
 
-            <button className="w-full py-4 bg-gray-50 text-gray-500 rounded-2xl font-bold text-sm hover:bg-gray-100 hover:text-gray-700 transition-all">
+            <motion.button 
+              whileHover={{ scale: 1.01, backgroundColor: "#f3f4f6" }}
+              whileTap={{ scale: 0.99 }}
+              className="w-full py-4 bg-gray-50 text-gray-500 rounded-2xl font-bold text-sm hover:text-gray-700 transition-all border border-transparent hover:border-gray-200"
+            >
               View all openings
-            </button>
+            </motion.button>
           </section>
         </div>
       </div>

@@ -12,8 +12,8 @@ export default function GeneralCompanySection({ editData, update }) {
     if (file) {
       try {
         setIsUploading((prev) => ({ ...prev, logo: true }));
-        const url = await uploadToCloudinary(file);
-        update("logo", url);
+        const result = await uploadToCloudinary(file, "profile");
+        update("logo", result.url);
       } catch (error) {
         console.error("Logo upload failed:", error);
         alert("Failed to upload logo.");
@@ -28,8 +28,8 @@ export default function GeneralCompanySection({ editData, update }) {
     if (file) {
       try {
         setIsUploading((prev) => ({ ...prev, banner: true }));
-        const url = await uploadToCloudinary(file);
-        update("banner", url);
+        const result = await uploadToCloudinary(file, "profile");
+        update("banner", result.url);
       } catch (error) {
         console.error("Banner upload failed:", error);
         alert("Failed to upload banner.");
@@ -63,6 +63,7 @@ export default function GeneralCompanySection({ editData, update }) {
                 <img
                   src={editData.logo}
                   alt="Company Logo"
+                  referrerPolicy="no-referrer"
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -126,6 +127,7 @@ export default function GeneralCompanySection({ editData, update }) {
                 src={editData.banner}
                 className="w-full h-full object-cover"
                 alt="Banner Preview"
+                referrerPolicy="no-referrer"
               />
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center gap-2">
