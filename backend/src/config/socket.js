@@ -31,6 +31,10 @@ const initSocket = (server) => {
     // Join a room based on user ID for direct messages/notifications
     socket.join(socket.user.id);
 
+    // Initialize modular socket handlers
+    const messagingHandler = require("../sockets/messaging");
+    messagingHandler(io, socket);
+
     socket.on("disconnect", () => {
       console.log(`Socket disconnected: ${socket.id}, User: ${socket.user.id}`);
     });

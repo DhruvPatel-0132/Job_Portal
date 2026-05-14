@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ChevronRight,
   MessageSquare,
@@ -7,47 +7,25 @@ import {
   Search,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-
-const contacts = [
-  {
-    id: 1,
-    name: "Alice Johnson",
-    avatar: "https://i.pravatar.cc/150?img=1",
-    status: "online",
-    message: "Hey, are you available for a chat?",
-  },
-  {
-    id: 2,
-    name: "Bob Smith",
-    avatar: "https://i.pravatar.cc/150?img=2",
-    status: "offline",
-    message: "Sent an attachment",
-  },
-  {
-    id: 3,
-    name: "Charlie Brown",
-    avatar: "https://i.pravatar.cc/150?img=3",
-    status: "online",
-    message: "Thanks for the update.",
-  },
-  {
-    id: 4,
-    name: "Diana Prince",
-    avatar: "https://i.pravatar.cc/150?img=4",
-    status: "online",
-    message: "Let's connect next week.",
-  },
-  {
-    id: 5,
-    name: "Evan Wright",
-    avatar: "https://i.pravatar.cc/150?img=5",
-    status: "offline",
-    message: "Sounds good!",
-  },
-];
+import { useMessageStore } from "../store/messageStore";
+import { useAuthStore } from "../store/authStore";
 
 const MessagingPopup = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const { 
+    isMessagingPopupOpen: isOpen, 
+    setMessagingPopupOpen: setIsOpen, 
+    conversations, 
+    fetchConversations, 
+    setActiveConversation, 
+    onlineUsers 
+  } = useMessageStore();
+  const { profile } = useAuthStore();
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchConversations();
+    }
+  }, [isOpen, fetchConversations]);
 
   return (
     <>
@@ -93,14 +71,14 @@ const MessagingPopup = () => {
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <img
-                    src="https://i.pravatar.cc/150?img=11"
+                    src={profile?.avatar || "/avatar.svg"}
                     alt="Me"
                     referrerPolicy="no-referrer"
                     onError={(e) => {
                       e.target.onerror = null; 
                       e.target.src = "/avatar.svg";
                     }}
-                    className="w-9 h-9 rounded-full border border-gray-200"
+                    className="w-9 h-9 rounded-full border border-gray-200 object-cover"
                   />
 
                   <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
@@ -139,39 +117,58 @@ const MessagingPopup = () => {
 
             {/* Contacts List */}
             <div className="flex-1 overflow-y-auto hide-scrollbar bg-white">
-              {contacts.map((contact) => (
-                <div
-                  key={contact.id}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-none transition-colors"
-                >
-                  <div className="relative flex-shrink-0">
-                    <img
-                      src={contact.avatar}
-                      alt={contact.name}
-                      referrerPolicy="no-referrer"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "/avatar.svg";
-                      }}
-                      className="w-12 h-12 rounded-full border border-gray-200"
-                    />
-                    {contact.status === "online" && (
-                      <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-baseline mb-0.5">
-                      <h4 className="text-[15px] font-semibold text-gray-900 truncate">
-                        {contact.name}
-                      </h4>
-                      <span className="text-[11px] text-gray-500">Mar 12</span>
-                    </div>
-                    <p className="text-[13px] text-gray-500 truncate">
-                      {contact.message}
-                    </p>
-                  </div>
+              {conversations.length === 0 ? (
+                <div className="p-6 text-center text-gray-500 text-sm">
+                  No conversations yet. Start a chat with your connections!
                 </div>
-              ))}
+              ) : (
+                conversations.map((conv) => {
+                  const isOnline = onlineUsers.includes(conv.otherParticipant._id);
+                  return (
+                    <div
+                      key={conv._id}
+                      onClick={() => setActiveConversation(conv.otherParticipant)}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-none transition-colors"
+                    >
+                      <div className="relative flex-shrink-0">
+                        <img
+                          src={conv.otherParticipant.avatar}
+                          alt={conv.otherParticipant.fullName}
+                          referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "/avatar.svg";
+                          }}
+                          className="w-12 h-12 rounded-full border border-gray-200 object-cover"
+                        />
+                        {isOnline && (
+                          <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-baseline mb-0.5">
+                          <h4 className="text-[15px] font-semibold text-gray-900 truncate">
+                            {conv.otherParticipant.fullName}
+                          </h4>
+                          <span className="text-[11px] text-gray-500">
+                            {conv.updatedAt ? new Date(conv.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : ""}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <p className={`text-[13px] truncate pr-2 ${conv.unreadCount > 0 ? "font-semibold text-gray-900" : "text-gray-500"}`}>
+                            {conv.lastMessage?.message || "No messages yet"}
+                          </p>
+                          {conv.unreadCount > 0 && (
+                            <span className="bg-[#0a66c2] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                              {conv.unreadCount}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </motion.div>
         )}
