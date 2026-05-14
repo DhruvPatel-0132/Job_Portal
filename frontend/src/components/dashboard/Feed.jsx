@@ -38,13 +38,9 @@ const Feed = () => {
   };
 
   // Infinite scroll functionality (Placeholder for future implementation)
-  const lastPostElementRef = useCallback(
-    (node) => {
-      // Logic for infinite scroll would go here
-    },
-    [],
-  );
-
+  const lastPostElementRef = useCallback((node) => {
+    // Logic for infinite scroll would go here
+  }, []);
 
   return (
     <div className="flex flex-col w-full">
@@ -63,7 +59,10 @@ const Feed = () => {
           />
 
           <button
-            onClick={() => { setInitialType("regular"); setIsModalOpen(true); }}
+            onClick={() => {
+              setInitialType("regular");
+              setIsModalOpen(true);
+            }}
             className="flex-1 bg-white border border-gray-300 rounded-full text-left px-4 text-gray-500 font-medium hover:bg-gray-50 transition-colors"
           >
             Start a post
@@ -73,7 +72,10 @@ const Feed = () => {
           {role === "job_seeker" ? (
             <>
               <button
-                onClick={() => { setInitialType("project"); setIsModalOpen(true); }}
+                onClick={() => {
+                  setInitialType("project");
+                  setIsModalOpen(true);
+                }}
                 className="flex items-center space-x-2 text-gray-500 hover:bg-gray-100 p-2 rounded-md transition-colors"
               >
                 <svg
@@ -86,7 +88,10 @@ const Feed = () => {
                 <span className="text-sm font-medium">Showcase Projects</span>
               </button>
               <button
-                onClick={() => { setInitialType("achievement"); setIsModalOpen(true); }}
+                onClick={() => {
+                  setInitialType("achievement");
+                  setIsModalOpen(true);
+                }}
                 className="flex items-center space-x-2 text-gray-500 hover:bg-gray-100 p-2 rounded-md transition-colors"
               >
                 <svg
@@ -109,7 +114,10 @@ const Feed = () => {
           ) : role === "hire" || role === "company" ? (
             <>
               <button
-                onClick={() => { setInitialType("media"); setIsModalOpen(true); }}
+                onClick={() => {
+                  setInitialType("media");
+                  setIsModalOpen(true);
+                }}
                 className="flex items-center space-x-2 text-gray-500 hover:bg-gray-100 p-2 rounded-md transition-colors"
               >
                 <svg
@@ -126,7 +134,10 @@ const Feed = () => {
                 <span className="text-sm font-medium">Media</span>
               </button>
               <button
-                onClick={() => { setInitialType("article"); setIsModalOpen(true); }}
+                onClick={() => {
+                  setInitialType("article");
+                  setIsModalOpen(true);
+                }}
                 className="flex items-center space-x-2 text-gray-500 hover:bg-gray-100 p-2 rounded-md transition-colors"
               >
                 <svg
@@ -143,7 +154,10 @@ const Feed = () => {
                 <span className="text-sm font-medium">Write Article</span>
               </button>
               <button
-                onClick={() => { setInitialType("job_post"); setIsModalOpen(true); }}
+                onClick={() => {
+                  setInitialType("job_post");
+                  setIsModalOpen(true);
+                }}
                 className="flex items-center space-x-2 text-gray-500 hover:bg-gray-100 p-2 rounded-md transition-colors"
               >
                 <svg
@@ -168,36 +182,49 @@ const Feed = () => {
       {/* Feed Posts */}
       <div className="flex flex-col">
         <AnimatePresence>
-          {posts.length > 0 ? (
-            posts.map((post, index) => (
-              <motion.div
-                key={post._id || post.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                ref={posts.length === index + 1 ? lastPostElementRef : null}
-              >
-                <PostCard post={post} onOpen={handleOpenDetail} />
-              </motion.div>
-            ))
-          ) : !loading && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex flex-col items-center justify-center py-12 px-4 bg-white rounded-lg border border-gray-200 shadow-sm"
-            >
-              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l2 2h2a2 2 0 012 2v10a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold text-gray-900">No posts yet</h3>
-              <p className="text-gray-500 text-center mt-1">Be the first to share something with your network!</p>
-            </motion.div>
-          )}
+          {posts.length > 0
+            ? posts.map((post, index) => (
+                <motion.div
+                  key={post._id || post.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  ref={posts.length === index + 1 ? lastPostElementRef : null}
+                >
+                  <PostCard post={post} onOpen={handleOpenDetail} />
+                </motion.div>
+              ))
+            : !loading && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex flex-col items-center justify-center py-12 px-4 bg-white rounded-lg border border-gray-200 shadow-sm"
+                >
+                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                    <svg
+                      className="w-8 h-8 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l2 2h2a2 2 0 012 2v10a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    No posts yet
+                  </h3>
+                  <p className="text-gray-500 text-center mt-1">
+                    Be the first to share something with your network!
+                  </p>
+                </motion.div>
+              )}
         </AnimatePresence>
       </div>
-
 
       {/* Loading Indicator */}
       {loading && (

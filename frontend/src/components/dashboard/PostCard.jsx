@@ -16,7 +16,7 @@ const PostCard = ({ post, onOpen }) => {
   const { deletePost, archivePost } = usePostStore();
 
   const isOwner = user && (
-    post.author._id === user._id || 
+    post.author._id === user._id ||  
     (userCompany && post.author._id === userCompany._id) ||
     post.author === user._id ||
     (userCompany && post.author === userCompany._id)
@@ -109,6 +109,11 @@ const PostCard = ({ post, onOpen }) => {
                     </span>
                   )}
                 </div>
+                {post.referenceId.description && (
+                  <p className="text-sm text-gray-700 mt-3 line-clamp-2 leading-relaxed">
+                    {post.referenceId.description}
+                  </p>
+                )}
                 {post.referenceId.skillsRequired && post.referenceId.skillsRequired.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {post.referenceId.skillsRequired.map((skill, i) => (

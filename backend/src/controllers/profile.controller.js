@@ -19,11 +19,13 @@ const getProfile = async (req, res) => {
     }
 
     // Fetch professional details from separate model
-    const profDetails = await ProfessionalDetails.findOne({ userId: req.user.id });
+    const profDetails = await ProfessionalDetails.findOne({
+      userId: req.user.id,
+    });
 
     // Fetch connections count
     const connectionsCount = await Connection.countDocuments({
-      $or: [{ user1: req.user.id }, { user2: req.user.id }]
+      $or: [{ user1: req.user.id }, { user2: req.user.id }],
     });
 
     // Fetch posts count
@@ -39,7 +41,7 @@ const getProfile = async (req, res) => {
     const postsCount = await Post.countDocuments({
       author: authorId,
       authorModel: authorModel,
-      isDeleted: false
+      isDeleted: false,
     });
 
     // Convert profile to object to add extra fields
@@ -162,7 +164,7 @@ const updateProfile = async (req, res) => {
       },
       {
         new: true,
-      }
+      },
     ).select("-password");
 
     // =========================
@@ -198,7 +200,7 @@ const updateProfile = async (req, res) => {
           {
             new: true,
             upsert: true,
-          }
+          },
         );
       }
     }
@@ -223,16 +225,15 @@ const updateProfile = async (req, res) => {
       {
         new: true,
         upsert: true,
-      }
+      },
     );
 
     // =========================
     // FETCH PROFESSIONAL DETAILS
     // =========================
-    const professionalDetails =
-      await ProfessionalDetails.findOne({
-        userId: req.user.id,
-      });
+    const professionalDetails = await ProfessionalDetails.findOne({
+      userId: req.user.id,
+    });
 
     // =========================
     // CONNECTION COUNT
@@ -248,7 +249,10 @@ const updateProfile = async (req, res) => {
     let authorModelForCount = "User";
 
     const userCompany = await Company.findOne({ createdBy: req.user.id });
-    if ((req.user.role === "company" || req.user.role === "hire") && userCompany) {
+    if (
+      (req.user.role === "company" || req.user.role === "hire") &&
+      userCompany
+    ) {
       authorIdForCount = userCompany._id;
       authorModelForCount = "Company";
     }
@@ -256,7 +260,7 @@ const updateProfile = async (req, res) => {
     const postsCount = await Post.countDocuments({
       author: authorIdForCount,
       authorModel: authorModelForCount,
-      isDeleted: false
+      isDeleted: false,
     });
 
     // =========================
@@ -284,6 +288,5 @@ const updateProfile = async (req, res) => {
     });
   }
 };
-
 
 module.exports = { getProfile, updateProfile };
