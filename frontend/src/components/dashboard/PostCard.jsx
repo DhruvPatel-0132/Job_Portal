@@ -4,12 +4,14 @@ import { motion, AnimatePresence } from "motion/react";
 import { useAuthStore } from "../../store/authStore";
 import usePostStore from "../../store/postStore";
 import PostModal from "../Post";
+import CommentSection from "../Post/CommentSection";
 
 const PostCard = ({ post, onOpen }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
+  const [showComments, setShowComments] = useState(false);
   const menuRef = useRef(null);
   const reactionTimeoutRef = useRef(null);
   const CONTENT_LIMIT = 200;
@@ -27,7 +29,7 @@ const PostCard = ({ post, onOpen }) => {
   const { deletePost, archivePost, toggleReaction } = usePostStore();
 
   const isOwner = user && (
-    post.author._id === user._id ||  
+    post.author._id === user._id ||
     (userCompany && post.author._id === userCompany._id) ||
     post.author === user._id ||
     (userCompany && post.author === userCompany._id)
@@ -74,6 +76,8 @@ const PostCard = ({ post, onOpen }) => {
   };
 
   const hasLiked = post.stats?.likedBy?.includes(user?._id);
+  const userReaction = post.stats?.userReaction || null;
+  const currentReaction = REACTION_TYPES.find(r => r.type === userReaction) || null;
 
   const isLongText = post.content && post.content.length > CONTENT_LIMIT;
   const displayedContent = isExpanded ? post.content : post.content?.slice(0, CONTENT_LIMIT);
@@ -507,21 +511,33 @@ const PostCard = ({ post, onOpen }) => {
             onMouseLeave={handleMouseLeaveReaction}
             className="flex-1 sm:flex-none flex"
           >
-            <ActionButton 
-              icon={<ThumbsUp className={`w-5 h-5 ${hasLiked ? 'fill-current' : ''}`} />} 
-              label="Like" 
-              onClick={(e) => handleLike(e, "like")} 
-              active={hasLiked}
-              activeColor="text-blue-600"
+            <ActionButton
+              icon={
+                currentReaction
+                  ? <span className="text-lg leading-none">{currentReaction.icon}</span>
+                  : <ThumbsUp className="w-5 h-5" />
+              }
+              label={currentReaction ? currentReaction.label : "Like"}
+              onClick={(e) => handleLike(e, currentReaction ? currentReaction.type : "like")}
+              active={!!currentReaction}
+              activeColor={currentReaction ? currentReaction.color : "text-blue-600"}
             />
           </div>
           <ActionButton
             icon={<MessageSquare className="w-5 h-5" />}
             label="Comment"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowComments(!showComments);
+            }}
           />
           <ActionButton icon={<Send className="w-5 h-5" />} label="Send" onClick={(e) => e.stopPropagation()} />
         </div>
+        
+        {/* Comment Section */}
+        <AnimatePresence>
+          {showComments && <CommentSection postId={post._id} currentUserAvatar={isOwner ? authorAvatar : undefined} />}
+        </AnimatePresence>
       </motion.div>
 
       {/* Edit Post Modal */}

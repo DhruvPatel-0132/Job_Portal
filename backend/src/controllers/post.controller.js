@@ -28,7 +28,8 @@ const createPostController = async (req, res) => {
 
 const getPostsController = async (req, res) => {
   try {
-    const { status, response } = await getPosts();
+    const userId = req.user?.id || null;
+    const { status, response } = await getPosts({}, userId);
     return res.status(status).json(response);
   } catch (error) {
     return res.status(500).json({
@@ -42,7 +43,7 @@ const getPostsController = async (req, res) => {
 const getUserPostsController = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { status, response } = await getUserPosts(userId);
+    const { status, response } = await getUserPosts(userId, userId);
     return res.status(status).json(response);
   } catch (error) {
     return res.status(500).json({

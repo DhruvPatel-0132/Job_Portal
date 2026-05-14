@@ -151,7 +151,7 @@ const createPost = async (userId, userRole, postData) => {
 };
 
 
-const getPosts = async (query = {}) => {
+const getPosts = async (query = {}, userId = null) => {
   try {
     const posts = await Post.find({ 
       isDeleted: { $ne: true }, 
@@ -163,8 +163,17 @@ const getPosts = async (query = {}) => {
         path: "author",
         select: "firstName lastName name logo avatar",
       })
-      .populate("referenceId");
+      .populate("referenceId")
+      .lean();
 
+    // Attach userReaction for authenticated user
+    if (userId) {
+      const postIds = posts.map(p => p._id);
+      const reactions = await Reaction.find({ post: { $in: postIds }, user: userId }).select("post reactionType");
+      const reactionMap = {};
+      reactions.forEach(r => { reactionMap[r.post.toString()] = r.reactionType; });
+      posts.forEach(p => { p.stats = p.stats || {}; p.stats.userReaction = reactionMap[p._id.toString()] || null; });
+    }
 
     return {
       status: 200,
@@ -186,7 +195,7 @@ const getPosts = async (query = {}) => {
   }
 };
 
-const getUserPosts = async (userId) => {
+const getUserPosts = async (userId, requestingUserId = null) => {
   try {
     const company = await Company.findOne({ createdBy: userId });
     let authorQuery = { author: userId };
@@ -205,7 +214,17 @@ const getUserPosts = async (userId) => {
         path: "author",
         select: "firstName lastName name logo avatar",
       })
-      .populate("referenceId");
+      .populate("referenceId")
+      .lean();
+
+    // Attach userReaction for the requesting user
+    if (requestingUserId) {
+      const postIds = posts.map(p => p._id);
+      const reactions = await Reaction.find({ post: { $in: postIds }, user: requestingUserId }).select("post reactionType");
+      const reactionMap = {};
+      reactions.forEach(r => { reactionMap[r.post.toString()] = r.reactionType; });
+      posts.forEach(p => { p.stats = p.stats || {}; p.stats.userReaction = reactionMap[p._id.toString()] || null; });
+    }
 
     return {
       status: 200,

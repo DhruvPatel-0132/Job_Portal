@@ -162,6 +162,7 @@ const usePostStore = create((set, get) => ({
                     ...post.stats,
                     likesCount: response.data.likesCount,
                     likedBy: response.data.likedBy,
+                    userReaction: response.data.userReaction,
                   },
                 }
               : post
@@ -174,6 +175,7 @@ const usePostStore = create((set, get) => ({
                     ...post.stats,
                     likesCount: response.data.likesCount,
                     likedBy: response.data.likedBy,
+                    userReaction: response.data.userReaction,
                   },
                 }
               : post
