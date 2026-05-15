@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import { X, Send, MoreHorizontal, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  X,
+  Send,
+  MoreHorizontal,
+  ChevronDown,
+  ChevronUp,
+  Check,
+  CheckCheck,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMessageStore } from "../store/messageStore";
 import { useAuthStore } from "../store/authStore";
@@ -24,6 +32,18 @@ const ChatWindow = () => {
   const typingTimeoutRef = useRef(null);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
+
+  const formatTime = (timestamp) => {
+    if (!timestamp) return "";
+    const date = new Date(timestamp);
+    return date
+      .toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+      .toLowerCase();
+  };
 
   const isOnline = activeConversation
     ? onlineUsers.includes(activeConversation._id)
@@ -108,20 +128,22 @@ const ChatWindow = () => {
           height: isMinimized ? 58 : 560,
           width: isMinimized ? 60 : 420,
           right: isMessagingPopupOpen ? 340 : 0,
-          top: isMinimized 
-            ? (isMessagingPopupOpen ? "calc(100vh - 58px)" : "calc(20% + 75px)") 
+          top: isMinimized
+            ? isMessagingPopupOpen
+              ? "calc(100vh - 58px)"
+              : "calc(20% + 75px)"
             : "calc(100vh - 560px)",
         }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        exit={{ 
-          height: 58, 
-          x: 800, 
+        exit={{
+          height: 58,
+          x: 800,
           opacity: 0,
           transition: {
             height: { duration: 0.3 },
             x: { delay: 0.3, duration: 0.3 },
-            opacity: { delay: 0.5, duration: 0.1 }
-          }
+            opacity: { delay: 0.5, duration: 0.1 },
+          },
         }}
         className={`fixed bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.15)] z-[95] flex flex-col border border-gray-200 overflow-hidden ${
           isMinimized && !isMessagingPopupOpen
@@ -150,7 +172,7 @@ const ChatWindow = () => {
             </div>
             <AnimatePresence>
               {!isMinimized && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, width: 0 }}
                   animate={{ opacity: 1, width: "auto" }}
                   exit={{ opacity: 0, width: 0 }}
@@ -195,7 +217,7 @@ const ChatWindow = () => {
         </div>
 
         {/* Messages Body */}
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 bg-[#f4f2ee]">
+        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 bg-[#f4f2ee] hide-scrollbar">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center mt-8">
               <img
@@ -215,8 +237,7 @@ const ChatWindow = () => {
             </div>
           ) : (
             messages.map((msg, index) => {
-              const isMe = msg.senderId === user?.id;
-              const isLast = index === messages.length - 1;
+              const isMe = msg.senderId === user?._id;
 
               return (
                 <div
@@ -224,19 +245,34 @@ const ChatWindow = () => {
                   className={`flex flex-col max-w-[80%] ${isMe ? "self-end" : "self-start"}`}
                 >
                   <div
-                    className={`px-3.5 py-2 rounded-2xl text-[14px] shadow-[0_1px_2px_rgba(0,0,0,0.05)] break-words ${
+                    className={`px-3 py-1.5 rounded-2xl text-[14px] shadow-[0_1px_2px_rgba(0,0,0,0.05)] break-words ${
                       isMe
-                        ? "bg-[#0a66c2] text-white rounded-tr-sm"
+                        ? "bg-white text-gray-800 rounded-tr-sm border border-gray-200"
                         : "bg-white text-gray-800 rounded-tl-sm border border-gray-200"
                     }`}
                   >
-                    {msg.message}
+                    <div className="flow-root">
+                      <span className="whitespace-pre-wrap">{msg.message}</span>
+                      <div
+                        className={`inline-flex items-center gap-1 text-[10px] float-right mt-1.5 ml-2 ${
+                          isMe ? "text-gray-400" : "text-gray-400"
+                        }`}
+                      >
+                        <span>{formatTime(msg.createdAt)}</span>
+                        {isMe && (
+                          <span className="flex items-center">
+                            {msg.isSeen ? (
+                              <CheckCheck className="w-3.5 h-3.5 text-[#4fc3f7]" />
+                            ) : isOnline ? (
+                              <CheckCheck className="w-3.5 h-3.5" />
+                            ) : (
+                              <Check className="w-3.5 h-3.5" />
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  {isMe && isLast && msg.isSeen && (
-                    <span className="text-[10px] text-gray-500 font-medium self-end mt-1 pr-1">
-                      Seen
-                    </span>
-                  )}
                 </div>
               );
             })
