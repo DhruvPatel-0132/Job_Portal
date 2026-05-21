@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Home,
   Users,
@@ -11,68 +11,24 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import { useProfileStore } from "../store/profileStore";
-import { useNotificationStore } from "../store/notificationStore";
-import { useNetworkStore } from "../store/networkStore";
 
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-  const location = useLocation();
 
-  const { user, company, profile: authProfile, token } = useAuthStore();
-  const {
-    profile: storeProfile,
-    fetchProfile,
-    clearProfile,
-  } = useProfileStore();
-  const { unreadCount, fetchUnreadCount, fetchNotifications } =
-    useNotificationStore();
-  const { pendingIncomingCount, fetchPendingIncomingCount } = useNetworkStore();
+  const { user } = useAuthStore();
+  const { profile, fetchProfile } = useProfileStore();
 
-  const profile = storeProfile || authProfile;
-
-  // Re-fetch profile whenever the logged-in user changes (e.g. after switching accounts)
   useEffect(() => {
-    if (user) {
-      // If profile belongs to a different user, clear it first then re-fetch
-      if (
-        storeProfile &&
-        storeProfile.userId &&
-        storeProfile.userId !== user.id
-      ) {
-        clearProfile();
-      }
+    if (!profile) {
       fetchProfile();
     }
-  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const authToken = token || localStorage.getItem("token");
-
-  useEffect(() => {
-    if (authToken) {
-      fetchUnreadCount();
-      fetchNotifications();
-      fetchPendingIncomingCount();
-    }
-  }, [
-    authToken,
-    fetchUnreadCount,
-    fetchNotifications,
-    fetchPendingIncomingCount,
-  ]);
-
-  const isCompany = user?.role === "company";
+  }, [profile, fetchProfile]);
 
   const userData = {
-    name: isCompany
-      ? company?.name || profile?.fullName || "Company"
-      : profile?.fullName ||
-        `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
-        "User",
-    avatar: profile?.avatar || company?.logo || "/avatar.svg",
-    headline: isCompany
-      ? profile?.headline || company?.industry || "Company Account"
-      : profile?.headline || "Welcome to your profile",
+    name: profile?.fullName || `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "User",
+    avatar: profile?.avatar || "/avatar.svg",
+    headline: profile?.headline || "Welcome to your profile",
   };
 
   // Close dropdown on outside click
@@ -87,14 +43,10 @@ const Navbar = () => {
   }, []);
   const navigate = useNavigate();
 
-  const logout = useAuthStore((state) => state.logout);
+  const logout = useAuthStore((state) => state.logout); // ✅ ADD THIS
 
-  const handleLogout = async () => {
-    clearProfile();
-    await logout();
-    import("../store/socketStore").then(({ default: useSocketStore }) => {
-      useSocketStore.getState().disconnectSocket();
-    });
+  const handleLogout = () => {
+    logout(); // now works
     navigate("/");
   };
 
@@ -104,13 +56,11 @@ const Navbar = () => {
         <div className="flex items-stretch h-14">
           {/* ── Left: Logo + Search ── */}
           <div className="flex items-center gap-2 mr-4">
-            <Link to="/dashboard" className="flex-shrink-0">
-              <img
-                src="/Logo.png"
-                alt="Logo"
-                className="w-11 h-11 object-contain rounded"
-              />
-            </Link>
+            {/* <Link to="/dashboard" className="flex-shrink-0">
+              <div className="w-9 h-9 bg-[#0a66c2] rounded flex items-center justify-center font-extrabold text-white text-xl leading-none select-none">
+                in
+              </div>
+            </Link> */}
             <div className="hidden md:flex items-center bg-[#eef3f8] rounded-md px-3 h-9 w-[280px] gap-2 border border-transparent focus-within:border-[#0a66c2] focus-within:bg-white transition-all duration-150">
               <Search className="h-4 w-4 text-gray-500 flex-shrink-0" />
               <input
@@ -127,29 +77,22 @@ const Navbar = () => {
               icon={<Home className="h-5 w-5" />}
               label="Home"
               to="/dashboard"
-              active={location.pathname === "/dashboard"}
+              active
             />
-            {!isCompany && (
-              <NavItem
-                icon={<Users className="h-5 w-5" />}
-                label="My Network"
-                to="/network"
-                active={location.pathname === "/network"}
-                badgeCount={pendingIncomingCount}
-              />
-            )}
+            <NavItem
+              icon={<Users className="h-5 w-5" />}
+              label="My Network"
+              to="#"
+            />
             <NavItem
               icon={<Briefcase className="h-5 w-5" />}
               label="Jobs"
-              to="/jobs"
-              active={location.pathname === "/jobs"}
+              to="#"
             />
             <NavItem
               icon={<Bell className="h-5 w-5" />}
               label="Notifications"
-              to="/notification"
-              active={location.pathname === "/notification"}
-              badgeCount={unreadCount}
+              to="#"
             />
 
             {/* Vertical divider */}
@@ -161,16 +104,11 @@ const Navbar = () => {
                 className="flex flex-col items-center justify-center px-4 text-gray-500 hover:text-gray-900 focus:outline-none border-b-2 border-transparent hover:border-gray-900 transition-colors h-full"
                 onClick={() => setIsDropdownOpen((o) => !o)}
               >
-                <img
-                  className="h-6 w-6 rounded-full object-cover"
-                  src={userData.avatar}
-                  alt="User Avatar"
-                  referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "/avatar.svg";
-                  }}
-                />
+                  <img
+                    className="h-6 w-6 rounded-full object-cover"
+                    src={userData.avatar}
+                    alt="User Avatar"
+                  />
                 <div className="flex items-center mt-0.5">
                   <span className="text-xs hidden md:block">Me</span>
                   <svg
@@ -197,13 +135,7 @@ const Navbar = () => {
                         className="h-12 w-12 rounded-full object-cover border border-gray-200"
                         src={userData.avatar}
                         alt="User Avatar"
-                        referrerPolicy="no-referrer"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = "/avatar.svg";
-                        }}
                       />
-
                       <div>
                         <p className="text-sm font-semibold text-gray-900">
                           {userData.name}
@@ -230,12 +162,6 @@ const Navbar = () => {
                     >
                       Settings &amp; Privacy
                     </a>
-                    <Link
-                      to="/manage-posts"
-                      className="block px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      Manage Posts
-                    </Link>
                     <a
                       href="#"
                       className="block px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
@@ -246,7 +172,7 @@ const Navbar = () => {
                   <div className="py-1 border-t border-gray-100">
                     <button
                       onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-100 cursor-pointer"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
                     >
                       Sign Out
                     </button>
@@ -261,7 +187,7 @@ const Navbar = () => {
   );
 };
 
-const NavItem = ({ icon, label, to, active, badgeCount = 0 }) => (
+const NavItem = ({ icon, label, to, active }) => (
   <Link
     to={to}
     className={`flex flex-col items-center justify-center px-4 border-b-2 transition-colors
@@ -271,14 +197,7 @@ const NavItem = ({ icon, label, to, active, badgeCount = 0 }) => (
           : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-900"
       }`}
   >
-    <div className="relative">
-      {icon}
-      {badgeCount > 0 && (
-        <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 bg-black text-white text-[10px] rounded-full flex items-center justify-center leading-none">
-          {badgeCount > 99 ? "99+" : badgeCount}
-        </span>
-      )}
-    </div>
+    {icon}
     <span className="text-xs mt-0.5 hidden md:block">{label}</span>
   </Link>
 );

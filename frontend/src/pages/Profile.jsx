@@ -10,6 +10,7 @@ import EducationCard from "../components/Profile/EducationCard";
 import SkillsCard from "../components/Profile/SkillsCard";
 
 import EditProfileModal from "../components/Profile/EditProfileModal";
+import EditAbout from "../components/Profile/EditAbout";
 
 export default function Profile() {
   const { profile, fetchProfile, updateProfile, isLoading } = useProfileStore();
@@ -22,7 +23,11 @@ export default function Profile() {
   // EDIT MODAL STATE
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editData, setEditData] = useState({});
-  const [activeSection, setActiveSection] = useState("basic");
+
+  // EDIT ABOUT STATE
+  const [isEditAboutOpen, setIsEditAboutOpen] = useState(false);
+  const [editAboutText, setEditAboutText] = useState("");
+
   // Helper to format dates for input fields
   const formatDateForInput = (date, type = "date") => {
     if (!date) return "";
@@ -33,8 +38,7 @@ export default function Profile() {
   };
 
   // When opening the edit modal, populate editData from the current profile
-  const handleOpenEditModal = (sectionId = "basic") => {
-    setActiveSection(sectionId);
+  const handleOpenEditModal = () => {
     setEditData({
       firstName: profile?.fullName?.split(" ")[0] || user?.firstName || "",
       lastName: profile?.fullName?.split(" ").slice(1).join(" ") || user?.lastName || "",
@@ -46,8 +50,8 @@ export default function Profile() {
       phone: profile?.phone || "",
       country: profile?.country || "",
       city: profile?.city || "",
+      code: profile?.code || "",
       address: profile?.address || "",
-      postalCode: profile?.postalCode || "",
       birthday: formatDateForInput(profile?.birthday),
       skills: profile?.skills || [],
       experience: (profile?.experience || []).map(exp => ({
@@ -64,6 +68,11 @@ export default function Profile() {
     setIsEditOpen(true);
   };
 
+  const handleOpenAboutModal = () => {
+    setEditAboutText(profile?.about || "");
+    setIsEditAboutOpen(true);
+  };
+
   const handleSaveProfile = async (updatedData) => {
     const payload = {
       ...updatedData,
@@ -71,6 +80,12 @@ export default function Profile() {
     };
     await updateProfile(payload);
     fetchProfile();
+  };
+
+  const handleSaveAbout = async (newAboutText) => {
+    await updateProfile({ about: newAboutText });
+    fetchProfile();
+    setIsEditAboutOpen(false);
   };
 
   if (isLoading && !profile) {
@@ -81,33 +96,20 @@ export default function Profile() {
     return <div className="min-h-screen flex items-center justify-center bg-gray-100">Profile not found</div>;
   }
 
-  // Sort experience and education by date (newest first)
-  const sortedExperience = [...(profile?.experience || [])].sort((a, b) => {
-    const dateA = a.startDate ? new Date(a.startDate) : new Date(0);
-    const dateB = b.startDate ? new Date(b.startDate) : new Date(0);
-    return dateB - dateA;
-  });
-
-  const sortedEducation = [...(profile?.education || [])].sort((a, b) => {
-    const dateA = a.startDate ? new Date(a.startDate) : new Date(0);
-    const dateB = b.startDate ? new Date(b.startDate) : new Date(0);
-    return dateB - dateA;
-  });
-
   return (
     <>
-      <div className="min-h-screen bg-gray-100 flex justify-center px-5 pt-5 py-5">
+      <div className="min-h-screen bg-gray-100 flex justify-center px-4 pt-5">
         <div className="w-full max-w-3xl space-y-4">
-          <ProfileHeader profile={profile} onEdit={() => handleOpenEditModal("basic")} />
+          <ProfileHeader profile={profile} onEdit={handleOpenEditModal} />
 
           <AboutCard
             about={profile?.about}
-            onEdit={() => handleOpenEditModal("about")}
+            onEdit={handleOpenAboutModal}
           />
 
-          <ExperienceCard experience={sortedExperience} onEdit={() => handleOpenEditModal("professional")} />
-          <EducationCard education={sortedEducation} onEdit={() => handleOpenEditModal("education")} />
-          <SkillsCard skills={profile?.skills} onEdit={() => handleOpenEditModal("skills")} />
+          <ExperienceCard experience={profile?.experience} onEdit={handleOpenEditModal} />
+          <EducationCard education={profile?.education} onEdit={handleOpenEditModal} />
+          <SkillsCard skills={profile?.skills} onEdit={handleOpenEditModal} />
         </div>
       </div>
 
@@ -118,9 +120,16 @@ export default function Profile() {
         editData={editData}
         setEditData={setEditData}
         onSave={handleSaveProfile}
-        initialSection={activeSection}
       />
 
+      {/* EDIT ABOUT */}
+      <EditAbout
+        isOpen={isEditAboutOpen}
+        setIsOpen={setIsEditAboutOpen}
+        aboutText={editAboutText}
+        setAboutText={setEditAboutText}
+        onSave={handleSaveAbout}
+      />
     </>
   );
 }

@@ -65,6 +65,11 @@ const profileSchema = new mongoose.Schema(
       default: "",
     },
 
+    code: {
+      type: String,
+      default: "",
+    },
+
     phone: {
       type: String,
       default: "",
@@ -81,11 +86,6 @@ const profileSchema = new mongoose.Schema(
     },
 
     city: {
-      type: String,
-      default: "",
-    },
-
-    postalCode: {
       type: String,
       default: "",
     },

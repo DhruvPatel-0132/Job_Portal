@@ -1,26 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "../store/authStore";
 
 export default function Auth() {
-  const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
-  const { token, user } = useAuthStore();
   const [method, setMethod] = useState("email");
   const [otp, setOtp] = useState(Array(6).fill(""));
   const inputsRef = useRef([]);
-
-  // 🚫 Google users are pre-verified — bounce them away from /auth
-  useEffect(() => {
-    if (token && user) {
-      if (!user.isOnboarded) {
-        navigate("/onboarding", { replace: true });
-      } else {
-        navigate("/dashboard", { replace: true });
-      }
-    }
-  }, [token, user, navigate]);
 
   const [timer, setTimer] = useState(0);
   const [isTimerActive, setIsTimerActive] = useState(false);
@@ -92,14 +78,8 @@ export default function Auth() {
     const data = await res.json();
 
     if (data.success) {
-      // ✅ Use Zustand login to store tokens and user
-      login(data);
-      
-      if (!data.user?.isOnboarded) {
-        navigate("/onboarding");
-      } else {
-        navigate("/dashboard");
-      }
+      localStorage.setItem("user", JSON.stringify(data.user));
+      window.location.href = "/dashboard";
     } else {
       alert(data.message);
     }

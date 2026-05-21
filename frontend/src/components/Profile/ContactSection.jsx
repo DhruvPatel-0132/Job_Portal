@@ -20,7 +20,6 @@ export default function ContactSection({ editData, update }) {
           onChange={update}
           type="email"
           icon={Mail}
-          placeholder="e.g. john.doe@example.com"
         />
         <InputField
           label="Phone Number"
@@ -29,7 +28,6 @@ export default function ContactSection({ editData, update }) {
           onChange={update}
           type="tel"
           icon={Phone}
-          placeholder="e.g. +1 234 567 890"
         />
       </div>
     </motion.div>

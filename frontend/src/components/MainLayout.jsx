@@ -2,7 +2,6 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import MessagingPopup from './MessagingPopup';
-import ChatWindow from './ChatWindow';
 
 const MainLayout = () => {
   return (
@@ -10,7 +9,6 @@ const MainLayout = () => {
       <Navbar />
       <Outlet />
       <MessagingPopup />
-      <ChatWindow />
     </div>
   );
 };
