@@ -12,8 +12,10 @@ export default function AboutCard({ about, onEdit }) {
         <Edit2 size={20} className="text-gray-600" />
       </button>
 
-      <h2 className="text-lg font-semibold mb-2">About</h2>
-      <p className="text-sm text-gray-700 whitespace-pre-wrap">{about}</p>
+      <h2 className="text-lg font-semibold mb-6">About</h2>
+      <p className="text-sm text-gray-700 whitespace-pre-wrap">
+        {about || <span className="text-gray-500 italic">No description added yet.</span>}
+      </p>
     </motion.div>
   );
 }

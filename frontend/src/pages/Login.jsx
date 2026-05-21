@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { motion } from "framer-motion";
@@ -8,8 +8,18 @@ import { useAuthStore } from "../store/authStore";
 
 export default function Login() {
   const navigate = useNavigate();
-
+  const { user, token } = useAuthStore();
   const loginStore = useAuthStore((state) => state.login);
+
+  useEffect(() => {
+    if (token && user) {
+      if (!user.isOnboarded) {
+        navigate("/onboarding");
+      } else {
+        navigate("/dashboard");
+      }
+    }
+  }, [token, user, navigate]);
 
   const [form, setForm] = useState({
     identifier: "",
@@ -71,6 +81,8 @@ export default function Login() {
       /* 🚨 VERIFY FLOW */
       if (!data.isVerified) {
         navigate("/auth");
+      } else if (!data.user?.isOnboarded) {
+        navigate("/onboarding");
       } else {
         navigate("/dashboard");
       }
@@ -185,7 +197,18 @@ export default function Login() {
 
               await loginStore(response.data);
 
-              navigate("/dashboard");
+              const { isNewUser, user: googleUser } = response.data;
+
+              if (isNewUser) {
+                // New Google user → reuse Register flow starting at RoleStep
+                navigate("/register", { state: { googleMode: true } });
+              } else if (!googleUser?.isOnboarded) {
+                // Existing Google user not yet onboarded
+                navigate("/onboarding");
+              } else {
+                // Fully set up user → dashboard
+                navigate("/dashboard");
+              }
             } catch (err) {
               console.log("Google login failed");
             } finally {

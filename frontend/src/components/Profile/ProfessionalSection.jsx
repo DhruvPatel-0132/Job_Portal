@@ -1,9 +1,10 @@
-import React from "react";
-import { motion } from "framer-motion";
-import { Plus, Trash2 } from "lucide-react";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Plus, Trash2, X } from "lucide-react";
 import InputField from "./InputField";
 
 export default function ProfessionalSection({ editData, update }) {
+  const [newSkills, setNewSkills] = useState({});
   const experiences = Array.isArray(editData.experience)
     ? editData.experience
     : [];
@@ -36,6 +37,23 @@ export default function ProfessionalSection({ editData, update }) {
     const updated = [...experiences];
     updated.splice(index, 1);
     update("experience", updated);
+  };
+
+  const handleAddSkill = (index, e) => {
+    e?.preventDefault();
+    const skill = newSkills[index]?.trim();
+    if (skill && !experiences[index].skills?.includes(skill)) {
+      handleExpChange(index, "skills", [...(experiences[index].skills || []), skill]);
+      setNewSkills({ ...newSkills, [index]: "" });
+    }
+  };
+
+  const handleRemoveSkill = (index, skillToRemove) => {
+    handleExpChange(
+      index,
+      "skills",
+      experiences[index].skills.filter((s) => s !== skillToRemove)
+    );
   };
 
   return (
@@ -182,19 +200,65 @@ export default function ProfessionalSection({ editData, update }) {
             placeholder="Describe your responsibilities and achievements..."
           />
 
-          <InputField
-            label="Skills (comma separated)"
-            field="skills"
-            value={
-              Array.isArray(exp.skills)
-                ? exp.skills.join(", ")
-                : exp.skills || ""
-            }
-            onChange={(field, val) =>
-              handleExpChange(index, field, val.split(","))
-            }
-            placeholder="e.g. React, Node.js, MongoDB"
-          />
+          <div className="flex flex-col gap-3">
+            <label className="text-[13px] font-medium text-gray-700">Skills</label>
+            <div className="flex items-end gap-3">
+              <div
+                className="flex-1"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddSkill(index, e);
+                  }
+                }}
+              >
+                <InputField
+                  label=""
+                  field={`newSkill-${index}`}
+                  value={newSkills[index] || ""}
+                  onChange={(field, val) => setNewSkills({ ...newSkills, [index]: val })}
+                  placeholder="e.g., React, Node.js"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={(e) => handleAddSkill(index, e)}
+                className="flex items-center justify-center h-[46px] px-5 bg-black text-white rounded-xl hover:bg-gray-800 transition-colors font-medium text-[14px] shadow-sm shrink-0"
+              >
+                <Plus size={18} className="mr-1.5" />
+                Add
+              </button>
+            </div>
+            
+            <div className="bg-white rounded-xl border border-gray-200/80 p-3 min-h-[56px] shadow-[0_2px_4px_rgba(0,0,0,0.02)] flex flex-wrap gap-2">
+              <AnimatePresence>
+                {(exp.skills || []).map((skill) => (
+                  <motion.span
+                    key={skill}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.15 }}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 text-gray-800 text-[13px] font-medium rounded-lg border border-gray-200/60"
+                  >
+                    {skill}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSkill(index, skill)}
+                      className="p-0.5 rounded-md hover:bg-gray-200 text-gray-500 hover:text-black transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </motion.span>
+                ))}
+              </AnimatePresence>
+              {(!exp.skills || exp.skills.length === 0) && (
+                <p className="text-[13px] text-gray-400 w-full py-1.5">
+                  No skills added to this experience.
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       ))}
 

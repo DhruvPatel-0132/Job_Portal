@@ -6,10 +6,19 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
+import CompanyProfile from "./pages/CompanyProfile";
+import PublicProfile from "./pages/PublicProfile";
+import Jobs from "./pages/Jobs";
+import Onboarding from "./pages/Onboarding";
 import MainLayout from "./components/MainLayout";
+import ManagePosts from "./pages/ManagePosts";
 
 /* ✅ USE ZUSTAND */
 import { useAuthStore } from "./store/authStore";
+import useSocketStore from "./store/socketStore";
+import NotificationPage from "./pages/NotificationPage";
+import MyNetwork from "./pages/MyNetwork";
+import { useEffect } from "react";
 
 /* 🔥 PRIVATE ROUTE (ZUSTAND) */
 function PrivateRoute({ children }) {
@@ -21,7 +30,35 @@ function PrivateRoute({ children }) {
   return finalToken ? children : <Navigate to="/" replace />;
 }
 
+// Wrapper for Profile Route to check role
+function ProfileRouteWrapper() {
+  const user = useAuthStore((state) => state.user);
+  return user?.role === "company" ? <CompanyProfile /> : <Profile />;
+}
+
+// Wrapper for Network Route to hide for company
+function NetworkRouteWrapper() {
+  const user = useAuthStore((state) => state.user);
+  if (user?.role === "company") {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <MyNetwork />;
+}
+
 export default function App() {
+  const { fetchUser, token } = useAuthStore();
+  const { connectSocket } = useSocketStore();
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+    const activeToken = storedToken || token;
+    
+    if (activeToken) {
+      fetchUser();
+      connectSocket(activeToken);
+    }
+  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <Routes>
       <Route path="/" element={<Login />} />
@@ -29,19 +66,22 @@ export default function App() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/auth" element={<AuthVerification />} />
-      <Route element={<MainLayout />}>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/profile" element={<Profile />} />
-      </Route>
-
+      <Route path="/onboarding" element={<Onboarding />} />
       <Route
-        path="/dashboard"
         element={
           <PrivateRoute>
-            <Dashboard />
+            <MainLayout />
           </PrivateRoute>
         }
-      />
+      >
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<ProfileRouteWrapper />} />
+        <Route path="/profile/:userId" element={<PublicProfile />} />
+        <Route path="/jobs" element={<Jobs />} />
+        <Route path="/notification" element={<NotificationPage />} />
+        <Route path="/network" element={<NetworkRouteWrapper />} />
+        <Route path="/manage-posts" element={<ManagePosts />} />
+      </Route>
     </Routes>
   );
 }

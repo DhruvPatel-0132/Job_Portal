@@ -1,33 +1,38 @@
 import React, { useEffect } from "react";
 import Navbar from "../components/Navbar";
-import SidebarProfile from "../components/dashboard/SidebarProfile";
-import Feed from "../components/dashboard/Feed";
-import JobRecommendations from "../components/dashboard/JobRecommendations";
+import SidebarProfile from "../components/Dashboard/SidebarProfile";
+import SidebarCompanyProfile from "../components/Dashboard/SidebarCompanyProfile";
+import Feed from "../components/Dashboard/Feed";
+import JobRecommendations from "../components/Dashboard/JobRecommendations";
+import ProfileProgress from "../components/Dashboard/ProfileProgress";
+import CompanyProgress from "../components/CompanyProfile/CompanyProgress";
 import { useAuthStore } from "../store/authStore";
+import SidebarContent from "../components/Dashboard/SidebarContent";
 
 const Dashboard = () => {
-  const user = useAuthStore((state) => state.user);
-  const profile = useAuthStore((state) => state.profile); // 🔥 ADD
-  const fetchUser = useAuthStore((state) => state.fetchUser);
+  const { user, profile, company, token } = useAuthStore();
 
-  useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
-
-  console.log("🔥 DASHBOARD USER:", user);
-  console.log("🔥 DASHBOARD PROFILE:", profile); // 🔥 DEBUG
+  // Show loading while user data is being fetched on refresh
+  if (token && !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <>
       {/* Main Content Area */}
       <main className="max-w-[1080px] mx-auto px-4 py-6">
         <div className="flex flex-col lg:flex-row gap-6 justify-center">
-          <div className="w-full lg:w-[225px] flex-shrink-0 self-start lg:sticky lg:top-[72px]">
-            {/* 🔥 PASS PROFILE INSTEAD OF USER */}
-            <SidebarProfile profile={profile} />
-          </div>
-
+          <SidebarContent />
           <div className="w-full lg:w-[540px] xl:w-[600px] flex-shrink-0 self-start">
+            {user?.role === "company" ? (
+              <CompanyProgress company={company} profile={profile} />
+            ) : (
+              <ProfileProgress profile={profile} />
+            )}
             <Feed />
           </div>
 

@@ -77,9 +77,25 @@ const verifyPhoneOTP = async (req, res) => {
       });
     }
 
+    // Generate tokens
+    const { generateAccessToken, generateRefreshToken, hashToken, REFRESH_TOKEN_EXPIRY_MS } = require("../utils/generateTokens");
+    const Token = require("../models/Token");
+
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken();
+
+    await Token.create({
+      userId: user._id,
+      emailOrPhone: user.emailOrPhone,
+      refreshToken: hashToken(refreshToken),
+      expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY_MS),
+    });
+
     res.json({
       success: true,
       message: "Phone verified",
+      accessToken,
+      refreshToken,
       user,
     });
   } catch (err) {

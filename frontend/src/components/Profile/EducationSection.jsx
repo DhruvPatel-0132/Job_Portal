@@ -22,6 +22,7 @@ export default function EducationSection({ editData, update }) {
         startDate: "",
         endDate: "",
         stillStudying: false,
+        grade: "",
         description: "",
       },
     ]);
@@ -122,6 +123,14 @@ export default function EducationSection({ editData, update }) {
             </button>
             <span className="text-[14px] text-gray-700 font-medium">I am currently studying here</span>
           </div>
+
+          <InputField
+            label="Grade / GPA"
+            field="grade"
+            value={edu.grade}
+            onChange={(field, val) => handleEduChange(index, field, val)}
+            placeholder="e.g. 3.8 / 4.0 or Grade A"
+          />
 
           <InputField
             label="Description"
