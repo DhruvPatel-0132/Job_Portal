@@ -35,3 +35,19 @@ body::-webkit-scrollbar {
 }
 
 a:hover, button:hover { cursor: pointer; }
+
+/* Popup entry animation */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.2s ease-out forwards;
+}

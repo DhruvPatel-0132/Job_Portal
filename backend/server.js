@@ -3,6 +3,8 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const cors = require("cors");
+const compression = require("compression");
+const rateLimit = require("express-rate-limit");
 const connectDB = require("./src/config/db");
 
 const authRoutes = require("./src/routes/auth.routes");
@@ -26,8 +28,17 @@ const app = express();
 const server = http.createServer(app);
 
 /* MIDDLEWARE */
+app.use(compression()); // Gzip compression for all responses
 app.use(cors());
 app.use(express.json());
+
+// Global Rate Limiting for Feed & APIs
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // Limit each IP to 1000 requests per windowMs
+  message: "Too many requests from this IP, please try again later."
+});
+app.use("/api", apiLimiter);
 
 /* ROUTES */
 app.use("/api/auth", authRoutes);       // 🔥 includes /me now

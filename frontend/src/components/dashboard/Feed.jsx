@@ -4,14 +4,17 @@ import PostCard from "./PostCard";
 import CreatePostModal from "./CreatePostModal";
 import PostDetailModal from "./PostDetailModal";
 import { useAuthStore } from "../../store/authStore";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useProfileStore } from "../../store/profileStore";
 import usePostStore from "../../store/postStore";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import api from "../../api/axios";
+import { useInfiniteScroll } from "../../hooks/useInfiniteScroll";
 
 const Feed = () => {
   const { user, company, profile: authProfile } = useAuthStore();
   const { profile: storeProfile } = useProfileStore();
-  const { posts, loading, fetchPosts, incrementViews } = usePostStore();
+  const { incrementViews } = usePostStore();
 
   const profile = storeProfile || authProfile;
   const role = user?.role;
@@ -23,11 +26,32 @@ const Feed = () => {
   const [selectedPost, setSelectedPost] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-  const observer = useRef();
+  const fetchFeedPosts = async ({ pageParam = null }) => {
+    const res = await api.get(`/posts`, {
+      params: { limit: 10, cursor: pageParam },
+    });
+    return res.data;
+  };
 
-  useEffect(() => {
-    fetchPosts();
-  }, [fetchPosts]);
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useInfiniteQuery({
+    queryKey: ["feedPosts"],
+    queryFn: fetchFeedPosts,
+    getNextPageParam: (lastPage) => lastPage.nextCursor || undefined,
+  });
+
+  const { lastElementRef } = useInfiniteScroll(
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  );
+
+  const posts = data?.pages.flatMap((page) => page.posts) || [];
 
   const handleOpenDetail = async (post) => {
     setSelectedPost(post);
@@ -36,11 +60,6 @@ const Feed = () => {
     // Increment views in backend
     await incrementViews(post._id);
   };
-
-  // Infinite scroll functionality (Placeholder for future implementation)
-  const lastPostElementRef = useCallback((node) => {
-    // Logic for infinite scroll would go here
-  }, []);
 
   return (
     <div className="flex flex-col w-full">
@@ -180,21 +199,24 @@ const Feed = () => {
       </div>
 
       {/* Feed Posts */}
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-4">
         <AnimatePresence>
           {posts.length > 0
-            ? posts.map((post, index) => (
-                <motion.div
-                  key={post._id || post.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  ref={posts.length === index + 1 ? lastPostElementRef : null}
-                >
-                  <PostCard post={post} onOpen={handleOpenDetail} />
-                </motion.div>
-              ))
-            : !loading && (
+            ? posts.map((post, index) => {
+                const isLastElement = posts.length === index + 1;
+                return (
+                  <motion.div
+                    key={post._id || post.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    ref={isLastElement ? lastElementRef : null}
+                  >
+                    <PostCard post={post} onOpen={handleOpenDetail} />
+                  </motion.div>
+                );
+              })
+            : !isLoading && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -226,12 +248,33 @@ const Feed = () => {
         </AnimatePresence>
       </div>
 
-      {/* Loading Indicator */}
-      {loading && (
-        <div className="flex justify-center py-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      {/* Loading Skeletons */}
+      {(isLoading || isFetchingNextPage) && (
+        <div className="flex flex-col gap-4 mt-4">
+          {[1, 2].map((n) => (
+            <div key={n} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm animate-pulse">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-12 h-12 bg-gray-200 rounded-full" />
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-200 rounded w-1/4 mb-2" />
+                  <div className="h-3 bg-gray-200 rounded w-1/3" />
+                </div>
+              </div>
+              <div className="h-4 bg-gray-200 rounded w-full mb-2" />
+              <div className="h-4 bg-gray-200 rounded w-5/6 mb-4" />
+              <div className="h-64 bg-gray-200 rounded w-full" />
+            </div>
+          ))}
         </div>
       )}
+
+      {/* End of feed indicator */}
+      {!hasNextPage && posts.length > 0 && (
+        <div className="py-6 text-center text-gray-500 text-sm font-medium">
+          You've reached the end of the feed.
+        </div>
+      )}
+
       {/* Create Post Modal */}
       <CreatePostModal
         isOpen={isModalOpen}

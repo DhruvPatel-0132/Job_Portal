@@ -1,7 +1,7 @@
 import React from "react";
-import { Edit2 } from "lucide-react";
+import { Edit2, Check } from "lucide-react";
 
-export default function CompanyHeader({ company, companyInfo, user, profile, onEdit }) {
+export default function CompanyHeader({ company, companyInfo, user, profile, onEdit, isFollowing, onToggleFollow }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden relative">
       {/* Banner */}
@@ -68,17 +68,37 @@ export default function CompanyHeader({ company, companyInfo, user, profile, onE
 
           {/* Action Buttons */}
           <div className="flex gap-3 mt-5">
-            <a
-              href={companyInfo.website}
-              target="_blank"
-              rel="noreferrer"
-              className="px-5 py-1.5 border border-blue-600 text-blue-600 hover:bg-blue-50 rounded-full font-semibold transition-colors text-sm"
-            >
-              Visit website
-            </a>
-            <button className="px-5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold transition-colors shadow-sm text-sm">
-              Follow
-            </button>
+            {companyInfo.website && (
+              <a
+                href={companyInfo.website}
+                target="_blank"
+                rel="noreferrer"
+                className="px-5 py-1.5 border border-blue-600 text-blue-600 hover:bg-blue-50 rounded-full font-semibold transition-colors text-sm flex items-center justify-center"
+              >
+                Visit website
+              </a>
+            )}
+            
+            {/* Show Follow button only in public view (when onEdit is undefined) */}
+            {!onEdit && (
+              <button
+                onClick={onToggleFollow}
+                className={`px-5 py-1.5 rounded-full font-semibold transition-colors shadow-sm text-sm flex items-center gap-2 ${
+                  isFollowing
+                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
+                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                }`}
+              >
+                {isFollowing ? (
+                  <>
+                    <Check size={16} />
+                    Following
+                  </>
+                ) : (
+                  "Follow"
+                )}
+              </button>
+            )}
           </div>
 
           {/* View Jobs Link */}

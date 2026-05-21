@@ -29,7 +29,10 @@ const createPostController = async (req, res) => {
 const getPostsController = async (req, res) => {
   try {
     const userId = req.user?.id || null;
-    const { status, response } = await getPosts({}, userId);
+    const limit = parseInt(req.query.limit) || 15;
+    const cursor = req.query.cursor || null;
+
+    const { status, response } = await getPosts({}, userId, limit, cursor);
     return res.status(status).json(response);
   } catch (error) {
     return res.status(500).json({

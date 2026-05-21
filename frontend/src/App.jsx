@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import CompanyProfile from "./pages/CompanyProfile";
+import PublicProfile from "./pages/PublicProfile";
 import Jobs from "./pages/Jobs";
 import Onboarding from "./pages/Onboarding";
 import MainLayout from "./components/MainLayout";
@@ -75,6 +76,7 @@ export default function App() {
       >
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<ProfileRouteWrapper />} />
+        <Route path="/profile/:userId" element={<PublicProfile />} />
         <Route path="/jobs" element={<Jobs />} />
         <Route path="/notification" element={<NotificationPage />} />
         <Route path="/network" element={<NetworkRouteWrapper />} />

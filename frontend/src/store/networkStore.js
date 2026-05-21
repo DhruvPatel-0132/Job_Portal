@@ -139,4 +139,17 @@ export const useNetworkStore = create((set, get) => ({
       console.error(err);
     }
   },
+
+  removeConnection: async (userId) => {
+    try {
+      const res = await api.delete(`/connections/${userId}`);
+      if (res.data.success) {
+        set((state) => ({
+          connections: state.connections.filter((c) => c._id !== userId),
+        }));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  },
 }));

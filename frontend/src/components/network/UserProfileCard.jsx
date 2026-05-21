@@ -1,5 +1,6 @@
 import React from "react";
 import { X, UserPlus, CheckCircle2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const UserProfileCard = ({
   person,
@@ -7,6 +8,7 @@ const UserProfileCard = ({
   isPending,
   onConnect,
 }) => {
+  const navigate = useNavigate();
   let actionText = "Connect";
   let isActionDisabled = false;
 
@@ -53,7 +55,10 @@ const UserProfileCard = ({
       {/* Content */}
       <div className="px-3 pb-4 flex-1 flex flex-col w-full">
         <div className="flex items-center justify-center gap-1">
-          <h3 className="text-[15px] font-bold text-gray-900 line-clamp-1 hover:text-blue-600 hover:underline cursor-pointer">
+          <h3
+            onClick={() => navigate(`/profile/${person._id}`)}
+            className="text-[15px] font-bold text-gray-900 line-clamp-1 hover:text-blue-600 hover:underline cursor-pointer"
+          >
             {person.name}
           </h3>
           {person.isVerified && (

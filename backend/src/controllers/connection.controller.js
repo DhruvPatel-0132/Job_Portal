@@ -29,6 +29,7 @@ exports.getUserConnections = async (req, res) => {
         _id: user._id,
         name: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : "Unknown",
         avatar: user.avatar || profile?.avatar || "/avatar.svg",
+        banner: profile?.banner || "",
         headline: profile?.headline || "",
         role: user.role,
       };
@@ -37,6 +38,29 @@ exports.getUserConnections = async (req, res) => {
     res.status(200).json({ success: true, connections: completeConnections });
   } catch (error) {
     console.error("getUserConnections error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.removeConnection = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { userId: targetUserId } = req.params;
+
+    const result = await Connection.findOneAndDelete({
+      $or: [
+        { user1: userId, user2: targetUserId },
+        { user1: targetUserId, user2: userId },
+      ],
+    });
+
+    if (!result) {
+      return res.status(404).json({ success: false, message: "Connection not found" });
+    }
+
+    res.status(200).json({ success: true, message: "Connection removed successfully" });
+  } catch (error) {
+    console.error("removeConnection error:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };

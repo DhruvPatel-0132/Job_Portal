@@ -2,8 +2,131 @@ const User = require("../models/User");
 const Profile = require("../models/Profile");
 const ProfessionalDetails = require("../models/ProfessionalDetails");
 const Connection = require("../models/Connection");
+const ConnectRequest = require("../models/ConnectRequest");
+const CompanyFollower = require("../models/CompanyFollower");
 const Post = require("../models/Post");
 const Company = require("../models/Company");
+
+/**
+ * Get any user's public profile by their userId.
+ * Returns the same data shape as getProfile so the frontend
+ * can reuse all existing profile display components.
+ * Also returns `role` and `companyData` so the client can
+ * decide whether to render a user profile or company profile.
+ */
+const getPublicProfile = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Validate that the target user exists
+    const targetUser = await User.findById(userId).select("-password -emailOrPhone -googleId");
+    if (!targetUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Fetch profile document (create empty one is ok — same as getProfile)
+    let profile = await Profile.findOne({ userId });
+    if (!profile) {
+      // Return a minimal profile so the page can still render
+      return res.status(200).json({
+        success: true,
+        role: targetUser.role,
+        profile: { fullName: `${targetUser.firstName} ${targetUser.lastName}`.trim(), avatar: targetUser.avatar },
+        companyData: null,
+      });
+    }
+
+    const profileObj = profile.toObject();
+
+    // Professional details (hire-type users)
+    const profDetails = await ProfessionalDetails.findOne({ userId });
+    if (profDetails) {
+      profileObj.hireType = profDetails.hireType;
+      profileObj.industryExperience = profDetails.industryExperience;
+      profileObj.portfolioDescription = profDetails.portfolioDescription;
+      profileObj.currentProfession = profDetails.currentProfession;
+      profileObj.skills = profDetails.skills;
+      profileObj.company = profDetails.company;
+    }
+
+    // Connection count for this user
+    const connectionsCount = await Connection.countDocuments({
+      $or: [{ user1: userId }, { user2: userId }],
+    });
+    profileObj.connections = connectionsCount;
+
+    // Post count — resolve author model (company vs user)
+    let authorId = userId;
+    let authorModel = "User";
+    let companyData = null;
+
+    const company = await Company.findOne({ createdBy: userId });
+    if ((targetUser.role === "company" || targetUser.role === "hire") && company) {
+      authorId = company._id;
+      authorModel = "Company";
+      companyData = company.toObject();
+    }
+
+    const postsCount = await Post.countDocuments({
+      author: authorId,
+      authorModel,
+      isDeleted: false,
+    });
+    profileObj.postsCount = postsCount;
+
+    // --- Relationship Status ---
+    const loggedInUserId = req.user.id;
+    let connectionStatus = "none";
+    let isFollowing = false;
+
+    if (userId !== loggedInUserId) {
+      // Check Connection
+      const isConnected = await Connection.findOne({
+        $or: [
+          { user1: loggedInUserId, user2: userId },
+          { user1: userId, user2: loggedInUserId },
+        ],
+      });
+
+      if (isConnected) {
+        connectionStatus = "connected";
+      } else {
+        // Check Pending Requests
+        const pendingRequest = await ConnectRequest.findOne({
+          $or: [
+            { senderId: loggedInUserId, recipientId: userId, status: "pending" },
+            { senderId: userId, recipientId: loggedInUserId, status: "pending" },
+          ],
+        });
+        if (pendingRequest) {
+          connectionStatus = pendingRequest.senderId.toString() === loggedInUserId ? "pending_sent" : "pending_received";
+        }
+      }
+
+      // Check Follow Status
+      if (authorModel === "Company" && companyData) {
+        const followRecord = await CompanyFollower.findOne({
+          userId: loggedInUserId,
+          companyId: companyData._id,
+        });
+        isFollowing = !!followRecord;
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      role: targetUser.role,
+      profile: profileObj,
+      companyData,
+      connectionStatus,
+      isFollowing,
+    });
+  } catch (error) {
+    console.error("getPublicProfile error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 
 // Get current user profile
 const getProfile = async (req, res) => {
@@ -289,4 +412,5 @@ const updateProfile = async (req, res) => {
   }
 };
 
-module.exports = { getProfile, updateProfile };
+module.exports = { getProfile, updateProfile, getPublicProfile };
+

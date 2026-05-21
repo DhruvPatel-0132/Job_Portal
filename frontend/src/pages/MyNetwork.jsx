@@ -1,15 +1,13 @@
-import { Send } from "lucide-react";
 import Footer from "../components/dashboard/Footer";
 import { useNetworkStore } from "../store/networkStore";
-import { useMessageStore } from "../store/messageStore";
 import ConnectionRequestList from "../components/network/ConnectionRequestList";
 import UserProfileCard from "../components/network/UserProfileCard";
 import CompanyCard from "../components/network/CompanyCard";
+import ConnectionsSection from "../components/network/ConnectionsSection";
 import SidebarContent from "../components/dashboard/SidebarContent";
 import { useEffect } from "react";
 
 const MyNetwork = () => {
-  const { setActiveConversation } = useMessageStore();
   const {
     networkUsers,
     requests,
@@ -64,63 +62,7 @@ const MyNetwork = () => {
             />
 
             {/* Connections Section */}
-            {connections.length > 0 && (
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-4">
-                <div className="flex justify-between items-center px-4 py-3 border-b border-gray-100">
-                  <h2 className="text-[16px] font-bold text-gray-900">
-                    Your Connections ({connections.length})
-                  </h2>
-                  <button className="text-[16px] font-bold text-gray-500 hover:text-black hover:underline transition-colors">
-                    Show all
-                  </button>
-                </div>
-                <div className="flex flex-col">
-                  {connections.map((conn) => (
-                    <div
-                      key={conn._id}
-                      className="p-4 flex items-center gap-3 w-full border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors"
-                    >
-                      <img
-                        src={conn.avatar || "/avatar.svg"}
-                        alt={conn.name}
-                        referrerPolicy="no-referrer"
-                        className="w-14 h-14 rounded-full border border-gray-100 shadow-sm object-cover shrink-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-bold text-gray-900 hover:text-blue-600 hover:underline cursor-pointer truncate">
-                          {conn.name}
-                        </h3>
-                        <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">
-                          {conn.headline || "No headline available"}
-                        </p>
-                      </div>
-                      <div className="flex gap-2 ml-4 shrink-0">
-                        <button 
-                          onClick={() => setActiveConversation({
-                            _id: conn._id,
-                            fullName: conn.name,
-                            avatar: conn.avatar || "/avatar.svg",
-                            headline: conn.headline
-                          })}
-                          className="px-4 py-1.5 border text-white bg-blue-600 rounded-full text-sm font-bold transition-all flex items-center align-center gap-1"
-                        >
-                          <Send className="h-4 w-4" />
-                          Message
-                        </button>
-                        <button
-                          onClick={() =>
-                            (window.location.href = `/profile/${conn._id}`)
-                          }
-                          className="px-4 py-1.5 border border-blue-600 text-blue-600 rounded-full text-sm font-bold hover:bg-blue-50 transition-all"
-                        >
-                          Profile
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            <ConnectionsSection connections={connections} />
 
             {/* People You May Know Section */}
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-6">

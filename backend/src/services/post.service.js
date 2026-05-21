@@ -151,20 +151,36 @@ const createPost = async (userId, userRole, postData) => {
 };
 
 
-const getPosts = async (query = {}, userId = null) => {
+const getPosts = async (query = {}, userId = null, limit = 15, cursor = null) => {
   try {
-    const posts = await Post.find({ 
-      isDeleted: { $ne: true }, 
-      isArchived: { $ne: true }, 
-      ...query 
-    })
-      .sort({ createdAt: -1 })
+    let dbQuery = {
+      isDeleted: { $ne: true },
+      isArchived: { $ne: true },
+      ...query
+    };
+
+    // If a cursor is provided, fetch posts strictly older than the cursor ID
+    if (cursor) {
+      dbQuery._id = { $lt: cursor };
+    }
+
+    const posts = await Post.find(dbQuery)
+      .sort({ _id: -1 }) // _id naturally encodes the timestamp in a perfect chronological order
+      .limit(limit + 1) // Fetch one extra to determine if there are more pages
+      .select("author authorModel postType content media hashtags mentions referenceId referenceModel stats isEdited editedAt createdAt")
       .populate({
         path: "author",
         select: "firstName lastName name logo avatar",
       })
       .populate("referenceId")
       .lean();
+
+    const hasMore = posts.length > limit;
+    if (hasMore) {
+      posts.pop(); // Remove the extra item
+    }
+
+    const nextCursor = posts.length > 0 ? posts[posts.length - 1]._id.toString() : null;
 
     // Attach userReaction for authenticated user
     if (userId) {
@@ -180,6 +196,8 @@ const getPosts = async (query = {}, userId = null) => {
       response: {
         success: true,
         posts,
+        nextCursor,
+        hasMore,
       },
     };
   } catch (error) {

@@ -1,6 +1,22 @@
 import React, { useState, useRef, useEffect } from "react";
-import { ThumbsUp, MessageSquare, Send, MoreHorizontal, Briefcase, Award, Code, FileText, ExternalLink, Clock, MapPin, Edit, Trash2, Archive } from "lucide-react";
+import {
+  ThumbsUp,
+  MessageSquare,
+  Send,
+  MoreHorizontal,
+  Briefcase,
+  Award,
+  Code,
+  FileText,
+  ExternalLink,
+  Clock,
+  MapPin,
+  Edit,
+  Trash2,
+  Archive,
+} from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
 import usePostStore from "../../store/postStore";
 import PostModal from "../Post";
@@ -16,25 +32,36 @@ const PostCard = ({ post, onOpen }) => {
   const reactionTimeoutRef = useRef(null);
   const cardRef = useRef(null);
   const CONTENT_LIMIT = 200;
+  const navigate = useNavigate();
 
   const REACTION_TYPES = [
     { type: "like", icon: "👍", label: "Like", color: "text-blue-600" },
-    { type: "celebrate", icon: "👏", label: "Celebrate", color: "text-green-600" },
+    {
+      type: "celebrate",
+      icon: "👏",
+      label: "Celebrate",
+      color: "text-green-600",
+    },
     { type: "support", icon: "🤝", label: "Support", color: "text-purple-600" },
     { type: "love", icon: "❤️", label: "Love", color: "text-red-600" },
-    { type: "insightful", icon: "💡", label: "Insightful", color: "text-yellow-600" },
-    { type: "funny", icon: "😄", label: "Funny", color: "text-orange-600" }
+    {
+      type: "insightful",
+      icon: "💡",
+      label: "Insightful",
+      color: "text-yellow-600",
+    },
+    { type: "funny", icon: "😄", label: "Funny", color: "text-orange-600" },
   ];
 
   const { user, profile: userProfile, company: userCompany } = useAuthStore();
   const { deletePost, archivePost, toggleReaction } = usePostStore();
 
-  const isOwner = user && (
-    post.author._id === user._id ||
-    (userCompany && post.author._id === userCompany._id) ||
-    post.author === user._id ||
-    (userCompany && post.author === userCompany._id)
-  );
+  const isOwner =
+    user &&
+    (post.author._id === user._id ||
+      (userCompany && post.author._id === userCompany._id) ||
+      post.author === user._id ||
+      (userCompany && post.author === userCompany._id));
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -78,10 +105,13 @@ const PostCard = ({ post, onOpen }) => {
 
   const hasLiked = post.stats?.likedBy?.includes(user?._id);
   const userReaction = post.stats?.userReaction || null;
-  const currentReaction = REACTION_TYPES.find(r => r.type === userReaction) || null;
+  const currentReaction =
+    REACTION_TYPES.find((r) => r.type === userReaction) || null;
 
   const isLongText = post.content && post.content.length > CONTENT_LIMIT;
-  const displayedContent = isExpanded ? post.content : post.content?.slice(0, CONTENT_LIMIT);
+  const displayedContent = isExpanded
+    ? post.content
+    : post.content?.slice(0, CONTENT_LIMIT);
 
   const isCompany = post.authorModel === "Company";
   const authorName = isCompany
@@ -90,7 +120,9 @@ const PostCard = ({ post, onOpen }) => {
   const authorAvatar = post.author.avatar || post.author.logo || "/avatar.svg";
 
   // Format relative time if createdAt exists
-  const timeAgo = post.createdAt ? new Date(post.createdAt).toLocaleDateString() : post.timeAgo;
+  const timeAgo = post.createdAt
+    ? new Date(post.createdAt).toLocaleDateString()
+    : post.timeAgo;
 
   const formatLabel = (key) => {
     const labels = {
@@ -107,7 +139,7 @@ const PostCard = ({ post, onOpen }) => {
       mid: "Mid-level",
       senior: "Senior",
       lead: "Lead",
-      executive: "Executive"
+      executive: "Executive",
     };
     return labels[key] || key;
   };
@@ -131,34 +163,44 @@ const PostCard = ({ post, onOpen }) => {
                 </h4>
                 <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2.5 text-xs text-blue-700 font-semibold">
                   <span className="flex items-center gap-1.5 bg-blue-100/50 px-2 py-1 rounded-md">
-                    <MapPin className="w-3.5 h-3.5" /> {post.referenceId.location}
+                    <MapPin className="w-3.5 h-3.5" />{" "}
+                    {post.referenceId.location}
                   </span>
                   <span className="flex items-center gap-1.5 bg-blue-100/50 px-2 py-1 rounded-md">
-                    <Clock className="w-3.5 h-3.5" /> {formatLabel(post.referenceId.employmentType)}
+                    <Clock className="w-3.5 h-3.5" />{" "}
+                    {formatLabel(post.referenceId.employmentType)}
                   </span>
                   <span className="flex items-center gap-1.5 bg-blue-100/50 px-2 py-1 rounded-md">
-                    <Briefcase className="w-3.5 h-3.5" /> {formatLabel(post.referenceId.workMode)}
+                    <Briefcase className="w-3.5 h-3.5" />{" "}
+                    {formatLabel(post.referenceId.workMode)}
                   </span>
-                  {post.referenceId.salary && !post.referenceId.salary.hideSalary && (
-                    <span className="flex items-center gap-1.5 bg-green-100/50 text-green-700 px-2 py-1 rounded-md">
-                      <span className="font-bold">₹</span> {post.referenceId.salary.min.toLocaleString()} - {post.referenceId.salary.max.toLocaleString()}
-                    </span>
-                  )}
+                  {post.referenceId.salary &&
+                    !post.referenceId.salary.hideSalary && (
+                      <span className="flex items-center gap-1.5 bg-green-100/50 text-green-700 px-2 py-1 rounded-md">
+                        <span className="font-bold">₹</span>{" "}
+                        {post.referenceId.salary.min.toLocaleString()} -{" "}
+                        {post.referenceId.salary.max.toLocaleString()}
+                      </span>
+                    )}
                 </div>
                 {post.referenceId.description && (
                   <p className="text-sm text-gray-700 mt-3 line-clamp-2 leading-relaxed">
                     {post.referenceId.description}
                   </p>
                 )}
-                {post.referenceId.skillsRequired && post.referenceId.skillsRequired.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {post.referenceId.skillsRequired.map((skill, i) => (
-                      <span key={i} className="px-2.5 py-1 bg-white border border-blue-200 text-blue-600 text-[10px] font-bold rounded-lg shadow-sm">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                )}
+                {post.referenceId.skillsRequired &&
+                  post.referenceId.skillsRequired.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {post.referenceId.skillsRequired.map((skill, i) => (
+                        <span
+                          key={i}
+                          className="px-2.5 py-1 bg-white border border-blue-200 text-blue-600 text-[10px] font-bold rounded-lg shadow-sm"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  )}
               </div>
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -198,15 +240,19 @@ const PostCard = ({ post, onOpen }) => {
                   <ExternalLink className="w-3 h-3" /> Live Demo
                 </a>
               )}
-              {post.referenceId.techStack && post.referenceId.techStack.length > 0 && (
-                <div className="flex gap-2">
-                  {post.referenceId.techStack.map((tech, i) => (
-                    <span key={i} className="text-[10px] bg-white border px-2 py-0.5 rounded text-gray-500 font-medium">
-                      {tech.name || tech}
-                    </span>
-                  ))}
-                </div>
-              )}
+              {post.referenceId.techStack &&
+                post.referenceId.techStack.length > 0 && (
+                  <div className="flex gap-2">
+                    {post.referenceId.techStack.map((tech, i) => (
+                      <span
+                        key={i}
+                        className="text-[10px] bg-white border px-2 py-0.5 rounded text-gray-500 font-medium"
+                      >
+                        {tech.name || tech}
+                      </span>
+                    ))}
+                  </div>
+                )}
             </div>
           </motion.div>
         );
@@ -220,8 +266,14 @@ const PostCard = ({ post, onOpen }) => {
           >
             {post.referenceId.bannerImage?.url && (
               <div className="relative h-40 overflow-hidden">
-                <img src={post.referenceId.bannerImage.url} alt={post.referenceId.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                <div className="absolute top-3 left-3 px-2 py-1 bg-black/50 backdrop-blur-md text-white text-[10px] font-bold rounded uppercase tracking-wider">Article</div>
+                <img
+                  src={post.referenceId.bannerImage.url}
+                  alt={post.referenceId.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute top-3 left-3 px-2 py-1 bg-black/50 backdrop-blur-md text-white text-[10px] font-bold rounded uppercase tracking-wider">
+                  Article
+                </div>
               </div>
             )}
             <div className="p-4">
@@ -241,7 +293,9 @@ const PostCard = ({ post, onOpen }) => {
                 {post.referenceId.tags && post.referenceId.tags.length > 0 && (
                   <div className="flex flex-wrap gap-x-2 gap-y-1 border-l border-gray-200 pl-3">
                     {post.referenceId.tags.map((tag, i) => (
-                      <span key={i} className="text-blue-600 whitespace-nowrap">#{tag}</span>
+                      <span key={i} className="text-blue-600 whitespace-nowrap">
+                        #{tag}
+                      </span>
                     ))}
                   </div>
                 )}
@@ -261,13 +315,18 @@ const PostCard = ({ post, onOpen }) => {
               <Award className="w-8 h-8 text-amber-600" />
             </div>
             <div>
-              <h4 className="font-bold text-amber-900 leading-tight">{post.referenceId.title}</h4>
-              <p className="text-sm text-amber-800/80 font-medium">{post.referenceId.issuer?.name || post.referenceId.issuer}</p>
-              <p className="text-[10px] text-amber-600 font-bold mt-1 uppercase">Achievement Unlocked</p>
+              <h4 className="font-bold text-amber-900 leading-tight">
+                {post.referenceId.title}
+              </h4>
+              <p className="text-sm text-amber-800/80 font-medium">
+                {post.referenceId.issuer?.name || post.referenceId.issuer}
+              </p>
+              <p className="text-[10px] text-amber-600 font-bold mt-1 uppercase">
+                Achievement Unlocked
+              </p>
             </div>
           </motion.div>
         );
-
 
       default:
         return null;
@@ -286,7 +345,7 @@ const PostCard = ({ post, onOpen }) => {
             onOpen(post);
           }
         }}
-        className={`bg-white rounded-xl border border-gray-200 mb-4 shadow-sm hover:shadow-md transition-all overflow-hidden active:scale-[0.99] ${!isExpanded ? 'cursor-pointer' : 'cursor-default'} ${post.isArchived ? 'opacity-75 grayscale-[0.2]' : ''}`}
+        className={`bg-white rounded-xl border border-gray-200 mb-4 shadow-sm hover:shadow-md transition-all overflow-hidden active:scale-[0.99] ${!isExpanded ? "cursor-pointer" : "cursor-default"} ${post.isArchived ? "opacity-75 grayscale-[0.2]" : ""}`}
       >
         {/* Post Header */}
         <div className="flex items-center px-4 py-3">
@@ -299,18 +358,42 @@ const PostCard = ({ post, onOpen }) => {
               e.target.onerror = null;
               e.target.src = "/avatar.svg";
             }}
-            className="w-12 h-12 rounded-full object-cover mr-3 border border-gray-100 p-0.5"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const profileId = post.author?._id || post.author;
+              if (profileId) navigate(`/profile/${profileId}`);
+            }}
+            className="w-12 h-12 rounded-full object-cover mr-3 border border-gray-100 p-0.5 cursor-pointer relative z-10"
           />
 
           <div className="flex-1">
-            <h3 className="text-sm font-bold text-gray-900 hover:text-blue-600 hover:underline cursor-pointer transition-colors">
+            <h3
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const profileId = post.author?._id || post.author;
+                if (profileId) navigate(`/profile/${profileId}`);
+              }}
+              className="text-sm font-bold text-gray-900 hover:text-blue-600 hover:underline cursor-pointer transition-colors inline-block relative z-10"
+            >
               {authorName}
             </h3>
-            <p className="text-xs text-gray-500 font-medium line-clamp-1">{post.author.headline}</p>
+            <p className="text-xs text-gray-500 font-medium line-clamp-1">
+              {post.author.headline}
+            </p>
             <div className="flex items-center mt-0.5 space-x-1">
-              <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">{timeAgo}</p>
-              {post.isEdited && <span className="text-[10px] text-gray-300">• Edited</span>}
-              {post.isArchived && <span className="text-[10px] text-amber-500 font-bold ml-2 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100">Archived</span>}
+              <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">
+                {timeAgo}
+              </p>
+              {post.isEdited && (
+                <span className="text-[10px] text-gray-300">• Edited</span>
+              )}
+              {post.isArchived && (
+                <span className="text-[10px] text-amber-500 font-bold ml-2 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100">
+                  Archived
+                </span>
+              )}
             </div>
           </div>
 
@@ -353,7 +436,9 @@ const PostCard = ({ post, onOpen }) => {
                         onClick={handleArchive}
                         className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                       >
-                        <Archive className={`w-4 h-4 ${post.isArchived ? 'text-amber-500' : 'text-gray-400'}`} />
+                        <Archive
+                          className={`w-4 h-4 ${post.isArchived ? "text-amber-500" : "text-gray-400"}`}
+                        />
                         {post.isArchived ? "Unarchive Post" : "Archive Post"}
                       </button>
                       <div className="h-px bg-gray-100" />
@@ -426,7 +511,10 @@ const PostCard = ({ post, onOpen }) => {
                       setIsExpanded((prev) => !prev);
                       if (collapsing && cardRef.current) {
                         setTimeout(() => {
-                          const cardTop = cardRef.current.getBoundingClientRect().top + window.pageYOffset - 70;
+                          const cardTop =
+                            cardRef.current.getBoundingClientRect().top +
+                            window.pageYOffset -
+                            70;
                           window.scrollTo({ top: cardTop, behavior: "smooth" });
                         }, 50);
                       }
@@ -446,7 +534,7 @@ const PostCard = ({ post, onOpen }) => {
                       >
                         {isExpanded ? "Show less" : "Show more"}
                       </motion.span>
-                    </AnimatePresence>  
+                    </AnimatePresence>
                     <motion.svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"
@@ -456,7 +544,10 @@ const PostCard = ({ post, onOpen }) => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       className="w-4 h-4"
-                      animate={{ rotate: isExpanded ? 180 : 0, y: isExpanded ? -1 : 1 }}
+                      animate={{
+                        rotate: isExpanded ? 180 : 0,
+                        y: isExpanded ? -1 : 1,
+                      }}
                       transition={{ duration: 0.3, ease: "easeInOut" }}
                     >
                       <polyline points="6 9 12 15 18 9" />
@@ -472,7 +563,7 @@ const PostCard = ({ post, onOpen }) => {
         )}
 
         {/* Post Media (Images/Videos) */}
-        {(post.media && post.media.length > 0) ? (
+        {post.media && post.media.length > 0 ? (
           <div className="mt-1 overflow-hidden relative py-2 flex justify-center">
             {post.media.map((item, i) => (
               <motion.div
@@ -497,26 +588,27 @@ const PostCard = ({ post, onOpen }) => {
               </motion.div>
             ))}
           </div>
-        ) : post.image && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="mt-1 relative overflow-hidden py-2 flex justify-center"
-          >
-            <div className="w-[85%] max-w-[500px]">
-              <img
-                src={post.image}
-                alt="Post content"
-                className="w-full h-auto rounded-lg shadow-xl"
-              />
-            </div>
-          </motion.div>
+        ) : (
+          post.image && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-1 relative overflow-hidden py-2 flex justify-center"
+            >
+              <div className="w-[85%] max-w-[500px]">
+                <img
+                  src={post.image}
+                  alt="Post content"
+                  className="w-full h-auto rounded-lg shadow-xl"
+                />
+              </div>
+            </motion.div>
+          )
         )}
-
 
         {/* Post Stats */}
         <div className="mx-4 px-1 py-2.5 flex items-center justify-between border-b-2 border-t-2 border-gray-100 text-[11px] font-medium text-gray-500">
-          {(post.stats?.likesCount > 0) && (
+          {post.stats?.likesCount > 0 && (
             <div className="flex items-center space-x-1.5">
               <div className="flex -space-x-1">
                 <span className="flex items-center justify-center w-4 h-4 bg-blue-500 rounded-full ring-2 ring-white">
@@ -526,7 +618,9 @@ const PostCard = ({ post, onOpen }) => {
                   <div className="w-1.5 h-1.5 bg-white rounded-full" />
                 </span>
               </div>
-              <span className="hover:text-blue-600 hover:underline cursor-pointer">{post.stats.likesCount}</span>
+              <span className="hover:text-blue-600 hover:underline cursor-pointer">
+                {post.stats.likesCount}
+              </span>
             </div>
           )}
           <div className="flex space-x-3 ml-auto">
@@ -542,7 +636,6 @@ const PostCard = ({ post, onOpen }) => {
 
         {/* Post Actions */}
         <div className="px-2 py-1 flex items-center justify-around sm:justify-start sm:space-x-1 relative">
-
           <AnimatePresence>
             {showReactions && (
               <motion.div
@@ -579,14 +672,22 @@ const PostCard = ({ post, onOpen }) => {
           >
             <ActionButton
               icon={
-                currentReaction
-                  ? <span className="text-lg leading-none">{currentReaction.icon}</span>
-                  : <ThumbsUp className="w-5 h-5" />
+                currentReaction ? (
+                  <span className="text-lg leading-none">
+                    {currentReaction.icon}
+                  </span>
+                ) : (
+                  <ThumbsUp className="w-5 h-5" />
+                )
               }
               label={currentReaction ? currentReaction.label : "Like"}
-              onClick={(e) => handleLike(e, currentReaction ? currentReaction.type : "like")}
+              onClick={(e) =>
+                handleLike(e, currentReaction ? currentReaction.type : "like")
+              }
               active={!!currentReaction}
-              activeColor={currentReaction ? currentReaction.color : "text-blue-600"}
+              activeColor={
+                currentReaction ? currentReaction.color : "text-blue-600"
+              }
             />
           </div>
           <ActionButton
@@ -597,12 +698,21 @@ const PostCard = ({ post, onOpen }) => {
               setShowComments(!showComments);
             }}
           />
-          <ActionButton icon={<Send className="w-5 h-5" />} label="Send" onClick={(e) => e.stopPropagation()} />
+          <ActionButton
+            icon={<Send className="w-5 h-5" />}
+            label="Send"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
 
         {/* Comment Section */}
         <AnimatePresence>
-          {showComments && <CommentSection postId={post._id} currentUserAvatar={isOwner ? authorAvatar : undefined} />}
+          {showComments && (
+            <CommentSection
+              postId={post._id}
+              currentUserAvatar={isOwner ? authorAvatar : undefined}
+            />
+          )}
         </AnimatePresence>
       </motion.div>
 
@@ -624,10 +734,18 @@ const ActionButton = ({ icon, label, onClick, active, activeColor }) => (
     whileHover={{ backgroundColor: "rgba(0,0,0,0.04)" }}
     whileTap={{ scale: 0.95 }}
     onClick={onClick}
-    className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg font-semibold transition-all group ${active ? activeColor : 'text-gray-600'}`}
+    className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg font-semibold transition-all group ${active ? activeColor : "text-gray-600"}`}
   >
-    <span className={`transition-colors ${active ? activeColor : 'group-hover:text-blue-600'}`}>{icon}</span>
-    <span className={`text-sm hidden sm:block transition-colors ${active ? activeColor : 'group-hover:text-blue-600'}`}>{label}</span>
+    <span
+      className={`transition-colors ${active ? activeColor : "group-hover:text-blue-600"}`}
+    >
+      {icon}
+    </span>
+    <span
+      className={`text-sm hidden sm:block transition-colors ${active ? activeColor : "group-hover:text-blue-600"}`}
+    >
+      {label}
+    </span>
   </motion.button>
 );
 
