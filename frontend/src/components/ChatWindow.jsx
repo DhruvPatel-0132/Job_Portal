@@ -3,6 +3,7 @@ import {
   X,
   Send,
   MoreHorizontal,
+  MoreVertical,
   ChevronDown,
   ChevronUp,
   Check,
@@ -12,6 +13,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMessageStore } from "../store/messageStore";
 import { useAuthStore } from "../store/authStore";
 import useSocketStore from "../store/socketStore";
+import SystemMessage from "./SystemMessage";
+import GroupMembersModal from "./GroupMembersModal";
 
 const ChatWindow = () => {
   const {
@@ -22,6 +25,7 @@ const ChatWindow = () => {
     sendMessage,
     onlineUsers,
     isMessagingPopupOpen,
+    exitGroup,
   } = useMessageStore();
   const { user } = useAuthStore();
   const { socket } = useSocketStore();
@@ -29,6 +33,8 @@ const ChatWindow = () => {
   const [text, setText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [isMembersOpen, setIsMembersOpen] = useState(false);
   const typingTimeoutRef = useRef(null);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
@@ -45,9 +51,23 @@ const ChatWindow = () => {
       .toLowerCase();
   };
 
-  const isOnline = activeConversation
-    ? onlineUsers.includes(activeConversation._id)
-    : false;
+  const isGroup =
+    activeConversation?.type === "group" ||
+    activeConversation?.headline === "Group Chat";
+
+  const isGroupChat =
+    activeConversation?.isGroup === true ||
+    activeConversation?.type === "group";
+
+  const isParticipant =
+    !isGroupChat ||
+    (activeConversation?.participants &&
+      activeConversation.participants.includes(user?._id));
+
+  const isOnline =
+    activeConversation && !isGroup
+      ? onlineUsers.includes(activeConversation._id)
+      : false;
 
   useEffect(() => {
     if (activeConversation?._id) {
@@ -62,7 +82,7 @@ const ChatWindow = () => {
 
   useEffect(() => {
     // Listen for typing events
-    if (socket) {
+    if (socket && !isGroup) {
       socket.on("userTyping", ({ userId, isTyping: typingStatus }) => {
         if (activeConversation && userId === activeConversation._id) {
           setIsTyping(typingStatus);
@@ -72,7 +92,7 @@ const ChatWindow = () => {
     return () => {
       if (socket) socket.off("userTyping");
     };
-  }, [socket, activeConversation]);
+  }, [socket, activeConversation, isGroup]);
 
   const handleTyping = (e) => {
     setText(e.target.value);
@@ -80,7 +100,7 @@ const ChatWindow = () => {
     e.target.style.height = "44px";
     e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
 
-    if (socket && activeConversation) {
+    if (socket && activeConversation && !isGroup) {
       socket.emit("typing", {
         receiverId: activeConversation._id,
         isTyping: true,
@@ -101,19 +121,26 @@ const ChatWindow = () => {
     e.preventDefault();
     if (!text.trim() || !activeConversation) return;
 
-    sendMessage(activeConversation._id, text);
+    sendMessage(activeConversation._id, text, isGroup);
     setText("");
     if (textareaRef.current) {
       textareaRef.current.style.height = "44px";
     }
 
-    if (socket) {
+    if (socket && !isGroup) {
       socket.emit("typing", {
         receiverId: activeConversation._id,
         isTyping: false,
       });
     }
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+  };
+
+  const handleExitGroup = async () => {
+    if (window.confirm("Are you sure you want to exit this group?")) {
+      setShowMenu(false);
+      await exitGroup(activeConversation._id);
+    }
   };
 
   if (!isChatOpen || !activeConversation) return null;
@@ -163,7 +190,12 @@ const ChatWindow = () => {
                 alt="Avatar"
                 className="w-9 h-9 rounded-full border border-gray-200 object-cover"
                 onError={(e) => {
-                  e.target.src = "/avatar.svg";
+                  const fallback = isGroup
+                    ? "/group-avatar.svg"
+                    : "/avatar.svg";
+                  if (!e.target.src.endsWith(fallback)) {
+                    e.target.src = fallback;
+                  }
                 }}
               />
               {isOnline && (
@@ -183,9 +215,9 @@ const ChatWindow = () => {
                   </h4>
                   <div className="flex items-center gap-1 mt-0.5 text-[12px]">
                     <span
-                      className={`font-medium shrink-0 ${isOnline ? "text-green-600" : "text-gray-500"}`}
+                      className={`font-medium shrink-0 ${isGroup ? "text-blue-600 font-semibold" : isOnline ? "text-green-600" : "text-gray-500"}`}
                     >
-                      {isOnline ? "Online" : "Offline"}
+                      {isGroup ? "Group Chat" : isOnline ? "Online" : "Offline"}
                     </span>
                   </div>
                 </motion.div>
@@ -193,7 +225,53 @@ const ChatWindow = () => {
             </AnimatePresence>
           </div>
           {!isMinimized && (
-            <div className="flex items-center gap-0.5 flex-shrink-0">
+            <div className="flex items-center gap-0.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+              {/* Three-Dot Menu (Group Only) */}
+              {isGroupChat && (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowMenu(!showMenu)}
+                    className={`p-1.5 rounded-full transition-colors ${
+                      showMenu ? "bg-gray-100 text-[#0a66c2]" : "hover:bg-gray-100 text-gray-500"
+                    }`}
+                  >
+                    <MoreVertical className="w-5 h-5" />
+                  </button>
+                  <AnimatePresence>
+                    {showMenu && (
+                      <>
+                        <div className="fixed inset-0 z-20" onClick={() => setShowMenu(false)} />
+                        <motion.div
+                          initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute right-0 mt-1.5 w-48 bg-white border border-gray-200 shadow-lg rounded-xl py-1.5 z-30 overflow-hidden flex flex-col"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowMenu(false);
+                              setIsMembersOpen(true);
+                            }}
+                            className="px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors font-semibold"
+                          >
+                            See all group members
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleExitGroup}
+                            className="px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 transition-colors font-semibold border-t border-gray-100"
+                          >
+                            Exit from group
+                          </button>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+
               <button
                 className="p-1.5 hover:bg-gray-100 rounded-full text-gray-500 transition-colors"
                 onClick={(e) => {
@@ -225,7 +303,12 @@ const ChatWindow = () => {
                 alt="Avatar"
                 className="w-20 h-20 rounded-full mb-3 shadow-sm object-cover border-2 border-white"
                 onError={(e) => {
-                  e.target.src = "/avatar.svg";
+                  const fallback = isGroup
+                    ? "/group-avatar.svg"
+                    : "/avatar.svg";
+                  if (!e.target.src.endsWith(fallback)) {
+                    e.target.src = fallback;
+                  }
                 }}
               />
               <h3 className="font-bold text-gray-900 text-[16px]">
@@ -237,6 +320,16 @@ const ChatWindow = () => {
             </div>
           ) : (
             messages.map((msg, index) => {
+              if (msg.messageType === "system") {
+                return (
+                  <SystemMessage
+                    key={msg._id}
+                    message={msg.message}
+                    isMe={msg.senderId === user?._id}
+                  />
+                );
+              }
+
               const isMe = msg.senderId === user?._id;
 
               return (
@@ -252,6 +345,11 @@ const ChatWindow = () => {
                     }`}
                   >
                     <div className="flow-root">
+                      {!isMe && isGroup && msg.sender && (
+                        <div className="text-[11px] font-bold text-[#0a66c2] mb-1 select-none leading-none">
+                          {msg.sender.fullName}
+                        </div>
+                      )}
                       <span className="whitespace-pre-wrap">{msg.message}</span>
                       <div
                         className={`inline-flex items-center gap-1 text-[10px] float-right mt-1.5 ml-2 ${
@@ -295,34 +393,47 @@ const ChatWindow = () => {
         </div>
 
         {/* Input Footer */}
-        <form
-          onSubmit={handleSend}
-          className="p-3 bg-white border-t border-gray-200 flex items-end gap-2"
-        >
-          <textarea
-            ref={textareaRef}
-            value={text}
-            onChange={handleTyping}
-            rows={1}
-            style={{ height: "44px" }}
-            placeholder="Write a message..."
-            className="flex-1 max-h-[120px] bg-[#f4f2ee] resize-none outline-none text-[14px] text-gray-900 rounded-xl px-3.5 py-2.5 hide-scrollbar transition-colors focus:bg-gray-100 border border-transparent focus:border-gray-200 overflow-y-auto"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSend(e);
-              }
-            }}
-          />
-          <button
-            type="submit"
-            disabled={!text.trim()}
-            className="p-2.5 bg-[#0a66c2] text-white rounded-full hover:bg-[#004182] disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-all flex-shrink-0 mb-0.5 shadow-sm"
+        {!isParticipant ? (
+          <div className="p-4 bg-gray-50 border-t border-gray-200 text-center text-xs text-gray-500 font-semibold select-none">
+            You left the group
+          </div>
+        ) : (
+          <form
+            onSubmit={handleSend}
+            className="p-3 bg-white border-t border-gray-200 flex items-end gap-2"
           >
-            <Send className="w-4 h-4" />
-          </button>
-        </form>
+            <textarea
+              ref={textareaRef}
+              value={text}
+              onChange={handleTyping}
+              rows={1}
+              style={{ height: "44px" }}
+              placeholder="Write a message..."
+              className="flex-1 max-h-[120px] bg-[#f4f2ee] resize-none outline-none text-[14px] text-gray-900 rounded-xl px-3.5 py-2.5 hide-scrollbar transition-colors focus:bg-gray-100 border border-transparent focus:border-gray-200 overflow-y-auto"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend(e);
+                }
+              }}
+            />
+            <button
+              type="submit"
+              disabled={!text.trim()}
+              className="p-2.5 bg-[#0a66c2] text-white rounded-full hover:bg-[#004182] disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-all flex-shrink-0 mb-0.5 shadow-sm"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </form>
+        )}
       </motion.div>
+
+      {/* Group Members Modal */}
+      <GroupMembersModal
+        isOpen={isMembersOpen}
+        onClose={() => setIsMembersOpen(false)}
+        groupId={activeConversation._id}
+      />
     </AnimatePresence>
   );
 };

@@ -18,28 +18,47 @@ const getPublicProfile = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Validate that the target user exists
-    const targetUser = await User.findById(userId).select("-password -emailOrPhone -googleId");
+    // Validate that the target user exists, or if it is a company, resolve to its creator
+    let resolvedUserId = userId;
+    let targetUser = await User.findById(resolvedUserId).select("-password -emailOrPhone -googleId");
+
+    if (!targetUser) {
+      // It might be a Company ID! Let's check
+      const company = await Company.findById(resolvedUserId);
+      if (company && company.createdBy) {
+        resolvedUserId = company.createdBy;
+        targetUser = await User.findById(resolvedUserId).select("-password -emailOrPhone -googleId");
+      }
+    }
+
     if (!targetUser) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
     // Fetch profile document (create empty one is ok — same as getProfile)
-    let profile = await Profile.findOne({ userId });
+    let profile = await Profile.findOne({ userId: resolvedUserId });
     if (!profile) {
+      const company = await Company.findOne({ createdBy: resolvedUserId });
+      const fullName = (targetUser.role === "company" && company)
+        ? company.name
+        : `${targetUser.firstName} ${targetUser.lastName}`.trim();
+      const avatar = (targetUser.role === "company" && company && company.logo)
+        ? company.logo
+        : targetUser.avatar;
+
       // Return a minimal profile so the page can still render
       return res.status(200).json({
         success: true,
         role: targetUser.role,
-        profile: { fullName: `${targetUser.firstName} ${targetUser.lastName}`.trim(), avatar: targetUser.avatar },
-        companyData: null,
+        profile: { fullName, avatar },
+        companyData: company ? company.toObject() : null,
       });
     }
 
     const profileObj = profile.toObject();
 
     // Professional details (hire-type users)
-    const profDetails = await ProfessionalDetails.findOne({ userId });
+    const profDetails = await ProfessionalDetails.findOne({ userId: resolvedUserId });
     if (profDetails) {
       profileObj.hireType = profDetails.hireType;
       profileObj.industryExperience = profDetails.industryExperience;
@@ -51,20 +70,28 @@ const getPublicProfile = async (req, res) => {
 
     // Connection count for this user
     const connectionsCount = await Connection.countDocuments({
-      $or: [{ user1: userId }, { user2: userId }],
+      $or: [{ user1: resolvedUserId }, { user2: resolvedUserId }],
     });
     profileObj.connections = connectionsCount;
 
     // Post count — resolve author model (company vs user)
-    let authorId = userId;
+    let authorId = resolvedUserId;
     let authorModel = "User";
     let companyData = null;
 
-    const company = await Company.findOne({ createdBy: userId });
+    const company = await Company.findOne({ createdBy: resolvedUserId });
     if ((targetUser.role === "company" || targetUser.role === "hire") && company) {
       authorId = company._id;
       authorModel = "Company";
       companyData = company.toObject();
+
+      // Override fullName and avatar for company role
+      if (targetUser.role === "company") {
+        profileObj.fullName = company.name;
+        if (company.logo) {
+          profileObj.avatar = company.logo;
+        }
+      }
     }
 
     const postsCount = await Post.countDocuments({
@@ -79,12 +106,12 @@ const getPublicProfile = async (req, res) => {
     let connectionStatus = "none";
     let isFollowing = false;
 
-    if (userId !== loggedInUserId) {
+    if (resolvedUserId !== loggedInUserId) {
       // Check Connection
       const isConnected = await Connection.findOne({
         $or: [
-          { user1: loggedInUserId, user2: userId },
-          { user1: userId, user2: loggedInUserId },
+          { user1: loggedInUserId, user2: resolvedUserId },
+          { user1: resolvedUserId, user2: loggedInUserId },
         ],
       });
 
@@ -94,8 +121,8 @@ const getPublicProfile = async (req, res) => {
         // Check Pending Requests
         const pendingRequest = await ConnectRequest.findOne({
           $or: [
-            { senderId: loggedInUserId, recipientId: userId, status: "pending" },
-            { senderId: userId, recipientId: loggedInUserId, status: "pending" },
+            { senderId: loggedInUserId, recipientId: resolvedUserId, status: "pending" },
+            { senderId: resolvedUserId, recipientId: loggedInUserId, status: "pending" },
           ],
         });
         if (pendingRequest) {
@@ -179,6 +206,14 @@ const getProfile = async (req, res) => {
       profileObj.currentProfession = profDetails.currentProfession;
       profileObj.skills = profDetails.skills;
       profileObj.company = profDetails.company;
+    }
+
+    // Override fullName and avatar for company role
+    if (req.user.role === "company" && company) {
+      profileObj.fullName = company.name;
+      if (company.logo) {
+        profileObj.avatar = company.logo;
+      }
     }
 
     return res.status(200).json({ success: true, profile: profileObj });
@@ -389,10 +424,18 @@ const updateProfile = async (req, res) => {
     // =========================
     // FINAL RESPONSE
     // =========================
+    const profileToReturn = updatedProfile.toObject();
+    if (req.user.role === "company" && userCompany) {
+      profileToReturn.fullName = userCompany.name;
+      if (userCompany.logo) {
+        profileToReturn.avatar = userCompany.logo;
+      }
+    }
+
     return res.status(200).json({
       success: true,
       profile: {
-        ...updatedProfile.toObject(),
+        ...profileToReturn,
 
         user: updatedUser,
 

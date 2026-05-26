@@ -1,5 +1,6 @@
 const Message = require("../models/Message");
 const Conversation = require("../models/Conversation");
+const Profile = require("../models/Profile");
 
 // Maintain online users map: userId -> new Set([socketIds])
 const onlineUsers = new Map();
@@ -18,6 +19,80 @@ module.exports = (io, socket) => {
   // Send current online users to this socket
   const onlineUserIds = Array.from(onlineUsers.keys());
   socket.emit("onlineUsers", onlineUserIds);
+
+  // Auto-join all participant group rooms on socket connection (including groups user has left)
+  const joinUserGroups = async () => {
+    try {
+      const userGroups = await Conversation.find({
+        $or: [
+          { participants: userId },
+          { "leftUsers.userId": userId }
+        ],
+        type: "group",
+      });
+      userGroups.forEach((group) => {
+        socket.join(group._id.toString());
+        console.log(`Socket ${socket.id} (User: ${userId}) auto-joined group room: ${group._id}`);
+      });
+    } catch (err) {
+      console.error("Error auto-joining group rooms on connect:", err);
+    }
+  };
+  joinUserGroups();
+
+  // Handle explicitly joining a group room
+  socket.on("group:join", ({ conversationId }) => {
+    socket.join(conversationId);
+    console.log(`Socket ${socket.id} (User: ${userId}) explicitly joined group room: ${conversationId}`);
+  });
+
+  // Handle group messaging
+  socket.on("group:message", async ({ conversationId, messageText }) => {
+    try {
+      // Validate: only group members can send messages
+      const group = await Conversation.findOne({
+        _id: conversationId,
+        participants: userId,
+        type: "group",
+      });
+
+      if (!group) {
+        console.warn(`Unauthorized group:message from User: ${userId} to Group: ${conversationId}`);
+        return;
+      }
+
+      // Create message in database
+      const newMessage = await Message.create({
+        conversationId: group._id,
+        senderId: userId,
+        message: messageText,
+      });
+
+      // Update lastMessage in Conversation
+      group.lastMessage = newMessage._id;
+      await group.save();
+
+      // Fetch sender profile details for frontend display
+      const senderProfile = await Profile.findOne({ userId }).select("fullName avatar headline");
+
+      const populatedMessage = {
+        ...newMessage.toObject(),
+        sender: {
+          _id: userId,
+          fullName: senderProfile?.fullName || "Group Member",
+          avatar: senderProfile?.avatar || "/avatar.svg",
+          headline: senderProfile?.headline || "",
+        },
+      };
+
+      // Broadcast to all active participants in the group individually
+      group.participants.forEach((pId) => {
+        io.to(pId.toString()).emit("group:message", populatedMessage);
+      });
+    } catch (error) {
+      console.error("Socket group:message error:", error);
+    }
+  });
 
   // Handle typing
   socket.on("typing", ({ receiverId, isTyping }) => {
