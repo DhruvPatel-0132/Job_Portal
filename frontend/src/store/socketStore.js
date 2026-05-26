@@ -61,9 +61,39 @@ const useSocketStore = create((set, get) => ({
       });
     });
 
+    socket.on("group:create", (group) => {
+      // Join the socket room for this new group
+      socket.emit("group:join", { conversationId: group._id });
+      import("./messageStore").then(({ useMessageStore }) => {
+        useMessageStore.getState().fetchConversations();
+      });
+    });
+
+    socket.on("group:message", (message) => {
+      import("./messageStore").then(({ useMessageStore }) => {
+        useMessageStore.getState().addGroupMessage(message);
+      });
+    });
+
     socket.on("messagesSeen", (data) => {
       import("./messageStore").then(({ useMessageStore }) => {
         useMessageStore.getState().updateMessageSeen(data);
+      });
+    });
+
+    socket.on("group:userLeft", ({ conversationId, userId, message }) => {
+      import("./messageStore").then(({ useMessageStore }) => {
+        const store = useMessageStore.getState();
+        const active = store.activeConversation;
+        if (active && active.type === "group" && active._id === conversationId) {
+          useMessageStore.setState({
+            activeConversation: {
+              ...active,
+              participants: active.participants ? active.participants.filter(p => p !== userId) : []
+            }
+          });
+        }
+        store.addGroupMessage(message);
       });
     });
 

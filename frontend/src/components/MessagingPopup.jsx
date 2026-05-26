@@ -5,10 +5,12 @@ import {
   MoreHorizontal,
   Edit,
   Search,
+  Users,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMessageStore } from "../store/messageStore";
 import { useAuthStore } from "../store/authStore";
+import CreateGroupModal from "./CreateGroupModal";
 
 const MessagingPopup = () => {
   const { 
@@ -20,6 +22,9 @@ const MessagingPopup = () => {
     onlineUsers 
   } = useMessageStore();
   const { profile } = useAuthStore();
+
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -67,7 +72,7 @@ const MessagingPopup = () => {
             className="fixed top-0 right-0 h-screen w-[320px] bg-white shadow-[-5px_0_25px_rgba(0,0,0,0.15)] z-[100] flex flex-col font-sans border-l border-gray-200"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200 bg-white">
+            <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200 bg-white relative flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <img
@@ -91,9 +96,50 @@ const MessagingPopup = () => {
                 <button className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">
                   <MoreHorizontal className="w-4 h-4" />
                 </button>
-                <button className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">
-                  <Edit className="w-4 h-4" />
-                </button>
+                
+                {/* Pencil / Edit button dropdown menu container */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowDropdown(!showDropdown)}
+                    className={`p-1.5 rounded-full transition-colors ${
+                      showDropdown ? "bg-gray-100 text-[#0a66c2]" : "hover:bg-gray-100 text-gray-500"
+                    }`}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+
+                  <AnimatePresence>
+                    {showDropdown && (
+                      <>
+                        {/* Invisible backdrop to dismiss dropdown */}
+                        <div
+                          className="fixed inset-0 z-10"
+                          onClick={() => setShowDropdown(false)}
+                        />
+                        <motion.div
+                          initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute right-0 mt-1.5 w-44 bg-white border border-gray-200 shadow-lg rounded-xl py-1.5 z-20 overflow-hidden flex flex-col"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowDropdown(false);
+                              setIsGroupModalOpen(true);
+                            }}
+                            className="flex items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors font-semibold"
+                          >
+                            <Users className="w-4 h-4 text-gray-400" />
+                            Create Group Chat
+                          </button>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
+
                 <button
                   className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-700"
                   onClick={() => setIsOpen(false)}
@@ -104,7 +150,7 @@ const MessagingPopup = () => {
             </div>
 
             {/* Search */}
-            <div className="p-3 border-b border-gray-100 bg-white">
+            <div className="p-3 border-b border-gray-100 bg-white flex-shrink-0">
               <div className="relative bg-[#eef3f8] rounded-md flex items-center px-3 py-2 border border-transparent focus-within:border-[#0a66c2] focus-within:bg-white transition-colors">
                 <Search className="w-4 h-4 text-gray-600 mr-2" />
                 <input
@@ -123,7 +169,9 @@ const MessagingPopup = () => {
                 </div>
               ) : (
                 conversations.map((conv) => {
-                  const isOnline = onlineUsers.includes(conv.otherParticipant._id);
+                  const isGroup = conv.type === "group";
+                  const isOnline = !isGroup && onlineUsers.includes(conv.otherParticipant?._id);
+
                   return (
                     <div
                       key={conv._id}
@@ -132,12 +180,14 @@ const MessagingPopup = () => {
                     >
                       <div className="relative flex-shrink-0">
                         <img
-                          src={conv.otherParticipant.avatar}
-                          alt={conv.otherParticipant.fullName}
+                          src={conv.otherParticipant?.avatar || "/avatar.svg"}
+                          alt={conv.otherParticipant?.fullName || "Chat Avatar"}
                           referrerPolicy="no-referrer"
                           onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = "/avatar.svg";
+                            const fallback = isGroup ? "/group-avatar.svg" : "/avatar.svg";
+                            if (!e.target.src.endsWith(fallback)) {
+                              e.target.src = fallback;
+                            }
                           }}
                           className="w-12 h-12 rounded-full border border-gray-200 object-cover"
                         />
@@ -148,7 +198,7 @@ const MessagingPopup = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-baseline mb-0.5">
                           <h4 className="text-[15px] font-semibold text-gray-900 truncate">
-                            {conv.otherParticipant.fullName}
+                            {conv.otherParticipant?.fullName}
                           </h4>
                           <span className="text-[11px] text-gray-500">
                             {conv.updatedAt ? new Date(conv.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : ""}
@@ -173,6 +223,12 @@ const MessagingPopup = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Premium Group Creation Modal */}
+      <CreateGroupModal
+        isOpen={isGroupModalOpen}
+        onClose={() => setIsGroupModalOpen(false)}
+      />
     </>
   );
 };
