@@ -14,6 +14,7 @@ import {
   Edit,
   Trash2,
   Archive,
+  Bookmark,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router-dom";
@@ -31,6 +32,7 @@ const PostCard = ({ post, onOpen }) => {
   const menuRef = useRef(null);
   const reactionTimeoutRef = useRef(null);
   const cardRef = useRef(null);
+  const hasViewedRef = useRef(false);
   const CONTENT_LIMIT = 200;
   const navigate = useNavigate();
 
@@ -54,7 +56,15 @@ const PostCard = ({ post, onOpen }) => {
   ];
 
   const { user, profile: userProfile, company: userCompany } = useAuthStore();
-  const { deletePost, archivePost, toggleReaction } = usePostStore();
+  const { deletePost, archivePost, toggleReaction, toggleSavePost, incrementViews } = usePostStore();
+
+  // Fire once per card mount; prevents duplicate counts on re-renders
+  const handleIncrementViews = () => {
+    if (!hasViewedRef.current) {
+      hasViewedRef.current = true;
+      incrementViews(post._id);
+    }
+  };
 
   const isOwner =
     user &&
@@ -85,6 +95,12 @@ const PostCard = ({ post, onOpen }) => {
     setShowMenu(false);
   };
 
+  const handleSave = async (e) => {
+    e.stopPropagation();
+    await toggleSavePost(post._id);
+    setShowMenu(false);
+  };
+
   const handleLike = async (e, type = "like") => {
     e.stopPropagation();
     if (!user) return;
@@ -108,6 +124,8 @@ const PostCard = ({ post, onOpen }) => {
   const currentReaction =
     REACTION_TYPES.find((r) => r.type === userReaction) || null;
 
+  const isPostSaved = post.stats?.isSaved;
+
   const isLongText = post.content && post.content.length > CONTENT_LIMIT;
   const displayedContent = isExpanded
     ? post.content
@@ -124,6 +142,16 @@ const PostCard = ({ post, onOpen }) => {
     ? new Date(post.createdAt).toLocaleDateString()
     : post.timeAgo;
 
+  const getTimeAgo = (dateString) => {
+    const date = new Date(dateString);
+    const diffInSeconds = Math.floor((new Date() - date) / 1000);
+    if (diffInSeconds < 60) return `${diffInSeconds}s`;
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
+    return date.toLocaleDateString();
+  };
+  
   const formatLabel = (key) => {
     const labels = {
       full_time: "Full-time",
@@ -342,6 +370,7 @@ const PostCard = ({ post, onOpen }) => {
         transition={{ duration: 0.3 }}
         onClick={() => {
           if (!isExpanded && onOpen) {
+            handleIncrementViews();
             onOpen(post);
           }
         }}
@@ -420,6 +449,16 @@ const PostCard = ({ post, onOpen }) => {
                   className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden"
                   onClick={(e) => e.stopPropagation()}
                 >
+                  <button
+                    onClick={handleSave}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <Bookmark
+                      className={`w-4 h-4 ${isPostSaved ? "fill-blue-500 text-blue-500" : "text-gray-400"}`}
+                    />
+                    {isPostSaved ? "Unsave Post" : "Save Post"}
+                  </button>
+                  <div className="h-px bg-gray-100" />
                   {isOwner ? (
                     <>
                       <button
@@ -509,7 +548,10 @@ const PostCard = ({ post, onOpen }) => {
                       e.stopPropagation();
                       const collapsing = isExpanded;
                       setIsExpanded((prev) => !prev);
-                      if (collapsing && cardRef.current) {
+                      if (!collapsing) {
+                        // User is expanding — count as a view
+                        handleIncrementViews();
+                      } else if (cardRef.current) {
                         setTimeout(() => {
                           const cardTop =
                             cardRef.current.getBoundingClientRect().top +
@@ -695,7 +737,7 @@ const PostCard = ({ post, onOpen }) => {
             label="Comment"
             onClick={(e) => {
               e.stopPropagation();
-              setShowComments(!showComments);
+              setShowComments((prev) => !prev);
             }}
           />
           <ActionButton
@@ -709,6 +751,7 @@ const PostCard = ({ post, onOpen }) => {
         <AnimatePresence>
           {showComments && (
             <CommentSection
+              key="comments"
               postId={post._id}
               currentUserAvatar={isOwner ? authorAvatar : undefined}
             />

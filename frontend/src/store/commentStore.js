@@ -66,12 +66,15 @@ const useCommentStore = create((set, get) => ({
         });
 
         // Also update post count in postStore
-        const { posts, userPosts } = usePostStore.getState();
+        const { posts, userPosts, savedPosts } = usePostStore.getState();
         usePostStore.setState({
           posts: posts.map(p => p._id === postId ? {
             ...p, stats: { ...p.stats, commentsCount: (p.stats?.commentsCount || 0) + 1 }
           } : p),
           userPosts: userPosts.map(p => p._id === postId ? {
+            ...p, stats: { ...p.stats, commentsCount: (p.stats?.commentsCount || 0) + 1 }
+          } : p),
+          savedPosts: savedPosts.map(p => p._id === postId ? {
             ...p, stats: { ...p.stats, commentsCount: (p.stats?.commentsCount || 0) + 1 }
           } : p),
         });
@@ -110,12 +113,15 @@ const useCommentStore = create((set, get) => ({
         });
 
         // Update post count in postStore
-        const { posts, userPosts } = usePostStore.getState();
+        const { posts, userPosts, savedPosts } = usePostStore.getState();
         usePostStore.setState({
           posts: posts.map(p => p._id === postId ? {
             ...p, stats: { ...p.stats, commentsCount: Math.max(0, (p.stats?.commentsCount || 1) - 1) }
           } : p),
           userPosts: userPosts.map(p => p._id === postId ? {
+            ...p, stats: { ...p.stats, commentsCount: Math.max(0, (p.stats?.commentsCount || 1) - 1) }
+          } : p),
+          savedPosts: savedPosts.map(p => p._id === postId ? {
             ...p, stats: { ...p.stats, commentsCount: Math.max(0, (p.stats?.commentsCount || 1) - 1) }
           } : p),
         });

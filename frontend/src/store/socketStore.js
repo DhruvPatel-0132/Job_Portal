@@ -36,6 +36,13 @@ const useSocketStore = create((set, get) => ({
       });
     });
 
+    // Listen for post reaction updates in real-time
+    socket.on("post_reaction_updated", ({ postId, likesCount, likedBy }) => {
+      import("./postStore").then(({ default: usePostStore }) => {
+        usePostStore.getState().updateReactionLocally(postId, likesCount, likedBy);
+      });
+    });
+
     // Messaging & Online Status Events
     socket.on("onlineUsers", (users) => {
       import("./messageStore").then(({ useMessageStore }) => {

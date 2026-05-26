@@ -2,11 +2,13 @@ const {
   createPost,
   getPosts,
   getUserPosts,
+  getSavedPosts,
   incrementPostViews,
   updatePost,
   deletePost,
   archivePost,
   toggleReaction,
+  toggleSavePost,
 } = require("../services/post.service");
 
 const createPostController = async (req, res) => {
@@ -47,6 +49,23 @@ const getUserPostsController = async (req, res) => {
   try {
     const userId = req.user.id;
     const { status, response } = await getUserPosts(userId, userId);
+    return res.status(status).json(response);
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
+const getSavedPostsController = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const limit = parseInt(req.query.limit) || 15;
+    const cursor = req.query.cursor || null;
+
+    const { status, response } = await getSavedPosts(userId, userId, limit, cursor);
     return res.status(status).json(response);
   } catch (error) {
     return res.status(500).json({
@@ -138,13 +157,31 @@ const toggleReactionController = async (req, res) => {
   }
 };
 
+const toggleSavePostController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const { status, response } = await toggleSavePost(id, userId);
+    return res.status(status).json(response);
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createPostController,
   getPostsController,
   getUserPostsController,
+  getSavedPostsController,
   incrementPostViewsController,
   updatePostController,
   deletePostController,
   archivePostController,
   toggleReactionController,
+  toggleSavePostController,
 };
