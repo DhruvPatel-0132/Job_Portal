@@ -9,6 +9,7 @@ const {
   deletePostController,
   archivePostController,
   toggleReactionController,
+  toggleSavePostController,
 } = require("../controllers/post.controller");
 const authMiddleware = require("../middleware/auth.middleware");
 
@@ -34,5 +35,8 @@ router.patch("/:id/archive", authMiddleware, archivePostController);
 router.patch("/:id/view", authMiddleware, incrementPostViewsController);
 // Toggle reaction on a post
 router.post("/:id/react", authMiddleware, toggleReactionController);
+
+// Toggle save on a post
+router.post("/:id/save", authMiddleware, toggleSavePostController);
 
 module.exports = router;

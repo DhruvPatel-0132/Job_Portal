@@ -14,6 +14,7 @@ import {
   Edit,
   Trash2,
   Archive,
+  Bookmark,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router-dom";
@@ -54,7 +55,7 @@ const PostCard = ({ post, onOpen }) => {
   ];
 
   const { user, profile: userProfile, company: userCompany } = useAuthStore();
-  const { deletePost, archivePost, toggleReaction } = usePostStore();
+  const { deletePost, archivePost, toggleReaction, toggleSavePost } = usePostStore();
 
   const isOwner =
     user &&
@@ -85,6 +86,12 @@ const PostCard = ({ post, onOpen }) => {
     setShowMenu(false);
   };
 
+  const handleSave = async (e) => {
+    e.stopPropagation();
+    await toggleSavePost(post._id);
+    setShowMenu(false);
+  };
+
   const handleLike = async (e, type = "like") => {
     e.stopPropagation();
     if (!user) return;
@@ -107,6 +114,8 @@ const PostCard = ({ post, onOpen }) => {
   const userReaction = post.stats?.userReaction || null;
   const currentReaction =
     REACTION_TYPES.find((r) => r.type === userReaction) || null;
+
+  const isPostSaved = post.stats?.isSaved;
 
   const isLongText = post.content && post.content.length > CONTENT_LIMIT;
   const displayedContent = isExpanded
@@ -420,6 +429,16 @@ const PostCard = ({ post, onOpen }) => {
                   className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden"
                   onClick={(e) => e.stopPropagation()}
                 >
+                  <button
+                    onClick={handleSave}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <Bookmark
+                      className={`w-4 h-4 ${isPostSaved ? "fill-blue-500 text-blue-500" : "text-gray-400"}`}
+                    />
+                    {isPostSaved ? "Unsave Post" : "Save Post"}
+                  </button>
+                  <div className="h-px bg-gray-100" />
                   {isOwner ? (
                     <>
                       <button
@@ -695,7 +714,7 @@ const PostCard = ({ post, onOpen }) => {
             label="Comment"
             onClick={(e) => {
               e.stopPropagation();
-              setShowComments(!showComments);
+              setShowComments((prev) => !prev);
             }}
           />
           <ActionButton
@@ -709,6 +728,7 @@ const PostCard = ({ post, onOpen }) => {
         <AnimatePresence>
           {showComments && (
             <CommentSection
+              key="comments"
               postId={post._id}
               currentUserAvatar={isOwner ? authorAvatar : undefined}
             />

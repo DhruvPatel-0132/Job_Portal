@@ -215,6 +215,68 @@ const usePostStore = create((set, get) => ({
     }
   },
 
+  toggleSavePost: async (postId) => {
+    try {
+      const response = await api.post(`/posts/${postId}/save`);
+      if (response.data.success) {
+        // Update post stats in store
+        set((state) => ({
+          posts: state.posts.map((post) =>
+            post._id === postId
+              ? {
+                  ...post,
+                  stats: {
+                    ...post.stats,
+                    savesCount: response.data.savesCount,
+                    isSaved: response.data.isSaved
+                  },
+                }
+              : post
+          ),
+          userPosts: state.userPosts.map((post) =>
+            post._id === postId
+              ? {
+                  ...post,
+                  stats: {
+                    ...post.stats,
+                    savesCount: response.data.savesCount,
+                    isSaved: response.data.isSaved
+                  },
+                }
+              : post
+          ),
+        }));
+        
+        // Update React Query cache
+        queryClient.setQueryData(["feedPosts"], (oldData) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page) => ({
+              ...page,
+              posts: page.posts.map((post) =>
+                post._id === postId
+                  ? {
+                      ...post,
+                      stats: {
+                        ...post.stats,
+                        savesCount: response.data.savesCount,
+                        isSaved: response.data.isSaved
+                      },
+                    }
+                  : post
+              ),
+            })),
+          };
+        });
+      }
+      return response.data;
+    } catch (error) {
+      console.error("Failed to toggle save post:", error);
+      return { success: false };
+    }
+  },
+
   updateReactionLocally: (postId, likesCount, likedBy) => {
     // Update Zustand store
     set((state) => ({

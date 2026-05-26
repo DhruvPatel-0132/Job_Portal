@@ -5,6 +5,8 @@ const Article = require("../models/Article");
 const ShowcaseProject = require("../models/ShowcaseProject");
 const Achievement = require("../models/Achievement");
 const Reaction = require("../models/Reaction");
+const User = require("../models/User");
+const SavedPost = require("../models/SavedPost");
 
 const createPost = async (userId, userRole, postData) => {
   try {
@@ -182,13 +184,22 @@ const getPosts = async (query = {}, userId = null, limit = 15, cursor = null) =>
 
     const nextCursor = posts.length > 0 ? posts[posts.length - 1]._id.toString() : null;
 
-    // Attach userReaction for authenticated user
+    // Attach userReaction and isSaved for authenticated user
     if (userId) {
       const postIds = posts.map(p => p._id);
-      const reactions = await Reaction.find({ post: { $in: postIds }, user: userId }).select("post reactionType");
+      const [reactions, savedPosts] = await Promise.all([
+        Reaction.find({ post: { $in: postIds }, user: userId }).select("post reactionType"),
+        SavedPost.find({ post: { $in: postIds }, user: userId }).select("post")
+      ]);
       const reactionMap = {};
       reactions.forEach(r => { reactionMap[r.post.toString()] = r.reactionType; });
-      posts.forEach(p => { p.stats = p.stats || {}; p.stats.userReaction = reactionMap[p._id.toString()] || null; });
+      const savedMap = new Set(savedPosts.map(s => s.post.toString()));
+      
+      posts.forEach(p => { 
+        p.stats = p.stats || {}; 
+        p.stats.userReaction = reactionMap[p._id.toString()] || null; 
+        p.stats.isSaved = savedMap.has(p._id.toString());
+      });
     }
 
     return {
@@ -235,13 +246,22 @@ const getUserPosts = async (userId, requestingUserId = null) => {
       .populate("referenceId")
       .lean();
 
-    // Attach userReaction for the requesting user
+    // Attach userReaction and isSaved for the requesting user
     if (requestingUserId) {
       const postIds = posts.map(p => p._id);
-      const reactions = await Reaction.find({ post: { $in: postIds }, user: requestingUserId }).select("post reactionType");
+      const [reactions, savedPosts] = await Promise.all([
+        Reaction.find({ post: { $in: postIds }, user: requestingUserId }).select("post reactionType"),
+        SavedPost.find({ post: { $in: postIds }, user: requestingUserId }).select("post")
+      ]);
       const reactionMap = {};
       reactions.forEach(r => { reactionMap[r.post.toString()] = r.reactionType; });
-      posts.forEach(p => { p.stats = p.stats || {}; p.stats.userReaction = reactionMap[p._id.toString()] || null; });
+      const savedMap = new Set(savedPosts.map(s => s.post.toString()));
+
+      posts.forEach(p => { 
+        p.stats = p.stats || {}; 
+        p.stats.userReaction = reactionMap[p._id.toString()] || null; 
+        p.stats.isSaved = savedMap.has(p._id.toString());
+      });
     }
 
     return {
@@ -557,6 +577,47 @@ const toggleReaction = async (postId, userId, reactionType = "like") => {
   }
 };
 
+const toggleSavePost = async (postId, userId) => {
+  try {
+    const post = await Post.findById(postId);
+    if (!post) {
+      return { status: 404, response: { success: false, message: "Post not found" } };
+    }
+
+    const existingSavedPost = await SavedPost.findOne({ post: postId, user: userId });
+
+    if (existingSavedPost) {
+      // Unsave post
+      await SavedPost.deleteOne({ _id: existingSavedPost._id });
+      post.stats.savesCount = Math.max(0, post.stats.savesCount - 1);
+      
+      await post.save();
+
+      return {
+        status: 200,
+        response: { success: true, message: "Post unsaved", savesCount: post.stats.savesCount, isSaved: false },
+      };
+    } else {
+      // Save post
+      await SavedPost.create({ post: postId, user: userId });
+      post.stats.savesCount += 1;
+
+      await post.save();
+
+      return {
+        status: 200,
+        response: { success: true, message: "Post saved", savesCount: post.stats.savesCount, isSaved: true },
+      };
+    }
+  } catch (error) {
+    console.error("Toggle Save Post Service Error:", error);
+    return {
+      status: 500,
+      response: { success: false, message: "Failed to toggle save post", error: error.message },
+    };
+  }
+};
+
 module.exports = {
   createPost,
   getPosts,
@@ -566,4 +627,5 @@ module.exports = {
   deletePost,
   archivePost,
   toggleReaction,
+  toggleSavePost,
 };
