@@ -138,6 +138,7 @@ const SidebarProfile = ({ profile }) => {
       {/* Bottom Action */}
       <motion.div
         whileHover={{ backgroundColor: "rgba(249, 250, 251, 1)" }}
+        onClick={() => navigate("/saved-posts")}
         className="px-4 py-3.5 cursor-pointer transition-all flex items-center justify-between group border-b border-gray-50"
       >
         <span className="text-[12px] text-gray-700 font-bold flex items-center group-hover:text-black">

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import SidebarContent from "../components/dashboard/SidebarContent";
-import PostCard from "../components/dashboard/PostCard";
-import PostDetailModal from "../components/dashboard/PostDetailModal";
+import SidebarContent from "../components/Dashboard/SidebarContent";
+import PostCard from "../components/Dashboard/PostCard";
+import PostDetailModal from "../components/Dashboard/PostDetailModal";
 import usePostStore from "../store/postStore";
 import { useAuthStore } from "../store/authStore";
 import { Loader2, AlertCircle, FileText } from "lucide-react";
@@ -11,15 +11,17 @@ const ManagePosts = () => {
   const { userPosts, loading, error, fetchUserPosts, incrementViews } = usePostStore();
   const { user } = useAuthStore();
 
-  const [selectedPost, setSelectedPost] = useState(null);
+  const [selectedPostId, setSelectedPostId] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+  const selectedPost = userPosts.find((p) => p._id === selectedPostId) || null;
 
   useEffect(() => {
     fetchUserPosts();
   }, [fetchUserPosts]);
 
   const handleOpenDetail = async (post) => {
-    setSelectedPost(post);
+    setSelectedPostId(post._id);
     setIsDetailModalOpen(true);
 
     // Increment views in backend (optional for self, but usually counted)
@@ -110,7 +112,10 @@ const ManagePosts = () => {
 
       <PostDetailModal
         isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedPostId(null);
+        }}
         post={selectedPost}
       />
     </main>

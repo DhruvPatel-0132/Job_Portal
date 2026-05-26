@@ -352,7 +352,7 @@ const CommentSection = ({ postId, currentUserAvatar }) => {
       animate={{ opacity: 1, height: "auto" }}
       exit={{ opacity: 0, height: 0 }}
       transition={{ duration: 0.3 }}
-      className="px-4 pb-4 bg-white border-t border-gray-100"
+      className="px-4 pb-4 bg-white border-t border-gray-100 overflow-hidden"
       onClick={(e) => e.stopPropagation()}
     >
       {/* Comment Input */}
