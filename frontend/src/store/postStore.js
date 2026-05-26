@@ -71,24 +71,29 @@ const usePostStore = create((set, get) => ({
     try {
       const response = await api.patch(`/posts/${postId}/view`);
       if (response.data.success) {
-        // Update the view count in the local state for immediate feedback
+        const updater = (post) =>
+          post._id === postId
+            ? { ...post, stats: { ...post.stats, viewsCount: response.data.viewsCount } }
+            : post;
+
+        // Update Zustand store slices
         set((state) => ({
-          posts: state.posts.map((post) =>
-            post._id === postId
-              ? { ...post, stats: { ...post.stats, viewsCount: response.data.viewsCount } }
-              : post
-          ),
-          userPosts: state.userPosts.map((post) =>
-            post._id === postId
-              ? { ...post, stats: { ...post.stats, viewsCount: response.data.viewsCount } }
-              : post
-          ),
-          savedPosts: state.savedPosts.map((post) =>
-            post._id === postId
-              ? { ...post, stats: { ...post.stats, viewsCount: response.data.viewsCount } }
-              : post
-          ),
+          posts: state.posts.map(updater),
+          userPosts: state.userPosts.map(updater),
+          savedPosts: state.savedPosts.map(updater),
         }));
+
+        // Update React Query infinite-scroll cache (feed)
+        queryClient.setQueryData(["feedPosts"], (oldData) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page) => ({
+              ...page,
+              posts: page.posts.map(updater),
+            })),
+          };
+        });
       }
       return { success: true, viewsCount: response.data.viewsCount };
     } catch (error) {
