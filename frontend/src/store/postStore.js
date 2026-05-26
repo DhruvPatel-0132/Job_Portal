@@ -5,6 +5,7 @@ import { queryClient } from "../api/queryClient";
 const usePostStore = create((set, get) => ({
   posts: [],
   userPosts: [],
+  savedPosts: [],
   loading: false,
   error: null,
 
@@ -56,6 +57,16 @@ const usePostStore = create((set, get) => ({
     }
   },
 
+  fetchSavedPosts: async () => {
+    set({ loading: true });
+    try {
+      const response = await api.get("/posts/saved");
+      set({ savedPosts: response.data.posts, loading: false });
+    } catch (error) {
+      set({ error: error.response?.data?.message || "Failed to fetch saved posts", loading: false });
+    }
+  },
+
   incrementViews: async (postId) => {
     try {
       const response = await api.patch(`/posts/${postId}/view`);
@@ -68,6 +79,11 @@ const usePostStore = create((set, get) => ({
               : post
           ),
           userPosts: state.userPosts.map((post) =>
+            post._id === postId
+              ? { ...post, stats: { ...post.stats, viewsCount: response.data.viewsCount } }
+              : post
+          ),
+          savedPosts: state.savedPosts.map((post) =>
             post._id === postId
               ? { ...post, stats: { ...post.stats, viewsCount: response.data.viewsCount } }
               : post
@@ -91,6 +107,9 @@ const usePostStore = create((set, get) => ({
         userPosts: state.userPosts.map((post) =>
           post._id === postId ? response.data.post : post
         ),
+        savedPosts: state.savedPosts.map((post) =>
+          post._id === postId ? response.data.post : post
+        ),
         loading: false,
       }));
       return { success: true, post: response.data.post };
@@ -108,6 +127,7 @@ const usePostStore = create((set, get) => ({
       set((state) => ({
         posts: state.posts.filter((post) => post._id !== postId),
         userPosts: state.userPosts.filter((post) => post._id !== postId),
+        savedPosts: state.savedPosts.filter((post) => post._id !== postId),
         loading: false,
       }));
 
@@ -140,6 +160,9 @@ const usePostStore = create((set, get) => ({
         userPosts: state.userPosts.map((post) =>
           post._id === postId ? { ...post, isArchived: response.data.isArchived } : post
         ),
+        savedPosts: state.savedPosts.map((post) =>
+          post._id === postId ? { ...post, isArchived: response.data.isArchived } : post
+        ),
         loading: false,
       }));
       return { success: true, isArchived: response.data.isArchived };
@@ -170,6 +193,19 @@ const usePostStore = create((set, get) => ({
               : post
           ),
           userPosts: state.userPosts.map((post) =>
+            post._id === postId
+              ? {
+                  ...post,
+                  stats: {
+                    ...post.stats,
+                    likesCount: response.data.likesCount,
+                    likedBy: response.data.likedBy,
+                    userReaction: response.data.userReaction,
+                  },
+                }
+              : post
+          ),
+          savedPosts: state.savedPosts.map((post) =>
             post._id === postId
               ? {
                   ...post,
@@ -245,6 +281,9 @@ const usePostStore = create((set, get) => ({
                 }
               : post
           ),
+          savedPosts: response.data.isSaved 
+            ? state.savedPosts // if saved, ideally we'd fetch or append, but appending requires full post object. Best to just let it be or remove if unsaved.
+            : state.savedPosts.filter((post) => post._id !== postId),
         }));
         
         // Update React Query cache
@@ -293,6 +332,18 @@ const usePostStore = create((set, get) => ({
           : post
       ),
       userPosts: state.userPosts.map((post) =>
+        post._id === postId
+          ? {
+              ...post,
+              stats: {
+                ...post.stats,
+                likesCount,
+                likedBy,
+              },
+            }
+          : post
+      ),
+      savedPosts: state.savedPosts.map((post) =>
         post._id === postId
           ? {
               ...post,

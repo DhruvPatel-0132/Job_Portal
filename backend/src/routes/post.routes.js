@@ -4,6 +4,7 @@ const {
   createPostController,
   getPostsController,
   getUserPostsController,
+  getSavedPostsController,
   incrementPostViewsController,
   updatePostController,
   deletePostController,
@@ -21,6 +22,9 @@ router.get("/", authMiddleware, getPostsController);
 
 // Get my posts
 router.get("/me", authMiddleware, getUserPostsController);
+
+// Get my saved posts
+router.get("/saved", authMiddleware, getSavedPostsController);
 
 // Edit a post
 router.put("/:id", authMiddleware, updatePostController);

@@ -284,6 +284,77 @@ const getUserPosts = async (userId, requestingUserId = null) => {
   }
 };
 
+const getSavedPosts = async (userId, requestingUserId = null, limit = 15, cursor = null) => {
+  try {
+    let dbQuery = { user: userId };
+
+    if (cursor) {
+      dbQuery._id = { $lt: cursor };
+    }
+
+    const savedPosts = await SavedPost.find(dbQuery)
+      .sort({ _id: -1 })
+      .limit(limit + 1)
+      .populate({
+        path: "post",
+        match: { isDeleted: { $ne: true } },
+        populate: [
+          { path: "author", select: "firstName lastName name logo avatar" },
+          { path: "referenceId" }
+        ]
+      })
+      .lean();
+
+    const hasMore = savedPosts.length > limit;
+    if (hasMore) {
+      savedPosts.pop();
+    }
+
+    const nextCursor = savedPosts.length > 0 ? savedPosts[savedPosts.length - 1]._id.toString() : null;
+
+    // Extract posts that are not null (i.e. not deleted)
+    let posts = savedPosts.map(sp => sp.post).filter(p => p != null);
+
+    // Attach userReaction and isSaved for the requesting user
+    if (requestingUserId) {
+      const postIds = posts.map(p => p._id);
+      const [reactions, userSavedPosts] = await Promise.all([
+        Reaction.find({ post: { $in: postIds }, user: requestingUserId }).select("post reactionType"),
+        SavedPost.find({ post: { $in: postIds }, user: requestingUserId }).select("post")
+      ]);
+      const reactionMap = {};
+      reactions.forEach(r => { reactionMap[r.post.toString()] = r.reactionType; });
+      const savedMap = new Set(userSavedPosts.map(s => s.post.toString()));
+
+      posts.forEach(p => {
+        p.stats = p.stats || {};
+        p.stats.userReaction = reactionMap[p._id.toString()] || null;
+        p.stats.isSaved = savedMap.has(p._id.toString());
+      });
+    }
+
+    return {
+      status: 200,
+      response: {
+        success: true,
+        posts,
+        nextCursor,
+        hasMore,
+      },
+    };
+  } catch (error) {
+    console.error("Get Saved Posts Service Error:", error);
+    return {
+      status: 500,
+      response: {
+        success: false,
+        message: "Failed to fetch saved posts",
+        error: error.message,
+      },
+    };
+  }
+};
+
 const incrementPostViews = async (postId, userId) => {
   try {
     const post = await Post.findOneAndUpdate(
@@ -622,6 +693,7 @@ module.exports = {
   createPost,
   getPosts,
   getUserPosts,
+  getSavedPosts,
   incrementPostViews,
   updatePost,
   deletePost,
