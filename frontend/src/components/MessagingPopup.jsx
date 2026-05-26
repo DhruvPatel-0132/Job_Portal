@@ -19,7 +19,7 @@ const MessagingPopup = () => {
     setActiveConversation, 
     onlineUsers 
   } = useMessageStore();
-  const { profile } = useAuthStore();
+  const { profile, company } = useAuthStore();
 
   useEffect(() => {
     if (isOpen) {
@@ -71,7 +71,7 @@ const MessagingPopup = () => {
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <img
-                    src={profile?.avatar || "/avatar.svg"}
+                    src={profile?.avatar || company?.logo || "/avatar.svg"}
                     alt="Me"
                     referrerPolicy="no-referrer"
                     onError={(e) => {

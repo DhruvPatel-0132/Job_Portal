@@ -12,6 +12,7 @@ import Jobs from "./pages/Jobs";
 import Onboarding from "./pages/Onboarding";
 import MainLayout from "./components/MainLayout";
 import ManagePosts from "./pages/ManagePosts";
+import SavedPosts from "./pages/SavedPosts";
 
 /* ✅ USE ZUSTAND */
 import { useAuthStore } from "./store/authStore";
@@ -81,6 +82,7 @@ export default function App() {
         <Route path="/notification" element={<NotificationPage />} />
         <Route path="/network" element={<NetworkRouteWrapper />} />
         <Route path="/manage-posts" element={<ManagePosts />} />
+        <Route path="/saved-posts" element={<SavedPosts />} />
       </Route>
     </Routes>
   );
