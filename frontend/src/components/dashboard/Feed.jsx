@@ -23,7 +23,7 @@ const Feed = () => {
   const [initialType, setInitialType] = useState("regular");
 
   // Post Detail Modal State
-  const [selectedPost, setSelectedPost] = useState(null);
+  const [selectedPostId, setSelectedPostId] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const fetchFeedPosts = async ({ pageParam = null }) => {
@@ -52,9 +52,10 @@ const Feed = () => {
   );
 
   const posts = data?.pages.flatMap((page) => page.posts) || [];
+  const selectedPost = posts.find((p) => p._id === selectedPostId) || null;
 
   const handleOpenDetail = async (post) => {
-    setSelectedPost(post);
+    setSelectedPostId(post._id);
     setIsDetailModalOpen(true);
 
     // Increment views in backend
@@ -289,7 +290,10 @@ const Feed = () => {
       {/* Post Detail Modal */}
       <PostDetailModal
         isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedPostId(null);
+        }}
         post={selectedPost}
       />
     </div>

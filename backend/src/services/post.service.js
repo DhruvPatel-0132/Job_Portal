@@ -486,6 +486,7 @@ const archivePost = async (postId, userId) => {
 
 const toggleReaction = async (postId, userId, reactionType = "like") => {
   try {
+    const { emitToAll } = require("../config/socket");
     const post = await Post.findById(postId);
     if (!post) {
       return { status: 404, response: { success: false, message: "Post not found" } };
@@ -500,6 +501,13 @@ const toggleReaction = async (postId, userId, reactionType = "like") => {
         post.stats.likesCount = Math.max(0, post.stats.likesCount - 1);
         post.stats.likedBy = post.stats.likedBy.filter(id => id.toString() !== userId.toString());
         await post.save();
+
+        emitToAll("post_reaction_updated", {
+          postId: post._id.toString(),
+          likesCount: post.stats.likesCount,
+          likedBy: post.stats.likedBy,
+        });
+
         return {
           status: 200,
           response: { success: true, message: "Reaction removed", likesCount: post.stats.likesCount, likedBy: post.stats.likedBy, userReaction: null },
@@ -508,6 +516,13 @@ const toggleReaction = async (postId, userId, reactionType = "like") => {
         // Change reaction
         existingReaction.reactionType = reactionType;
         await existingReaction.save();
+
+        emitToAll("post_reaction_updated", {
+          postId: post._id.toString(),
+          likesCount: post.stats.likesCount,
+          likedBy: post.stats.likedBy,
+        });
+
         return {
           status: 200,
           response: { success: true, message: "Reaction updated", likesCount: post.stats.likesCount, likedBy: post.stats.likedBy, userReaction: reactionType },
@@ -521,6 +536,13 @@ const toggleReaction = async (postId, userId, reactionType = "like") => {
         post.stats.likedBy.push(userId);
       }
       await post.save();
+
+      emitToAll("post_reaction_updated", {
+        postId: post._id.toString(),
+        likesCount: post.stats.likesCount,
+        likedBy: post.stats.likedBy,
+      });
+
       return {
         status: 201,
         response: { success: true, message: "Reaction added", likesCount: post.stats.likesCount, likedBy: post.stats.likedBy, userReaction: reactionType },

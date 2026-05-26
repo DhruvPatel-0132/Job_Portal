@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import api from "../api/axios";
+import { queryClient } from "../api/queryClient";
 
 const usePostStore = create((set, get) => ({
   posts: [],
@@ -153,6 +154,7 @@ const usePostStore = create((set, get) => ({
     try {
       const response = await api.post(`/posts/${postId}/react`, { reactionType });
       if (response.data.success) {
+        // Update Zustand store
         set((state) => ({
           posts: state.posts.map((post) =>
             post._id === postId
@@ -181,12 +183,89 @@ const usePostStore = create((set, get) => ({
               : post
           ),
         }));
+
+        // Update React Query cache
+        queryClient.setQueryData(["feedPosts"], (oldData) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page) => ({
+              ...page,
+              posts: page.posts.map((post) =>
+                post._id === postId
+                  ? {
+                      ...post,
+                      stats: {
+                        ...post.stats,
+                        likesCount: response.data.likesCount,
+                        likedBy: response.data.likedBy,
+                        userReaction: response.data.userReaction,
+                      },
+                    }
+                  : post
+              ),
+            })),
+          };
+        });
       }
       return response.data;
     } catch (error) {
       console.error("Failed to toggle reaction:", error);
       return { success: false };
     }
+  },
+
+  updateReactionLocally: (postId, likesCount, likedBy) => {
+    // Update Zustand store
+    set((state) => ({
+      posts: state.posts.map((post) =>
+        post._id === postId
+          ? {
+              ...post,
+              stats: {
+                ...post.stats,
+                likesCount,
+                likedBy,
+              },
+            }
+          : post
+      ),
+      userPosts: state.userPosts.map((post) =>
+        post._id === postId
+          ? {
+              ...post,
+              stats: {
+                ...post.stats,
+                likesCount,
+                likedBy,
+              },
+            }
+          : post
+      ),
+    }));
+
+    // Update React Query cache
+    queryClient.setQueryData(["feedPosts"], (oldData) => {
+      if (!oldData) return oldData;
+      return {
+        ...oldData,
+        pages: oldData.pages.map((page) => ({
+          ...page,
+          posts: page.posts.map((post) =>
+            post._id === postId
+              ? {
+                  ...post,
+                  stats: {
+                    ...post.stats,
+                    likesCount,
+                    likedBy,
+                  },
+                }
+              : post
+          ),
+        })),
+      };
+    });
   },
 
 }));
