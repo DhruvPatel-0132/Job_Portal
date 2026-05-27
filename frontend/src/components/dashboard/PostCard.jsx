@@ -22,6 +22,7 @@ import { useAuthStore } from "../../store/authStore";
 import usePostStore from "../../store/postStore";
 import PostModal from "../Post";
 import CommentSection from "../Post/CommentSection";
+import ConfirmDialog from "../ui/ConfirmDialog";
 
 const PostCard = ({ post, onOpen }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -29,6 +30,7 @@ const PostCard = ({ post, onOpen }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const menuRef = useRef(null);
   const reactionTimeoutRef = useRef(null);
   const cardRef = useRef(null);
@@ -83,11 +85,14 @@ const PostCard = ({ post, onOpen }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleDelete = async () => {
-    if (window.confirm("Are you sure you want to delete this post?")) {
-      await deletePost(post._id);
-    }
+  const handleDelete = () => {
+    setIsDeleteDialogOpen(true);
     setShowMenu(false);
+  };
+
+  const confirmDelete = async () => {
+    await deletePost(post._id);
+    setIsDeleteDialogOpen(false);
   };
 
   const handleArchive = async () => {
@@ -767,6 +772,18 @@ const PostCard = ({ post, onOpen }) => {
         role={user?.role}
         profile={userProfile}
         company={userCompany}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Post"
+        description="Are you sure you want to delete this post? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
       />
     </>
   );

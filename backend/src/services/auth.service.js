@@ -211,14 +211,14 @@ const googleLoginUser = async (idToken) => {
 
   // 🟡 EXISTING USER
   if (user) {
-    if (user.provider === "local" && user.password) {
-      return {
-        status: 400,
-        response: {
-          success: false,
-          message: "Account exists with email/password login",
-        },
-      };
+    // If the user has a local account, link the Google ID and allow login
+    if (user.provider === "local" || !user.googleId) {
+      user.googleId = sub;
+      // We can optionally keep the provider as 'local' or change it to 'google' or 'both'.
+      // For now, we just ensure googleId is saved.
+      user.isVerified = true;
+      if (!user.avatar && picture) user.avatar = picture;
+      await user.save();
     }
   }
 

@@ -22,7 +22,10 @@ const useSocketStore = create((set, get) => ({
     socket.on("notification", (notification) => {
       import("./notificationStore").then(({ useNotificationStore }) => {
         useNotificationStore.getState().fetchUnreadCount();
-        useNotificationStore.getState().fetchNotifications();
+        // We only prepend to avoid overwriting category filters if the user is viewing a specific category
+        useNotificationStore.setState((state) => ({
+          notifications: [notification, ...state.notifications]
+        }));
       });
       import("./networkStore").then(({ useNetworkStore }) => {
         useNetworkStore.getState().fetchPendingIncomingCount();
