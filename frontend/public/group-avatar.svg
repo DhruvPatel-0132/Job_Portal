@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="100" height="100">
+  <rect width="100%" height="100%" fill="#eef3f8" rx="12"/>
+  <g fill="#0a66c2">
+    <!-- Center Person -->
+    <circle cx="12" cy="9" r="3" />
+    <path d="M12 13.5c-2.8 0-5 1.8-5 4v0.5h10v-0.5c0-2.2-2.2-4-5-4z" />
+    <!-- Left Person -->
+    <circle cx="7.5" cy="10.5" r="2.2" fill="#3585d4" />
+    <path d="M7.5 14c-1.8 0-3.3 1.2-3.3 2.7v0.3h6.6v-0.3c0-1.5-1.5-2.7-3.3-2.7z" fill="#3585d4" opacity="0.85" />
+    <!-- Right Person -->
+    <circle cx="16.5" cy="10.5" r="2.2" fill="#3585d4" />
+    <path d="M16.5 14c-1.8 0-3.3 1.2-3.3 2.7v0.3h6.6v-0.3c0-1.5-1.5-2.7-3.3-2.7z" fill="#3585d4" opacity="0.85" />
+  </g>
+</svg>
