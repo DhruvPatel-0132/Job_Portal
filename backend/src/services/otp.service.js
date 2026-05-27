@@ -4,8 +4,8 @@ function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// SAVE OTP (30 sec expiry)
-async function setOTP(email) {
+// SAVE OTP
+async function setOTP(email, expiryInSeconds = 30) {
   const otp = generateOTP();
 
   await Otp.findOneAndUpdate(
@@ -13,7 +13,7 @@ async function setOTP(email) {
   {
     email,
     otp,
-    expiresAt: new Date(Date.now() + 30 * 1000),
+    expiresAt: new Date(Date.now() + expiryInSeconds * 1000),
   },
   {
     upsert: true,

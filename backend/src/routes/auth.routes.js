@@ -1,7 +1,17 @@
 const express = require("express");
 const router = express.Router();
 
-const { login, register, googleLogin, logoutController, refresh } = require("../controllers/auth.controller");
+const { 
+  login, 
+  register, 
+  googleLogin, 
+  logoutController, 
+  refresh,
+  validatePassword,
+  sendPasswordOtp,
+  verifyPasswordOtp,
+  changePassword 
+} = require("../controllers/auth.controller");
 const { getMe, getAllUsers, updateOnboarding, updateRole } = require("../controllers/user.controller");
 const authMiddleware = require("../middleware/auth.middleware");
 
@@ -17,5 +27,11 @@ router.put("/update-role", authMiddleware, updateRole);
 router.post("/google", googleLogin);
 router.post("/logout", logoutController);
 router.post("/refresh-token", refresh);
+
+// Change password flow
+router.post("/validate-password", authMiddleware, validatePassword);
+router.post("/send-otp", authMiddleware, sendPasswordOtp);
+router.post("/verify-otp", authMiddleware, verifyPasswordOtp);
+router.post("/change-password", authMiddleware, changePassword);
 
 module.exports = router;
