@@ -22,6 +22,12 @@ const conversationSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    groupAdmins: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      }
+    ],
     groupAdmin: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
