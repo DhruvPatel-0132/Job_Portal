@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Send, Loader2, Trash2, CornerDownRight, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
@@ -320,6 +320,7 @@ const CommentItem = ({ comment, postId, currentUserAvatar, currentUserId }) => {
 const CommentSection = ({ postId, currentUserAvatar }) => {
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const commentsListRef = useRef(null);
   const { user, profile, company } = useAuthStore();
   const { commentsByPost, fetchComments, addComment } = useCommentStore();
 
@@ -332,6 +333,13 @@ const CommentSection = ({ postId, currentUserAvatar }) => {
       fetchComments(postId, 1);
     }
   }, [postId, postCommentsData, fetchComments]);
+
+  // Auto-scroll to top (newest comment) whenever comments are added
+  useEffect(() => {
+    if (commentsListRef.current && comments.length > 0) {
+      commentsListRef.current.scrollTop = 0;
+    }
+  }, [comments.length]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -388,7 +396,10 @@ const CommentSection = ({ postId, currentUserAvatar }) => {
             <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
           </div>
         ) : comments.length > 0 ? (
-          <div className="max-h-[400px] overflow-y-auto custom-scrollbar pr-1 pb-2">
+          <div
+            ref={commentsListRef}
+            className="max-h-[252px] overflow-y-auto hide-scrollbar pr-1 pb-2"
+          >
             <AnimatePresence>
               {comments.map((comment) => (
                 <motion.div
