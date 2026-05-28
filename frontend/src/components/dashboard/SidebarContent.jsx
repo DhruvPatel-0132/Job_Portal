@@ -15,14 +15,14 @@ const SidebarContent = () => {
     fetchNetworkingData();
   }, [fetchUser, fetchNetworkingData]);
   return (
-    <div className="w-full lg:w-[225px] flex-shrink-0 self-start lg:sticky lg:top-[72px]">
+    <>
       {/* 🔥 PASS PROFILE INSTEAD OF USER */}
       {user?.role === "company" ? (
         <SidebarCompanyProfile profile={profile} />
       ) : (
         <SidebarProfile profile={profile} />
       )}
-    </div>
+    </>
   );
 };
 

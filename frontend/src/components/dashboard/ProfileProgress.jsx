@@ -1,9 +1,9 @@
 import React from "react";
-import { motion } from "framer-motion";
-import { UserCheck, ArrowRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { UserCheck, ArrowRight, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const ProfileProgress = ({ profile }) => {
+const ProfileProgress = ({ profile, onHide, isSidebar, onShow }) => {
   const navigate = useNavigate();
 
   const calculateProgress = () => {
@@ -124,6 +124,43 @@ const ProfileProgress = ({ profile }) => {
 
   if (score === 100) return null;
 
+  // ── Small sidebar-only progress bar (no suggestions) ──
+  if (isSidebar) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 overflow-hidden"
+      >
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1.5">
+            <div className={`w-5 h-5 rounded-md ${colors.bg} flex items-center justify-center`}>
+              <UserCheck size={12} className={colors.icon} />
+            </div>
+            <span className="text-xs font-semibold text-gray-700">Profile</span>
+          </div>
+          <span className={`text-xs font-bold ${colors.text}`}>{score}%</span>
+        </div>
+        <div className="relative h-1.5 bg-gray-100 rounded-full overflow-hidden mb-2">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${score}%` }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            className={`absolute top-0 left-0 h-full bg-gradient-to-r ${colors.bar} rounded-full`}
+          />
+        </div>
+        <button
+          onClick={onShow}
+          className="flex items-center justify-center gap-1.5 w-full py-1.5 text-[11px] font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"
+        >
+          <Eye size={12} />
+          Show Full Progress
+        </button>
+      </motion.div>
+    );
+  }
+
+  // ── Full progress bar (main content area) ──
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -140,9 +177,19 @@ const ProfileProgress = ({ profile }) => {
             <p className="text-[11px] text-gray-500">Profiles with {score}% completion get more views</p>
           </div>
         </div>
-        <span className={`text-sm font-bold ${colors.text} ${colors.bg} px-2 py-0.5 rounded-md`}>
-          {score}%
-        </span>
+        <div className="flex items-center gap-2">
+          <span className={`text-sm font-bold ${colors.text} ${colors.bg} px-2 py-0.5 rounded-md`}>
+            {score}%
+          </span>
+          {onHide && (
+            <button 
+              onClick={onHide}
+              className="text-xs font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-100 px-2 py-1 rounded-md transition-colors cursor-pointer"
+            >
+              Hide
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden mb-4">
