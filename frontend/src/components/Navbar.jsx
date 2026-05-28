@@ -224,12 +224,12 @@ const Navbar = () => {
                     <p className="px-4 pt-2 pb-1 text-xs font-semibold text-gray-900">
                       Account
                     </p>
-                    <a
-                      href="#"
+                    <Link
+                      to="/settings-privacy"
                       className="block px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
                     >
                       Settings &amp; Privacy
-                    </a>
+                    </Link>
                     <Link
                       to="/manage-posts"
                       className="block px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100"

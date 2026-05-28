@@ -20,6 +20,7 @@ import useSocketStore from "./store/socketStore";
 import NotificationPage from "./pages/NotificationPage";
 import MyNetwork from "./pages/MyNetwork";
 import { useEffect } from "react";
+import SettingsPrivacy from "./pages/SettingsPrivacy";
 
 /* 🔥 PRIVATE ROUTE (ZUSTAND) */
 function PrivateRoute({ children }) {
@@ -83,6 +84,7 @@ export default function App() {
         <Route path="/network" element={<NetworkRouteWrapper />} />
         <Route path="/manage-posts" element={<ManagePosts />} />
         <Route path="/saved-posts" element={<SavedPosts />} />
+        <Route path="/settings-privacy" element={<SettingsPrivacy />} />
       </Route>
     </Routes>
   );

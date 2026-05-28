@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import api from "../api/axios";
 import usePostStore from "./postStore";
+import { queryClient } from "../api/queryClient";
 
 const useCommentStore = create((set, get) => ({
   commentsByPost: {}, // { postId: { comments: [], page: 1, total: 0, loading: false } }
@@ -79,6 +80,22 @@ const useCommentStore = create((set, get) => ({
           } : p),
         });
 
+        // Update React Query feed cache so the counter refreshes without a reload
+        queryClient.setQueryData(["feedPosts"], (oldData) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page) => ({
+              ...page,
+              posts: page.posts.map((p) =>
+                p._id === postId
+                  ? { ...p, stats: { ...p.stats, commentsCount: (p.stats?.commentsCount || 0) + 1 } }
+                  : p
+              ),
+            })),
+          };
+        });
+
         return { success: true };
       }
     } catch (error) {
@@ -124,6 +141,22 @@ const useCommentStore = create((set, get) => ({
           savedPosts: savedPosts.map(p => p._id === postId ? {
             ...p, stats: { ...p.stats, commentsCount: Math.max(0, (p.stats?.commentsCount || 1) - 1) }
           } : p),
+        });
+
+        // Update React Query feed cache
+        queryClient.setQueryData(["feedPosts"], (oldData) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page) => ({
+              ...page,
+              posts: page.posts.map((p) =>
+                p._id === postId
+                  ? { ...p, stats: { ...p.stats, commentsCount: Math.max(0, (p.stats?.commentsCount || 1) - 1) } }
+                  : p
+              ),
+            })),
+          };
         });
 
         return { success: true };

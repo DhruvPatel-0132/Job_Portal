@@ -69,7 +69,7 @@ const PostDetailModal = ({ isOpen, onClose, post }) => {
         if (!post.referenceId) return null;
         const job = post.referenceId;
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 ">
             <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100">
               <h2 className="text-2xl font-bold text-blue-900 mb-4">{job.title}</h2>
               <div className="grid grid-cols-2 gap-4 text-sm font-semibold text-blue-800">
