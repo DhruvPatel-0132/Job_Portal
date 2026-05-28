@@ -108,11 +108,13 @@ module.exports = (io, socket) => {
       // Find or create conversation
       let conversation = await Conversation.findOne({
         participants: { $all: [userId, receiverId] },
+        type: "private",
       });
 
       if (!conversation) {
         conversation = await Conversation.create({
           participants: [userId, receiverId],
+          type: "private",
         });
       }
 
@@ -141,14 +143,28 @@ module.exports = (io, socket) => {
   // Handle message seen
   socket.on("messageSeen", async ({ conversationId, senderId }) => {
     try {
-      await Message.updateMany(
-        {
-          conversationId,
-          senderId,
-          isSeen: false,
-        },
-        { $set: { isSeen: true } }
-      );
+      const conversation = await Conversation.findById(conversationId);
+      if (!conversation) return;
+
+      if (conversation.type === "group") {
+        await Message.updateMany(
+          {
+            conversationId,
+            senderId: { $ne: userId },
+            seenBy: { $ne: userId },
+          },
+          { $addToSet: { seenBy: userId } }
+        );
+      } else {
+        await Message.updateMany(
+          {
+            conversationId,
+            senderId,
+            isSeen: false,
+          },
+          { $set: { isSeen: true } }
+        );
+      }
 
       // Notify the sender that their messages were seen
       io.to(senderId).emit("messagesSeen", {

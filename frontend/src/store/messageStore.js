@@ -84,9 +84,10 @@ export const useMessageStore = create((set, get) => ({
     const conversationToSet = fullConv ? {
       ...user,
       participants: fullConv.participants,
-      groupAdmin: fullConv.groupAdmin,
+      groupAdmins: fullConv.groupAdmins,
       type: fullConv.type || user.type,
-    } : user;
+      openedAt: Date.now(),
+    } : { ...user, openedAt: Date.now() };
 
     set({ activeConversation: conversationToSet, isChatOpen: true, messages: [] });
     try {
@@ -169,6 +170,31 @@ export const useMessageStore = create((set, get) => ({
     }));
   },
 
+  editGroupDetails: async (groupId, name, avatar) => {
+    try {
+      const res = await api.put(`/messages/groups/${groupId}`, { name, avatar });
+      if (res.data.success) {
+        get().fetchConversations();
+        const active = get().activeConversation;
+        if (active && active._id === groupId) {
+          set({
+            activeConversation: {
+              ...active,
+              fullName: res.data.group.groupName,
+              avatar: res.data.group.groupAvatar || "/group-avatar.svg",
+              groupName: res.data.group.groupName,
+              groupAvatar: res.data.group.groupAvatar,
+            }
+          });
+        }
+        return res.data;
+      }
+    } catch (err) {
+      console.error("editGroupDetails error:", err);
+      throw err;
+    }
+  },
+
   exitGroup: async (groupId) => {
     try {
       const res = await api.post(`/messages/groups/${groupId}/exit`);
@@ -193,6 +219,116 @@ export const useMessageStore = create((set, get) => ({
     } catch (err) {
       console.error("exitGroup error:", err);
       return false;
+    }
+  },
+
+  addGroupMembers: async (groupId, participantIds) => {
+    try {
+      const res = await api.post(`/messages/groups/${groupId}/members`, { participantIds });
+      if (res.data.success) {
+        get().fetchConversations();
+        const active = get().activeConversation;
+        if (active && active._id === groupId) {
+          set({
+            activeConversation: {
+              ...active,
+              participants: res.data.group.participants,
+            },
+          });
+        }
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error("addGroupMembers error:", err);
+      throw err;
+    }
+  },
+
+  removeGroupMember: async (groupId, memberId) => {
+    try {
+      const res = await api.delete(`/messages/groups/${groupId}/members/${memberId}`);
+      if (res.data.success) {
+        get().fetchConversations();
+        const active = get().activeConversation;
+        if (active && active._id === groupId) {
+          set({
+            activeConversation: {
+              ...active,
+              participants: active.participants ? active.participants.filter(p => p !== memberId) : [],
+            },
+          });
+        }
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error("removeGroupMember error:", err);
+      throw err;
+    }
+  },
+
+  deleteGroup: async (groupId) => {
+    try {
+      const res = await api.delete(`/messages/groups/${groupId}`);
+      if (res.data.success) {
+        get().fetchConversations();
+        const active = get().activeConversation;
+        if (active && active._id === groupId) {
+          set({ activeConversation: null, isChatOpen: false });
+        }
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error("deleteGroup error:", err);
+      throw err;
+    }
+  },
+
+  assignGroupAdmin: async (groupId, userId) => {
+    try {
+      const res = await api.post(`/messages/groups/${groupId}/admins/${userId}`);
+      if (res.data.success) {
+        get().fetchConversations();
+        const active = get().activeConversation;
+        if (active && active._id === groupId) {
+          set({
+            activeConversation: {
+              ...active,
+              groupAdmins: res.data.group.groupAdmins,
+            },
+          });
+        }
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error("assignGroupAdmin error:", err);
+      throw err;
+    }
+  },
+
+  removeGroupAdmin: async (groupId, userId) => {
+    try {
+      const res = await api.delete(`/messages/groups/${groupId}/admins/${userId}`);
+      if (res.data.success) {
+        get().fetchConversations();
+        const active = get().activeConversation;
+        if (active && active._id === groupId) {
+          set({
+            activeConversation: {
+              ...active,
+              groupAdmins: res.data.group.groupAdmins,
+            },
+          });
+        }
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error("removeGroupAdmin error:", err);
+      throw err;
     }
   }
 }));

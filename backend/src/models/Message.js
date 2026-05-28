@@ -25,6 +25,12 @@ const messageSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    seenBy: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      }
+    ],
     messageType: {
       type: String,
       enum: ["text", "system"],

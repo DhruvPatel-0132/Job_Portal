@@ -8,6 +8,10 @@ import {
   ChevronUp,
   Check,
   CheckCheck,
+  Users,
+  Settings,
+  LogOut,
+  Trash2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMessageStore } from "../store/messageStore";
@@ -15,6 +19,8 @@ import { useAuthStore } from "../store/authStore";
 import useSocketStore from "../store/socketStore";
 import SystemMessage from "./SystemMessage";
 import GroupMembersModal from "./GroupMembersModal";
+import EditGroupModal from "./EditGroupModal";
+import ConfirmDialog from "./ui/ConfirmDialog";
 
 const ChatWindow = () => {
   const {
@@ -26,6 +32,7 @@ const ChatWindow = () => {
     onlineUsers,
     isMessagingPopupOpen,
     exitGroup,
+    deleteGroup,
   } = useMessageStore();
   const { user } = useAuthStore();
   const { socket } = useSocketStore();
@@ -35,6 +42,9 @@ const ChatWindow = () => {
   const [isMinimized, setIsMinimized] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isMembersOpen, setIsMembersOpen] = useState(false);
+  const [isEditGroupOpen, setIsEditGroupOpen] = useState(false);
+  const [isExitGroupOpen, setIsExitGroupOpen] = useState(false);
+  const [isDeleteGroupOpen, setIsDeleteGroupOpen] = useState(false);
   const typingTimeoutRef = useRef(null);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
@@ -73,7 +83,7 @@ const ChatWindow = () => {
     if (activeConversation?._id) {
       setIsMinimized(false);
     }
-  }, [activeConversation?._id]);
+  }, [activeConversation?._id, activeConversation?.openedAt]);
 
   useEffect(() => {
     // Scroll to bottom when messages change
@@ -89,8 +99,37 @@ const ChatWindow = () => {
         }
       });
     }
+
+    if (socket && isGroup) {
+      socket.on("group:updated", (updatedGroup) => {
+        if (activeConversation && updatedGroup._id === activeConversation._id) {
+          useMessageStore.setState({
+            activeConversation: {
+              ...activeConversation,
+              fullName: updatedGroup.groupName,
+              avatar: updatedGroup.groupAvatar || "/group-avatar.svg",
+              groupName: updatedGroup.groupName,
+              groupAvatar: updatedGroup.groupAvatar,
+            },
+          });
+          useMessageStore.getState().fetchConversations();
+        }
+      });
+      socket.on("group:deleted", ({ conversationId }) => {
+        useMessageStore.getState().fetchConversations();
+        const active = useMessageStore.getState().activeConversation;
+        if (active && active._id === conversationId) {
+          useMessageStore.getState().closeChat();
+        }
+      });
+    }
+
     return () => {
-      if (socket) socket.off("userTyping");
+      if (socket) {
+        socket.off("userTyping");
+        socket.off("group:updated");
+        socket.off("group:deleted");
+      }
     };
   }, [socket, activeConversation, isGroup]);
 
@@ -136,11 +175,24 @@ const ChatWindow = () => {
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
   };
 
-  const handleExitGroup = async () => {
-    if (window.confirm("Are you sure you want to exit this group?")) {
-      setShowMenu(false);
-      await exitGroup(activeConversation._id);
-    }
+  const handleExitGroup = () => {
+    setIsExitGroupOpen(true);
+    setShowMenu(false);
+  };
+
+  const confirmExitGroup = async () => {
+    await exitGroup(activeConversation._id);
+    setIsExitGroupOpen(false);
+  };
+
+  const handleDeleteGroup = () => {
+    setIsDeleteGroupOpen(true);
+    setShowMenu(false);
+  };
+
+  const confirmDeleteGroup = async () => {
+    await deleteGroup(activeConversation._id);
+    setIsDeleteGroupOpen(false);
   };
 
   if (!isChatOpen || !activeConversation) return null;
@@ -148,6 +200,7 @@ const ChatWindow = () => {
   return (
     <AnimatePresence>
       <motion.div
+        key={activeConversation._id || 'chat-window'}
         initial={{ x: 500, opacity: 0, top: "20%" }}
         animate={{
           x: 0,
@@ -205,6 +258,7 @@ const ChatWindow = () => {
             <AnimatePresence>
               {!isMinimized && (
                 <motion.div
+                  key="chat-header-info"
                   initial={{ opacity: 0, width: 0 }}
                   animate={{ opacity: 1, width: "auto" }}
                   exit={{ opacity: 0, width: 0 }}
@@ -225,24 +279,35 @@ const ChatWindow = () => {
             </AnimatePresence>
           </div>
           {!isMinimized && (
-            <div className="flex items-center gap-0.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="flex items-center gap-0.5 flex-shrink-0"
+              onClick={(e) => e.stopPropagation()}
+            >
               {/* Three-Dot Menu (Group Only) */}
               {isGroupChat && (
                 <div className="relative">
                   <button
                     onClick={() => setShowMenu(!showMenu)}
                     className={`p-1.5 rounded-full transition-colors ${
-                      showMenu ? "bg-gray-100 text-[#0a66c2]" : "hover:bg-gray-100 text-gray-500"
+                      showMenu
+                        ? "bg-gray-100 text-[#0a66c2]"
+                        : "hover:bg-gray-100 text-gray-500"
                     }`}
                   >
                     <MoreVertical className="w-5 h-5" />
                   </button>
                   <AnimatePresence>
                     {showMenu && (
-                      <>
-                        <div className="fixed inset-0 z-20" onClick={() => setShowMenu(false)} />
-                        <motion.div
-                          initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      <div
+                        key="menu-overlay"
+                        className="fixed inset-0 z-20"
+                        onClick={() => setShowMenu(false)}
+                      />
+                    )}
+                    {showMenu && (
+                      <motion.div
+                        key="menu-dropdown"
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: -10, scale: 0.95 }}
                           transition={{ duration: 0.15 }}
@@ -254,19 +319,47 @@ const ChatWindow = () => {
                               setShowMenu(false);
                               setIsMembersOpen(true);
                             }}
-                            className="px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors font-semibold"
+                            className="px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors font-semibold flex items-center gap-2"
                           >
-                            See all group members
+                            <Users className="w-4 h-4 text-gray-500" />
+                            See all members
                           </button>
+                          {activeConversation.groupAdmins?.includes(
+                            user?._id,
+                          ) && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowMenu(false);
+                                setIsEditGroupOpen(true);
+                              }}
+                              className="px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors font-semibold flex items-center gap-2"
+                            >
+                              <Settings className="w-4 h-4 text-gray-500" />
+                              Edit Group
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={handleExitGroup}
-                            className="px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 transition-colors font-semibold border-t border-gray-100"
+                            className="px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors font-semibold flex items-center gap-2"
                           >
-                            Exit from group
+                            <LogOut className="w-4 h-4 text-gray-700" />
+                            Exit group
                           </button>
+                          {activeConversation.groupAdmins?.includes(
+                            user?._id,
+                          ) && (
+                            <button
+                              type="button"
+                              onClick={handleDeleteGroup}
+                              className="px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 transition-colors font-semibold border-t border-gray-100 flex items-center gap-2"
+                            >
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                              Delete Group
+                            </button>
+                          )}
                         </motion.div>
-                      </>
                     )}
                   </AnimatePresence>
                 </div>
@@ -323,7 +416,7 @@ const ChatWindow = () => {
               if (msg.messageType === "system") {
                 return (
                   <SystemMessage
-                    key={msg._id}
+                    key={`${msg._id || 'sys'}-${index}`}
                     message={msg.message}
                     isMe={msg.senderId === user?._id}
                   />
@@ -334,7 +427,7 @@ const ChatWindow = () => {
 
               return (
                 <div
-                  key={msg._id}
+                  key={`${msg._id || 'msg'}-${index}`}
                   className={`flex flex-col max-w-[80%] ${isMe ? "self-end" : "self-start"}`}
                 >
                   <div
@@ -359,7 +452,18 @@ const ChatWindow = () => {
                         <span>{formatTime(msg.createdAt)}</span>
                         {isMe && (
                           <span className="flex items-center">
-                            {msg.isSeen ? (
+                            {isGroup ? (
+                              <div className="flex items-center gap-0.5">
+                                <span className="text-[10px] text-gray-400 font-medium mr-0.5" title="Unread count">
+                                  {Math.max(0, (activeConversation.participants?.length || 1) - 1 - (msg.seenBy?.length || 0))}
+                                </span>
+                                {(msg.seenBy?.length || 0) >= Math.max(1, (activeConversation.participants?.length || 1) - 1) ? (
+                                  <CheckCheck className="w-3.5 h-3.5 text-[#4fc3f7]" />
+                                ) : (
+                                  <Check className="w-3.5 h-3.5 text-gray-400" />
+                                )}
+                              </div>
+                            ) : msg.isSeen ? (
                               <CheckCheck className="w-3.5 h-3.5 text-[#4fc3f7]" />
                             ) : isOnline ? (
                               <CheckCheck className="w-3.5 h-3.5" />
@@ -433,6 +537,38 @@ const ChatWindow = () => {
         isOpen={isMembersOpen}
         onClose={() => setIsMembersOpen(false)}
         groupId={activeConversation._id}
+        groupAdmins={activeConversation.groupAdmins}
+      />
+
+      {/* Edit Group Modal */}
+      <EditGroupModal
+        isOpen={isEditGroupOpen}
+        onClose={() => setIsEditGroupOpen(false)}
+        group={activeConversation}
+      />
+
+      {/* Exit Group Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={isExitGroupOpen}
+        onClose={() => setIsExitGroupOpen(false)}
+        onConfirm={confirmExitGroup}
+        title="Exit Group"
+        description={`Are you sure you want to exit "${activeConversation?.fullName}"? You won't be able to send or receive messages in this group unless re-added.`}
+        confirmText="Exit Group"
+        cancelText="Cancel"
+        type="danger"
+      />
+
+      {/* Delete Group Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={isDeleteGroupOpen}
+        onClose={() => setIsDeleteGroupOpen(false)}
+        onConfirm={confirmDeleteGroup}
+        title="Delete Group"
+        description={`Are you sure you want to delete this group? This action cannot be undone.`}
+        confirmText="Delete Group"
+        cancelText="Cancel"
+        type="danger"
       />
     </AnimatePresence>
   );

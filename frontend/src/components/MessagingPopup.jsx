@@ -13,18 +13,19 @@ import { useAuthStore } from "../store/authStore";
 import CreateGroupModal from "./CreateGroupModal";
 
 const MessagingPopup = () => {
-  const { 
-    isMessagingPopupOpen: isOpen, 
-    setMessagingPopupOpen: setIsOpen, 
-    conversations, 
-    fetchConversations, 
-    setActiveConversation, 
-    onlineUsers 
+  const {
+    isMessagingPopupOpen: isOpen,
+    setMessagingPopupOpen: setIsOpen,
+    conversations,
+    fetchConversations,
+    setActiveConversation,
+    onlineUsers,
   } = useMessageStore();
   const { profile, company } = useAuthStore();
 
   const [showDropdown, setShowDropdown] = useState(false);
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (isOpen) {
@@ -69,7 +70,7 @@ const MessagingPopup = () => {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="fixed top-0 right-0 h-screen w-[320px] bg-white shadow-[-5px_0_25px_rgba(0,0,0,0.15)] z-[100] flex flex-col font-sans border-l border-gray-200"
+            className="fixed top-0 right-0 h-screen w-[320px] bg-whitez shadow-[-5px_0_25px_rgba(0,0,0,0.15)] z-[100] flex flex-col font-sans border-l border-gray-200"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200 bg-white relative flex-shrink-0">
@@ -80,7 +81,7 @@ const MessagingPopup = () => {
                     alt="Me"
                     referrerPolicy="no-referrer"
                     onError={(e) => {
-                      e.target.onerror = null; 
+                      e.target.onerror = null;
                       e.target.src = "/avatar.svg";
                     }}
                     className="w-9 h-9 rounded-full border border-gray-200 object-cover"
@@ -96,13 +97,15 @@ const MessagingPopup = () => {
                 <button className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">
                   <MoreHorizontal className="w-4 h-4" />
                 </button>
-                
+
                 {/* Pencil / Edit button dropdown menu container */}
                 <div className="relative">
                   <button
                     onClick={() => setShowDropdown(!showDropdown)}
                     className={`p-1.5 rounded-full transition-colors ${
-                      showDropdown ? "bg-gray-100 text-[#0a66c2]" : "hover:bg-gray-100 text-gray-500"
+                      showDropdown
+                        ? "bg-gray-100 text-[#0a66c2]"
+                        : "hover:bg-gray-100 text-gray-500"
                     }`}
                   >
                     <Edit className="w-4 h-4" />
@@ -156,6 +159,8 @@ const MessagingPopup = () => {
                 <input
                   type="text"
                   placeholder="Search messages"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="bg-transparent border-none outline-none text-sm w-full placeholder-gray-600 text-gray-900"
                 />
               </div>
@@ -168,56 +173,88 @@ const MessagingPopup = () => {
                   No conversations yet. Start a chat with your connections!
                 </div>
               ) : (
-                conversations.map((conv) => {
-                  const isGroup = conv.type === "group";
-                  const isOnline = !isGroup && onlineUsers.includes(conv.otherParticipant?._id);
+                (() => {
+                  const filteredConversations = conversations.filter((conv) => {
+                    if (!searchQuery.trim()) return true;
+                    const name =
+                      conv.otherParticipant?.fullName?.toLowerCase() || "";
+                    return name.includes(searchQuery.toLowerCase());
+                  });
 
-                  return (
-                    <div
-                      key={conv._id}
-                      onClick={() => setActiveConversation(conv.otherParticipant)}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-none transition-colors"
-                    >
-                      <div className="relative flex-shrink-0">
-                        <img
-                          src={conv.otherParticipant?.avatar || "/avatar.svg"}
-                          alt={conv.otherParticipant?.fullName || "Chat Avatar"}
-                          referrerPolicy="no-referrer"
-                          onError={(e) => {
-                            const fallback = isGroup ? "/group-avatar.svg" : "/avatar.svg";
-                            if (!e.target.src.endsWith(fallback)) {
-                              e.target.src = fallback;
-                            }
-                          }}
-                          className="w-12 h-12 rounded-full border border-gray-200 object-cover"
-                        />
-                        {isOnline && (
-                          <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
-                        )}
+                  if (filteredConversations.length === 0) {
+                    return (
+                      <div className="p-6 text-center text-gray-500 text-sm">
+                        No matching conversations found.
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-baseline mb-0.5">
-                          <h4 className="text-[15px] font-semibold text-gray-900 truncate">
-                            {conv.otherParticipant?.fullName}
-                          </h4>
-                          <span className="text-[11px] text-gray-500">
-                            {conv.updatedAt ? new Date(conv.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : ""}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <p className={`text-[13px] truncate pr-2 ${conv.unreadCount > 0 ? "font-semibold text-gray-900" : "text-gray-500"}`}>
-                            {conv.lastMessage?.message || "No messages yet"}
-                          </p>
-                          {conv.unreadCount > 0 && (
-                            <span className="bg-[#0a66c2] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-                              {conv.unreadCount}
-                            </span>
+                    );
+                  }
+
+                  return filteredConversations.map((conv, index) => {
+                    const isGroup = conv.type === "group";
+                    const isOnline =
+                      !isGroup &&
+                      onlineUsers.includes(conv.otherParticipant?._id);
+
+                    return (
+                      <div
+                        key={`${conv._id || "conv"}-${index}`}
+                        onClick={() =>
+                          setActiveConversation(conv.otherParticipant)
+                        }
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-none transition-colors"
+                      >
+                        <div className="relative flex-shrink-0">
+                          <img
+                            src={conv.otherParticipant?.avatar || "/avatar.svg"}
+                            alt={
+                              conv.otherParticipant?.fullName || "Chat Avatar"
+                            }
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              const fallback = isGroup
+                                ? "/group-avatar.svg"
+                                : "/avatar.svg";
+                              if (!e.target.src.endsWith(fallback)) {
+                                e.target.src = fallback;
+                              }
+                            }}
+                            className="w-12 h-12 rounded-full border border-gray-200 object-cover"
+                          />
+                          {isOnline && (
+                            <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
                           )}
                         </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-baseline mb-0.5">
+                            <h4 className="text-[15px] font-semibold text-gray-900 truncate">
+                              {conv.otherParticipant?.fullName}
+                            </h4>
+                            <span className="text-[11px] text-gray-500">
+                              {conv.updatedAt
+                                ? new Date(conv.updatedAt).toLocaleDateString(
+                                    undefined,
+                                    { month: "short", day: "numeric" },
+                                  )
+                                : ""}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <p
+                              className={`text-[13px] truncate pr-2 ${conv.unreadCount > 0 ? "font-semibold text-gray-900" : "text-gray-500"}`}
+                            >
+                              {conv.lastMessage?.message || "No messages yet"}
+                            </p>
+                            {conv.unreadCount > 0 && (
+                              <span className="bg-[#0a66c2] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                                {conv.unreadCount}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })
+                    );
+                  });
+                })()
               )}
             </div>
           </motion.div>

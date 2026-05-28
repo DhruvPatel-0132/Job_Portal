@@ -5,6 +5,7 @@ import { useNetworkStore } from "../store/networkStore";
 import { useMessageStore } from "../store/messageStore";
 import useSocketStore from "../store/socketStore";
 import api from "../api/axios";
+import { uploadToCloudinary } from "../utils/cloudinary";
 
 const CreateGroupModal = ({ isOpen, onClose }) => {
   const { connections, fetchNetworkingData, isLoading: networkLoading } = useNetworkStore();
@@ -13,6 +14,7 @@ const CreateGroupModal = ({ isOpen, onClose }) => {
 
   const [groupName, setGroupName] = useState("");
   const [groupAvatar, setGroupAvatar] = useState("");
+  const [avatarFile, setAvatarFile] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedParticipants, setSelectedParticipants] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,14 +41,27 @@ const CreateGroupModal = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Image size must be less than 5MB");
+        return;
+      }
+      setAvatarFile(file);
+      setGroupAvatar(URL.createObjectURL(file));
+      setError("");
+    }
+  };
+
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!groupName.trim()) {
       setError("Please enter a group name");
       return;
     }
-    if (selectedParticipants.length === 0) {
-      setError("Please select at least one participant");
+    if (selectedParticipants.length < 2) {
+      setError("A group chat requires a minimum of three members (you and at least two others).");
       return;
     }
 
@@ -54,9 +69,15 @@ const CreateGroupModal = ({ isOpen, onClose }) => {
     setError("");
 
     try {
+      let avatarUrl = "";
+      if (avatarFile) {
+        const uploadResult = await uploadToCloudinary(avatarFile, "group_avatar", "image");
+        avatarUrl = uploadResult.url;
+      }
+
       const res = await api.post("/messages/groups", {
         name: groupName.trim(),
-        avatar: groupAvatar.trim() || "/group-avatar.svg",
+        avatar: avatarUrl || "/group-avatar.svg",
         participantIds: selectedParticipants,
       });
 
@@ -81,6 +102,7 @@ const CreateGroupModal = ({ isOpen, onClose }) => {
         // Clear and close
         setGroupName("");
         setGroupAvatar("");
+        setAvatarFile(null);
         setSelectedParticipants([]);
         onClose();
       }
@@ -152,17 +174,30 @@ const CreateGroupModal = ({ isOpen, onClose }) => {
               </div>
 
               {/* Group Avatar URL Input */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider flex items-center gap-1.5">
-                  <ImageIcon className="w-3.5 h-3.5 text-gray-400" /> Group Avatar (URL - Optional)
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://example.com/avatar.jpg"
-                  value={groupAvatar}
-                  onChange={(e) => setGroupAvatar(e.target.value)}
-                  className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 outline-none focus:border-[#0a66c2] focus:ring-1 focus:ring-[#0a66c2] transition-all placeholder-gray-400 font-medium"
-                />
+              <div className="flex flex-col items-center gap-3">
+                <div className="relative">
+                  <img
+                    src={groupAvatar || "/group-avatar.svg"}
+                    alt="Group Avatar"
+                    className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                    onError={(e) => {
+                      const fallback = "/group-avatar.svg";
+                      if (!e.target.src.endsWith(fallback)) {
+                        e.target.src = fallback;
+                      }
+                    }}
+                  />
+                  <label className="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-md border border-gray-200 text-gray-600 hover:text-[#0a66c2] transition-colors cursor-pointer">
+                    <ImageIcon className="w-4 h-4" />
+                    <input
+                      type="file"
+                      onChange={handleFileChange}
+                      accept="image/*"
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+                <span className="text-xs text-gray-500 font-medium">Upload Group Image</span>
               </div>
 
               {/* Participants Selector */}
@@ -260,7 +295,7 @@ const CreateGroupModal = ({ isOpen, onClose }) => {
               </button>
               <button
                 type="submit"
-                disabled={isSubmitting || !groupName.trim() || selectedParticipants.length === 0}
+                disabled={isSubmitting || !groupName.trim() || selectedParticipants.length < 2}
                 className="px-5 py-2.5 bg-[#0a66c2] text-white rounded-xl text-sm font-semibold hover:bg-[#004182] disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 shadow-sm"
               >
                 {isSubmitting ? (

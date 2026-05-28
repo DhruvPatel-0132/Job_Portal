@@ -59,7 +59,13 @@ export const useNetworkStore = create((set, get) => ({
     try {
       const res = await api.get("/requests/pending");
       if (res.data.success) {
-        set({ pendingIncomingCount: res.data.incoming?.length || 0 });
+        set((state) => ({ 
+          pendingIncomingCount: res.data.incoming?.length || 0,
+          requests: {
+            ...state.requests,
+            incoming: res.data.incoming || []
+          }
+        }));
       }
     } catch (error) {
       console.error("fetchPendingIncomingCount error:", error);
