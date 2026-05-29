@@ -10,7 +10,10 @@ const {
   validatePassword,
   sendPasswordOtp,
   verifyPasswordOtp,
-  changePassword 
+  changePassword,
+  hibernateAccount,
+  reactivateRequestOTP,
+  reactivateVerify
 } = require("../controllers/auth.controller");
 const { getMe, getAllUsers, updateOnboarding, updateRole } = require("../controllers/user.controller");
 const authMiddleware = require("../middleware/auth.middleware");
@@ -33,5 +36,10 @@ router.post("/validate-password", authMiddleware, validatePassword);
 router.post("/send-otp", authMiddleware, sendPasswordOtp);
 router.post("/verify-otp", authMiddleware, verifyPasswordOtp);
 router.post("/change-password", authMiddleware, changePassword);
+
+// Hibernate flow
+router.post("/hibernate", authMiddleware, hibernateAccount);
+router.post("/reactivate-request", reactivateRequestOTP);
+router.post("/reactivate-verify", reactivateVerify);
 
 module.exports = router;

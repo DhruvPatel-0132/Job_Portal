@@ -51,6 +51,20 @@ const loginUser = async ({ emailOrPhone, password }) => {
     };
   }
 
+  const profile = await Profile.findOne({ userId: user._id });
+  if (profile && profile.status === "hibernated") {
+    return {
+      status: 200,
+      response: {
+        success: true,
+        isHibernated: true,
+        message: "Account is hibernated",
+        userId: user._id,
+        emailOrPhone: user.emailOrPhone,
+      },
+    };
+  }
+
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken();
 
@@ -245,6 +259,21 @@ const googleLoginUser = async (idToken) => {
       email: email,
       avatar: picture || "",
     });
+  }
+
+  // 🟡 CHECK FOR HIBERNATION
+  const profile = await Profile.findOne({ userId: user._id });
+  if (profile && profile.status === "hibernated") {
+    return {
+      status: 200,
+      response: {
+        success: true,
+        isHibernated: true,
+        message: "Account is hibernated",
+        userId: user._id,
+        emailOrPhone: user.emailOrPhone,
+      },
+    };
   }
 
   // 🔐 TOKENS

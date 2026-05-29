@@ -100,6 +100,12 @@ const profileSchema = new mongoose.Schema(
       default: "",
     },
 
+    status: {
+      type: String,
+      enum: ["active", "hibernated", "deleted"],
+      default: "active",
+    },
+
     skills: [
       {
         type: String,

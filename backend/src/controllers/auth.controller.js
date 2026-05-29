@@ -7,10 +7,13 @@ const {
 } = require("../services/auth.service");
 
 const User = require("../models/User");
+const Profile = require("../models/Profile");
+const Token = require("../models/Token");
 const PasswordHistory = require("../models/PasswordHistory");
 const bcrypt = require("bcryptjs");
 const { sendOTPEmail } = require("../services/email.service");
 const { setOTP, verifyOTP, clearOTP } = require("../services/otp.service");
+const { generateAccessToken, generateRefreshToken, hashToken, REFRESH_TOKEN_EXPIRY_MS } = require("../utils/generateTokens");
 
 const login = async (req, res) => {
   try {
@@ -185,6 +188,96 @@ const changePassword = async (req, res) => {
   }
 };
 
+const hibernateAccount = async (req, res) => {
+  try {
+    const { password } = req.body;
+    const userId = req.user.id;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    if (user.password) {
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ success: false, message: "Incorrect password" });
+      }
+    }
+
+    await Profile.findOneAndUpdate({ userId }, { status: "hibernated" });
+
+    await Token.deleteMany({ userId });
+    res.clearCookie("refreshToken");
+
+    return res.json({ success: true, message: "Account hibernated successfully" });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+const reactivateRequestOTP = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!user.emailOrPhone || !emailRegex.test(user.emailOrPhone)) {
+      return res.status(400).json({ success: false, message: "No valid email found to send OTP." });
+    }
+
+    const otp = await setOTP(user.emailOrPhone, 300);
+    await sendOTPEmail(user.emailOrPhone, otp);
+
+    return res.json({ success: true, message: "OTP sent to your email" });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+const reactivateVerify = async (req, res) => {
+  try {
+    const { userId, otp } = req.body;
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    const isValid = await verifyOTP(user.emailOrPhone, otp);
+    if (!isValid) {
+      return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
+    }
+
+    await Profile.findOneAndUpdate({ userId }, { status: "active" });
+    await clearOTP(user.emailOrPhone);
+
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken();
+
+    await Token.deleteMany({ userId: user._id });
+    await Token.create({
+      userId: user._id,
+      emailOrPhone: user.emailOrPhone,
+      refreshToken: hashToken(refreshToken),
+      expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY_MS),
+    });
+
+    return res.json({
+      success: true,
+      message: "Account reactivated successfully",
+      accessToken,
+      refreshToken,
+      user: {
+        id: user._id,
+        emailOrPhone: user.emailOrPhone,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        isOnboarded: user.isOnboarded,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 module.exports = {
   login,
   register,
@@ -194,5 +287,8 @@ module.exports = {
   validatePassword,
   sendPasswordOtp,
   verifyPasswordOtp,
-  changePassword
+  changePassword,
+  hibernateAccount,
+  reactivateRequestOTP,
+  reactivateVerify
 };
