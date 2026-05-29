@@ -130,6 +130,7 @@ const ProfileProgress = ({ profile, onHide, isSidebar, onShow }) => {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
         className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 overflow-hidden"
       >
         <div className="flex items-center justify-between mb-2">
@@ -165,6 +166,7 @@ const ProfileProgress = ({ profile, onHide, isSidebar, onShow }) => {
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
       className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6 overflow-hidden relative group"
     >
       <div className="flex items-center justify-between mb-3">

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
 import SidebarProfile from "../components/Dashboard/SidebarProfile";
 import SidebarCompanyProfile from "../components/Dashboard/SidebarCompanyProfile";
@@ -41,22 +42,26 @@ const Dashboard = () => {
         <div className="flex flex-col lg:flex-row gap-6 justify-center">
           <div className="w-full lg:w-[225px] flex-shrink-0 self-start lg:sticky lg:top-[72px] flex flex-col gap-4">
             <SidebarContent />
-            {isProgressHidden && (
-              user?.role === "company" ? (
-                <CompanyProgress company={company} profile={profile} isSidebar={true} onShow={handleShowProgress} />
-              ) : (
-                <ProfileProgress profile={profile} isSidebar={true} onShow={handleShowProgress} />
-              )
-            )}
+            <AnimatePresence mode="wait">
+              {isProgressHidden && (
+                user?.role === "company" ? (
+                  <CompanyProgress key="company-sidebar" company={company} profile={profile} isSidebar={true} onShow={handleShowProgress} />
+                ) : (
+                  <ProfileProgress key="profile-sidebar" profile={profile} isSidebar={true} onShow={handleShowProgress} />
+                )
+              )}
+            </AnimatePresence>
           </div>
           <div className="w-full lg:w-[540px] xl:w-[600px] flex-shrink-0 self-start">
-            {!isProgressHidden && (
-              user?.role === "company" ? (
-                <CompanyProgress company={company} profile={profile} onHide={handleHideProgress} />
-              ) : (
-                <ProfileProgress profile={profile} onHide={handleHideProgress} />
-              )
-            )}
+            <AnimatePresence mode="wait">
+              {!isProgressHidden && (
+                user?.role === "company" ? (
+                  <CompanyProgress key="company-main" company={company} profile={profile} onHide={handleHideProgress} />
+                ) : (
+                  <ProfileProgress key="profile-main" profile={profile} onHide={handleHideProgress} />
+                )
+              )}
+            </AnimatePresence>
             <Feed />
           </div>
 
