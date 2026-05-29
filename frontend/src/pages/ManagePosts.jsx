@@ -31,7 +31,9 @@ const ManagePosts = () => {
   return (
     <main className="max-w-[1080px] mx-auto px-4 py-6">
       <div className="flex flex-col lg:flex-row gap-6 justify-center">
-        <SidebarContent />
+        <div className="w-full lg:w-[225px] flex-shrink-0 self-start lg:sticky lg:top-[72px]">
+          <SidebarContent />
+        </div>
 
         <div className="w-full lg:w-[540px] xl:w-[600px] flex-shrink-0 self-start space-y-6">
           <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">

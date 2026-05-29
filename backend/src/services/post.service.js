@@ -70,7 +70,7 @@ const createPost = async (userId, userRole, postData) => {
       });
       referenceId = article._id;
       referenceModel = "Article";
-    } else if (postType === "project" && postData.projectData) {
+    } else if ((postType === "project" || postType === "showcase_project") && postData.projectData) {
       const project = await ShowcaseProject.create({
         title: postData.projectData.title,
         description: postData.projectData.description || postData.content,
