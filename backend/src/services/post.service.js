@@ -7,6 +7,7 @@ const Achievement = require("../models/Achievement");
 const Reaction = require("../models/Reaction");
 const User = require("../models/User");
 const SavedPost = require("../models/SavedPost");
+const Profile = require("../models/Profile");
 
 const createPost = async (userId, userRole, postData) => {
   try {
@@ -155,9 +156,13 @@ const createPost = async (userId, userRole, postData) => {
 
 const getPosts = async (query = {}, userId = null, limit = 15, cursor = null) => {
   try {
+    const hibernatedProfiles = await Profile.find({ status: "hibernated" }).select("userId");
+    const hibernatedUserIds = hibernatedProfiles.map(p => p.userId);
+
     let dbQuery = {
       isDeleted: { $ne: true },
       isArchived: { $ne: true },
+      author: { $nin: hibernatedUserIds },
       ...query
     };
 
@@ -234,6 +239,24 @@ const getUserPosts = async (userId, requestingUserId = null) => {
       authorQuery = { author: { $in: [userId, company._id] } };
     }
 
+    let isHibernated = false;
+    if (requestingUserId && requestingUserId.toString() !== userId.toString()) {
+      const profile = await Profile.findOne({ userId });
+      if (profile && profile.status === "hibernated") {
+        isHibernated = true;
+      }
+    }
+
+    if (isHibernated) {
+      return {
+        status: 200,
+        response: {
+          success: true,
+          posts: [],
+        },
+      };
+    }
+
     const posts = await Post.find({ 
       ...authorQuery, 
       isDeleted: { $ne: true } 
@@ -292,12 +315,15 @@ const getSavedPosts = async (userId, requestingUserId = null, limit = 15, cursor
       dbQuery._id = { $lt: cursor };
     }
 
+    const hibernatedProfiles = await Profile.find({ status: "hibernated" }).select("userId");
+    const hibernatedUserIds = hibernatedProfiles.map(p => p.userId);
+
     const savedPosts = await SavedPost.find(dbQuery)
       .sort({ _id: -1 })
       .limit(limit + 1)
       .populate({
         path: "post",
-        match: { isDeleted: { $ne: true } },
+        match: { isDeleted: { $ne: true }, author: { $nin: hibernatedUserIds } },
         populate: [
           { path: "author", select: "firstName lastName name logo avatar" },
           { path: "referenceId" }
