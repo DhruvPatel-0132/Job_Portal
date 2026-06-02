@@ -16,6 +16,7 @@ export default function Profile() {
   const { user } = useAuthStore();
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     fetchProfile();
   }, [fetchProfile]);
 

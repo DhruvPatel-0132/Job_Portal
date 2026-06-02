@@ -54,7 +54,10 @@ const SavedPosts = () => {
   return (
     <main className="max-w-[1080px] mx-auto px-4 py-6">
       <div className="flex flex-col lg:flex-row gap-6 justify-center">
-        <SidebarContent />
+        <div className="w-full lg:w-[225px] flex-shrink-0 self-start lg:sticky lg:top-[72px]">
+          <SidebarContent />
+        </div>
+
 
         <div className="w-full lg:w-[540px] xl:w-[600px] flex-shrink-0 self-start">
           {/* Page Header */}
@@ -72,9 +75,8 @@ const SavedPosts = () => {
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`relative flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-semibold transition-colors duration-200 z-10 ${
-                    isActive ? "text-black" : "text-gray-600 hover:text-gray-800"
-                  }`}
+                  className={`relative flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-semibold transition-colors duration-200 z-10 ${isActive ? "text-black" : "text-gray-600 hover:text-gray-800"
+                    }`}
                 >
                   {isActive && (
                     <motion.div
@@ -87,11 +89,10 @@ const SavedPosts = () => {
                   <span className="relative z-10">{tab.label}</span>
                   {counts[tab.key] > 0 && (
                     <span
-                      className={`relative z-10 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                        isActive
+                      className={`relative z-10 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isActive
                           ? "bg-blue-100 text-black"
                           : "bg-gray-200 text-gray-700"
-                      }`}
+                        }`}
                     >
                       {counts[tab.key]}
                     </span>

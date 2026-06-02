@@ -59,6 +59,7 @@ export default function PublicProfile() {
 
   // Fetch on mount, clean up on unmount.
   useEffect(() => {
+    window.scrollTo(0, 0);
     if (userId) {
       fetchPublicProfile(userId);
     }
