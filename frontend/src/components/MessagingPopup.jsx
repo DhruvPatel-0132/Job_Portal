@@ -27,6 +27,11 @@ const MessagingPopup = () => {
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const totalUnreadMessages = conversations.reduce(
+    (sum, conv) => sum + (conv.unreadCount || 0),
+    0
+  );
+
   useEffect(() => {
     if (isOpen) {
       fetchConversations();
@@ -46,8 +51,15 @@ const MessagingPopup = () => {
             className="fixed top-[20%] right-0 -translate-y-1/2 z-[90] cursor-pointer"
             onClick={() => setIsOpen(true)}
           >
-            <div className="bg-white border border-gray-200 border-r-0 rounded-l-xl shadow-[0_4px_15px_rgba(0,0,0,0.1)] py-4 w-[60px] flex flex-col items-center gap-3 hover:bg-gray-50 transition-colors group">
-              <MessageSquare className="w-5 h-5 text-gray-500 group-hover:text-[#0a66c2] transition-colors" />
+            <div className="bg-white border border-gray-200 border-r-0 rounded-l-xl shadow-[0_4px_15px_rgba(0,0,0,0.1)] py-4 w-[60px] flex flex-col items-center gap-3 hover:bg-gray-50 transition-colors group relative">
+              <div className="relative">
+                <MessageSquare className="w-5 h-5 text-gray-500 group-hover:text-[#0a66c2] transition-colors" />
+                {totalUnreadMessages > 0 && (
+                  <span className="absolute -top-2 -right-2.5 bg-[#0a66c2] text-white text-[9px] font-bold h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center border border-white shadow-sm leading-none">
+                    {totalUnreadMessages > 99 ? "99+" : totalUnreadMessages}
+                  </span>
+                )}
+              </div>
               <span
                 className="text-[13px] font-semibold text-gray-700 tracking-wider group-hover:text-[#0a66c2] transition-colors"
                 style={{

@@ -11,11 +11,15 @@ const {
   archivePostController,
   toggleReactionController,
   toggleSavePostController,
+  getRecommendedJobsController,
 } = require("../controllers/post.controller");
 const authMiddleware = require("../middleware/auth.middleware");
 
 // Create a new post
 router.post("/", authMiddleware, createPostController);
+
+// Get recommended jobs
+router.get("/jobs/recommended", authMiddleware, getRecommendedJobsController);
 
 // Get all posts (public/feed)
 router.get("/", authMiddleware, getPostsController);

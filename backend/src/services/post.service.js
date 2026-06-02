@@ -715,6 +715,45 @@ const toggleSavePost = async (postId, userId) => {
   }
 };
 
+const getRecommendedJobs = async () => {
+  try {
+    const jobs = await Post.find({
+      postType: "job_post",
+      isDeleted: { $ne: true },
+      isArchived: { $ne: true }
+    })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate({
+        path: "author",
+        populate: {
+          path: "createdBy",
+          select: "role avatar firstName lastName"
+        }
+      })
+      .populate("referenceId")
+      .lean();
+
+    return {
+      status: 200,
+      response: {
+        success: true,
+        jobs
+      }
+    };
+  } catch (error) {
+    console.error("getRecommendedJobs Service Error:", error);
+    return {
+      status: 500,
+      response: {
+        success: false,
+        message: "Failed to fetch recommended jobs",
+        error: error.message
+      }
+    };
+  }
+};
+
 module.exports = {
   createPost,
   getPosts,
@@ -726,4 +765,5 @@ module.exports = {
   archivePost,
   toggleReaction,
   toggleSavePost,
+  getRecommendedJobs,
 };

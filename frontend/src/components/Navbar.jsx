@@ -13,6 +13,7 @@ import { useAuthStore } from "../store/authStore";
 import { useProfileStore } from "../store/profileStore";
 import { useNotificationStore } from "../store/notificationStore";
 import { useNetworkStore } from "../store/networkStore";
+import { useMessageStore } from "../store/messageStore";
 
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -28,6 +29,7 @@ const Navbar = () => {
   const { unreadCount, fetchUnreadCount, fetchNotifications } =
     useNotificationStore();
   const { pendingIncomingCount, fetchPendingIncomingCount } = useNetworkStore();
+  const { fetchConversations } = useMessageStore();
 
   const profile = storeProfile || authProfile;
 
@@ -53,12 +55,14 @@ const Navbar = () => {
       fetchUnreadCount();
       fetchNotifications();
       fetchPendingIncomingCount();
+      fetchConversations();
     }
   }, [
     authToken,
     fetchUnreadCount,
     fetchNotifications,
     fetchPendingIncomingCount,
+    fetchConversations,
   ]);
 
   const isCompany = user?.role === "company";

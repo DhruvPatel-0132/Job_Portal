@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
 const Profile = require("../models/Profile");
@@ -7,6 +8,7 @@ const cloudinary = require("../config/cloudinary");
 exports.getConversations = async (req, res) => {
   try {
     const userId = req.user.id;
+    const userObjectId = new mongoose.Types.ObjectId(userId);
 
     // Fetch conversations where user is a participant or has left
     const conversations = await Conversation.find({
@@ -29,8 +31,8 @@ exports.getConversations = async (req, res) => {
           // Exited users do not have any new unread messages
           const unreadCount = hasLeft ? 0 : await Message.countDocuments({
             conversationId: conv._id,
-            senderId: { $ne: userId },
-            seenBy: { $ne: userId },
+            senderId: { $ne: userObjectId },
+            seenBy: { $ne: userObjectId },
           });
 
           let lastMessage = conv.lastMessage;
@@ -109,6 +111,7 @@ exports.getConversations = async (req, res) => {
 exports.getMessages = async (req, res) => {
   try {
     const userId = req.user.id;
+    const userObjectId = new mongoose.Types.ObjectId(userId);
     const { userId: targetId } = req.params; // targetId could be either a conversationId or another userId
 
     // Check if targetId is an existing conversation
@@ -148,10 +151,10 @@ exports.getMessages = async (req, res) => {
         await Message.updateMany(
           {
             conversationId: conversation._id,
-            senderId: { $ne: userId },
-            seenBy: { $ne: userId },
+            senderId: { $ne: userObjectId },
+            seenBy: { $ne: userObjectId },
           },
-          { $addToSet: { seenBy: userId } }
+          { $addToSet: { seenBy: userObjectId } }
         );
       } else {
         const otherUserId = conversation.participants.find(p => p.toString() !== userId);
@@ -224,6 +227,7 @@ exports.getMessages = async (req, res) => {
 exports.markAsSeen = async (req, res) => {
   try {
     const userId = req.user.id;
+    const userObjectId = new mongoose.Types.ObjectId(userId);
     const { conversationId } = req.params;
 
     const conversation = await Conversation.findById(conversationId);
@@ -235,10 +239,10 @@ exports.markAsSeen = async (req, res) => {
       await Message.updateMany(
         {
           conversationId,
-          senderId: { $ne: userId },
-          seenBy: { $ne: userId },
+          senderId: { $ne: userObjectId },
+          seenBy: { $ne: userObjectId },
         },
-        { $addToSet: { seenBy: userId } }
+        { $addToSet: { seenBy: userObjectId } }
       );
     } else {
       const otherUserId = conversation.participants.find(p => p.toString() !== userId);
@@ -305,6 +309,7 @@ exports.createGroup = async (req, res) => {
 exports.getUserGroups = async (req, res) => {
   try {
     const userId = req.user.id;
+    const userObjectId = new mongoose.Types.ObjectId(userId);
     const groups = await Conversation.find({
       $or: [
         { participants: userId },
@@ -319,8 +324,8 @@ exports.getUserGroups = async (req, res) => {
       groups.map(async (group) => {
         const unreadCount = await Message.countDocuments({
           conversationId: group._id,
-          senderId: { $ne: userId },
-          seenBy: { $ne: userId },
+          senderId: { $ne: userObjectId },
+          seenBy: { $ne: userObjectId },
         });
 
         return {

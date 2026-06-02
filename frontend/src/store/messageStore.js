@@ -126,7 +126,7 @@ export const useMessageStore = create((set, get) => ({
     const { activeConversation } = get();
     
     // If the message belongs to the currently active chat
-    if (activeConversation && !activeConversation.type && (message.senderId === activeConversation._id || message.receiverId === activeConversation._id)) {
+    if (activeConversation && activeConversation.type !== "group" && (message.senderId === activeConversation._id || message.receiverId === activeConversation._id)) {
       set((state) => ({
         messages: [...state.messages, message]
       }));
