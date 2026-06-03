@@ -728,7 +728,8 @@ const getRecommendedJobs = async () => {
         path: "author",
         populate: {
           path: "createdBy",
-          select: "role avatar firstName lastName"
+          select: "role avatar firstName lastName",
+          options: { strictPopulate: false }
         }
       })
       .populate("referenceId")

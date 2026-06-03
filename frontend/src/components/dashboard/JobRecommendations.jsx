@@ -92,21 +92,25 @@ const JobRecommendations = () => {
               const jobData = job.referenceId; // JobPost details
 
               let logo = "/company.svg";
-              let companyName = "Unknown Company";
+              let uploaderName = "Unknown Uploader";
               let title = jobData?.title || job.content || "Job Posting";
               let location = jobData?.location || "Remote";
 
               // 2. Conditional Rendering: Check uploader's role
               if (authorModel === "Company") {
-                companyName = author.name;
-                const creatorRole = author.createdBy?.role; // "company" or "hire"
+                const creator = author.createdBy;
+                uploaderName = creator ? `${creator.firstName || ""} ${creator.lastName || ""}`.trim() : "";
+                if (!uploaderName) {
+                  uploaderName = author.name || "Unknown Company";
+                }
+                const creatorRole = creator?.role; // "company" or "hire"
                 if (creatorRole === "hire") {
-                  logo = author.createdBy?.avatar || "/avatar.svg";
+                  logo = creator?.avatar || "/avatar.svg";
                 } else {
                   logo = author.logo || "/company.svg";
                 }
               } else if (authorModel === "User") {
-                companyName = `${author.firstName || ""} ${author.lastName || ""}`.trim();
+                uploaderName = `${author.firstName || ""} ${author.lastName || ""}`.trim() || "Unknown User";
                 logo = author.avatar || "/avatar.svg";
               }
 
@@ -120,7 +124,7 @@ const JobRecommendations = () => {
                   <motion.img
                     whileHover={{ scale: 1.05 }}
                     src={logo}
-                    alt={`${companyName} logo`}
+                    alt={`${uploaderName} logo`}
                     className="w-10 h-10 object-cover mr-3 bg-gray-50 rounded-lg border border-gray-100 p-0.5 transition-colors group-hover:border-blue-200 group-hover:bg-blue-50"
                     onError={(e) => {
                       e.target.onerror = null;
@@ -131,7 +135,7 @@ const JobRecommendations = () => {
                     <h3 className="text-sm font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors cursor-pointer">
                       {title}
                     </h3>
-                    <p className="text-xs text-gray-500 truncate">{companyName}</p>
+                    <p className="text-xs text-gray-500 truncate">{uploaderName}</p>
                     <p className="text-[11px] text-gray-400 mt-0.5">{location}</p>
                     <motion.button 
                       whileHover={{ scale: 1.02, backgroundColor: "#eff6ff" }}
