@@ -99,11 +99,15 @@ const JobRecommendations = () => {
               // 2. Conditional Rendering: Check uploader's role
               if (authorModel === "Company") {
                 const creator = author.createdBy;
-                uploaderName = creator ? `${creator.firstName || ""} ${creator.lastName || ""}`.trim() : "";
-                if (!uploaderName) {
-                  uploaderName = author.name || "Unknown Company";
-                }
                 const creatorRole = creator?.role; // "company" or "hire"
+                if (creatorRole === "company" || creatorRole === "hire") {
+                  uploaderName = author.name || "Unknown Company";
+                } else {
+                  uploaderName = creator ? `${creator.firstName || ""} ${creator.lastName || ""}`.trim() : "";
+                  if (!uploaderName) {
+                    uploaderName = author.name || "Unknown Company";
+                  }
+                }
                 if (creatorRole === "hire") {
                   logo = creator?.avatar || "/avatar.svg";
                 } else {
