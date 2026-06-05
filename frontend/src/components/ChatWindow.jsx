@@ -200,7 +200,7 @@ const ChatWindow = () => {
   return (
     <AnimatePresence>
       <motion.div
-        key={activeConversation._id || 'chat-window'}
+        key="chat-window"
         initial={{ x: 500, opacity: 0, top: "20%" }}
         animate={{
           x: 0,

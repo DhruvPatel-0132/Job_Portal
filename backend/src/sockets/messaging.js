@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Message = require("../models/Message");
 const Conversation = require("../models/Conversation");
 const Profile = require("../models/Profile");
@@ -146,14 +147,16 @@ module.exports = (io, socket) => {
       const conversation = await Conversation.findById(conversationId);
       if (!conversation) return;
 
+      const userObjectId = new mongoose.Types.ObjectId(userId);
+
       if (conversation.type === "group") {
         await Message.updateMany(
           {
             conversationId,
-            senderId: { $ne: userId },
-            seenBy: { $ne: userId },
+            senderId: { $ne: userObjectId },
+            seenBy: { $ne: userObjectId },
           },
-          { $addToSet: { seenBy: userId } }
+          { $addToSet: { seenBy: userObjectId } }
         );
       } else {
         await Message.updateMany(

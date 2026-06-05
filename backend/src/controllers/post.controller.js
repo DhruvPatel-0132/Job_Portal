@@ -9,6 +9,7 @@ const {
   archivePost,
   toggleReaction,
   toggleSavePost,
+  getRecommendedJobs,
 } = require("../services/post.service");
 
 const createPostController = async (req, res) => {
@@ -173,6 +174,19 @@ const toggleSavePostController = async (req, res) => {
   }
 };
 
+const getRecommendedJobsController = async (req, res) => {
+  try {
+    const { status, response } = await getRecommendedJobs();
+    return res.status(status).json(response);
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createPostController,
   getPostsController,
@@ -184,4 +198,5 @@ module.exports = {
   archivePostController,
   toggleReactionController,
   toggleSavePostController,
+  getRecommendedJobsController,
 };
