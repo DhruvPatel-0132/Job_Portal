@@ -3,7 +3,9 @@ const Profile = require("../models/Profile");
 const Token = require("../models/Token");
 const Company = require("../models/Company");
 const ProfessionalDetails = require("../models/ProfessionalDetails");
+const TemporaryPassword = require("../models/TemporaryPassword");
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 
 const {
   generateAccessToken,
@@ -13,6 +15,7 @@ const {
 } = require("../utils/generateTokens");
 
 const { OAuth2Client } = require("google-auth-library");
+const { sendTemporaryPasswordEmail } = require("./email.service");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -22,14 +25,24 @@ const loginUser = async ({ emailOrPhone, password }) => {
     emailOrPhone: emailOrPhone.trim(),
   });
 
-  if (!user || !user.password) {
+  if (!user) {
     return {
       status: 401,
       response: { success: false, message: "Invalid credentials" },
     };
   }
 
-  const isMatch = await bcrypt.compare(password, user.password);
+  let isMatch = false;
+  if (user.password) {
+    isMatch = await bcrypt.compare(password, user.password);
+  }
+
+  if (!isMatch) {
+    const tempPass = await TemporaryPassword.findOne({ userId: user._id });
+    if (tempPass) {
+      isMatch = await bcrypt.compare(password, tempPass.password);
+    }
+  }
 
   if (!isMatch) {
     return {
@@ -228,8 +241,7 @@ const googleLoginUser = async (idToken) => {
     // If the user has a local account, link the Google ID and allow login
     if (user.provider === "local" || !user.googleId) {
       user.googleId = sub;
-      // We can optionally keep the provider as 'local' or change it to 'google' or 'both'.
-      // For now, we just ensure googleId is saved.
+      user.provider = "both";
       user.isVerified = true;
       if (!user.avatar && picture) user.avatar = picture;
       await user.save();
@@ -240,17 +252,30 @@ const googleLoginUser = async (idToken) => {
   if (!user) {
     isNewUser = true;
 
+    const rawPassword = crypto.randomBytes(4).toString("hex");
+    const hashedPassword = await bcrypt.hash(rawPassword, 10);
+
     user = await User.create({
       emailOrPhone: email,
       firstName,
       lastName,
       password: null,
       role: "job_seeker",
-      provider: "google",
+      provider: "both",
       googleId: sub,
       avatar: picture,
       isVerified: true,
     });
+
+    await TemporaryPassword.create({
+      userId: user._id,
+      password: hashedPassword,
+    });
+
+    // Send the email asynchronously
+    sendTemporaryPasswordEmail(email, rawPassword).catch((err) =>
+      console.error("Failed to send temporary password email:", err)
+    );
 
     // 🔥 CREATE PROFILE FOR GOOGLE USER
     await Profile.create({
