@@ -29,7 +29,7 @@ const ConnectionCard = ({ connection }) => {
   }, [connection, setActiveConversation]);
 
   const handleProfile = useCallback(() => {
-    navigate(`/profile/${connection._id}`);
+    navigate(`/profile/${connection.slug || connection._id}`);
   }, [connection._id, navigate]);
 
   const handleAvatarError = useCallback((e) => {

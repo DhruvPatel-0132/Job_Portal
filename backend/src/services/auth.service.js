@@ -140,12 +140,20 @@ const registerUser = async (data) => {
     role,
   });
 
+  const { generateSlug } = require("../utils/generateSlug");
+  let slugName = `${firstName} ${lastName}`;
+  if (role === "company" && companyName) {
+      slugName = companyName;
+  }
+  const userSlug = await generateSlug(slugName);
+
   // 🔥 CREATE PROFILE
   const profileData = {
     userId: user._id,
     fullName: `${firstName} ${lastName}`,
     email: emailOrPhone.includes("@") ? emailOrPhone : "",
     phone: emailOrPhone.includes("@") ? "" : emailOrPhone,
+    slug: userSlug,
   };
 
   if (role === "company") {
@@ -277,12 +285,16 @@ const googleLoginUser = async (idToken) => {
       console.error("Failed to send temporary password email:", err)
     );
 
+    const { generateSlug } = require("../utils/generateSlug");
+    const userSlug = await generateSlug(`${firstName} ${lastName}`);
+
     // 🔥 CREATE PROFILE FOR GOOGLE USER
     await Profile.create({
       userId: user._id,
       fullName: `${firstName} ${lastName}`,
       email: email,
       avatar: picture || "",
+      slug: userSlug,
     });
   }
 

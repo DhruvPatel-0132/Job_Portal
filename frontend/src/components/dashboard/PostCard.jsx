@@ -396,7 +396,7 @@ const PostCard = ({ post, onOpen }) => {
               e.preventDefault();
               e.stopPropagation();
               const profileId = post.author?._id || post.author;
-              if (profileId) navigate(`/profile/${profileId}`);
+              if (profileId) navigate(`/profile/${post.author?.slug || profileId}`);
             }}
             className="w-12 h-12 rounded-full object-cover mr-3 border border-gray-100 p-0.5 cursor-pointer relative z-10"
           />
@@ -407,7 +407,7 @@ const PostCard = ({ post, onOpen }) => {
                 e.preventDefault();
                 e.stopPropagation();
                 const profileId = post.author?._id || post.author;
-                if (profileId) navigate(`/profile/${profileId}`);
+                if (profileId) navigate(`/profile/${post.author?.slug || profileId}`);
               }}
               className="text-sm font-bold text-gray-900 hover:text-blue-600 hover:underline cursor-pointer transition-colors inline-block relative z-10"
             >

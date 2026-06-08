@@ -91,6 +91,10 @@ exports.updateRole = async (req, res) => {
         about: about || "",
         createdBy: userId,
       }).catch((err) => console.log("Company create error", err));
+
+      const { generateSlug } = require("../utils/generateSlug");
+      const companySlug = await generateSlug(companyName);
+      await Profile.findOneAndUpdate({ userId }, { slug: companySlug });
     } else if (role === "hire" && hireType) {
       const profDetails = { userId, hireType };
       if (hireType === "individual") {
@@ -155,7 +159,7 @@ exports.getAllUsers = async (req, res) => {
     
     // Fetch profiles for these users
     const userIds = users.map(user => user._id);
-    const profiles = await Profile.find({ userId: { $in: userIds } }).select("userId headline banner avatar");
+    const profiles = await Profile.find({ userId: { $in: userIds } }).select("userId headline banner avatar slug");
 
     // Fetch companies for company users
     const companyUsers = users.filter(u => u.role === "company");
@@ -169,6 +173,7 @@ exports.getAllUsers = async (req, res) => {
       
       return {
         _id: user._id,
+        slug: userProfile?.slug,
         name: user.role === "company" && userCompany?.name ? userCompany.name : (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : (user.firstName || user.lastName || "Unknown User")),
         role: user.role,
         isVerified: user.isVerified,

@@ -56,7 +56,7 @@ const UserProfileCard = ({
       <div className="px-3 pb-4 flex-1 flex flex-col w-full">
         <div className="flex items-center justify-center gap-1">
           <h3
-            onClick={() => navigate(`/profile/${person._id}`)}
+            onClick={() => navigate(`/profile/${person.slug || person._id}`)}
             className="text-[15px] font-bold text-gray-900 line-clamp-1 hover:text-blue-600 hover:underline cursor-pointer"
           >
             {person.name}

@@ -39,6 +39,12 @@ const profileSchema = new mongoose.Schema(
       unique: true,
     },
 
+    slug: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+
     fullName: {
       type: String,
       trim: true,

@@ -6,6 +6,7 @@ const ConnectRequest = require("../models/ConnectRequest");
 const CompanyFollower = require("../models/CompanyFollower");
 const Post = require("../models/Post");
 const Company = require("../models/Company");
+const mongoose = require("mongoose");
 
 /**
  * Get any user's public profile by their userId.
@@ -19,15 +20,26 @@ const getPublicProfile = async (req, res) => {
     const { userId } = req.params;
 
     // Validate that the target user exists, or if it is a company, resolve to its creator
-    let resolvedUserId = userId;
-    let targetUser = await User.findById(resolvedUserId).select("-password -emailOrPhone -googleId");
+    let resolvedUserId = null;
+    let targetUser = null;
 
-    if (!targetUser) {
-      // It might be a Company ID! Let's check
-      const company = await Company.findById(resolvedUserId);
-      if (company && company.createdBy) {
-        resolvedUserId = company.createdBy;
-        targetUser = await User.findById(resolvedUserId).select("-password -emailOrPhone -googleId");
+    let targetProfile = await Profile.findOne({ slug: userId });
+    if (targetProfile) {
+      resolvedUserId = targetProfile.userId;
+      targetUser = await User.findById(resolvedUserId).select("-password -emailOrPhone -googleId");
+    }
+
+    // Fallback if userId is a valid ObjectId (old links)
+    if (!targetUser && mongoose.Types.ObjectId.isValid(userId)) {
+      targetUser = await User.findById(userId).select("-password -emailOrPhone -googleId");
+      if (targetUser) {
+        resolvedUserId = targetUser._id;
+      } else {
+        const company = await Company.findById(userId);
+        if (company && company.createdBy) {
+          resolvedUserId = company.createdBy;
+          targetUser = await User.findById(resolvedUserId).select("-password -emailOrPhone -googleId");
+        }
       }
     }
 

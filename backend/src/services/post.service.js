@@ -177,7 +177,7 @@ const getPosts = async (query = {}, userId = null, limit = 15, cursor = null) =>
       .select("author authorModel postType content media hashtags mentions referenceId referenceModel stats isEdited editedAt createdAt")
       .populate({
         path: "author",
-        select: "firstName lastName name logo avatar",
+        select: "firstName lastName name logo avatar createdBy",
       })
       .populate("referenceId")
       .lean();
@@ -206,6 +206,25 @@ const getPosts = async (query = {}, userId = null, limit = 15, cursor = null) =>
         p.stats.isSaved = savedMap.has(p._id.toString());
       });
     }
+
+    // Attach author slugs
+    const authorUserIds = posts.map(p => {
+       if (!p.author) return null;
+       return p.authorModel === "Company" ? p.author.createdBy : p.author._id;
+    }).filter(Boolean);
+
+    const authorProfiles = await Profile.find({ userId: { $in: authorUserIds } }).select("userId slug");
+    const profileMap = {};
+    authorProfiles.forEach(prof => profileMap[prof.userId.toString()] = prof.slug);
+
+    posts.forEach(p => {
+        if (p.author) {
+           const aUserId = p.authorModel === "Company" ? p.author.createdBy?.toString() : p.author._id?.toString();
+           if (aUserId && profileMap[aUserId]) {
+               p.author.slug = profileMap[aUserId];
+           }
+        }
+    });
 
     return {
       status: 200,
@@ -264,7 +283,7 @@ const getUserPosts = async (userId, requestingUserId = null) => {
       .sort({ createdAt: -1 })
       .populate({
         path: "author",
-        select: "firstName lastName name logo avatar",
+        select: "firstName lastName name logo avatar createdBy",
       })
       .populate("referenceId")
       .lean();
@@ -286,6 +305,25 @@ const getUserPosts = async (userId, requestingUserId = null) => {
         p.stats.isSaved = savedMap.has(p._id.toString());
       });
     }
+
+    // Attach author slugs
+    const authorUserIds = posts.map(p => {
+       if (!p.author) return null;
+       return p.authorModel === "Company" ? p.author.createdBy : p.author._id;
+    }).filter(Boolean);
+
+    const authorProfiles = await Profile.find({ userId: { $in: authorUserIds } }).select("userId slug");
+    const profileMap = {};
+    authorProfiles.forEach(prof => profileMap[prof.userId.toString()] = prof.slug);
+
+    posts.forEach(p => {
+        if (p.author) {
+           const aUserId = p.authorModel === "Company" ? p.author.createdBy?.toString() : p.author._id?.toString();
+           if (aUserId && profileMap[aUserId]) {
+               p.author.slug = profileMap[aUserId];
+           }
+        }
+    });
 
     return {
       status: 200,
@@ -325,7 +363,7 @@ const getSavedPosts = async (userId, requestingUserId = null, limit = 15, cursor
         path: "post",
         match: { isDeleted: { $ne: true }, author: { $nin: hibernatedUserIds } },
         populate: [
-          { path: "author", select: "firstName lastName name logo avatar" },
+          { path: "author", select: "firstName lastName name logo avatar createdBy" },
           { path: "referenceId" }
         ]
       })
@@ -358,6 +396,25 @@ const getSavedPosts = async (userId, requestingUserId = null, limit = 15, cursor
         p.stats.isSaved = savedMap.has(p._id.toString());
       });
     }
+
+    // Attach author slugs
+    const authorUserIds = posts.map(p => {
+       if (!p.author) return null;
+       return p.authorModel === "Company" ? p.author.createdBy : p.author._id;
+    }).filter(Boolean);
+
+    const authorProfiles = await Profile.find({ userId: { $in: authorUserIds } }).select("userId slug");
+    const profileMap = {};
+    authorProfiles.forEach(prof => profileMap[prof.userId.toString()] = prof.slug);
+
+    posts.forEach(p => {
+        if (p.author) {
+           const aUserId = p.authorModel === "Company" ? p.author.createdBy?.toString() : p.author._id?.toString();
+           if (aUserId && profileMap[aUserId]) {
+               p.author.slug = profileMap[aUserId];
+           }
+        }
+    });
 
     return {
       status: 200,

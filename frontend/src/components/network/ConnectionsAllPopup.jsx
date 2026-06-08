@@ -223,7 +223,7 @@ const ConnectionsAllPopup = ({ isOpen, onClose, connections, totalCount }) => {
                       </button>
                       <button
                         onClick={() => {
-                          navigate(`/profile/${conn._id}`);
+                          navigate(`/profile/${conn.slug || conn._id}`);
                           onClose();
                         }}
                         className="px-3.5 py-1.5 border border-blue-600 text-blue-600 hover:bg-blue-50 rounded-full text-xs font-bold transition-colors flex items-center gap-1.5"

@@ -111,7 +111,7 @@ const GroupMembersModal = ({ isOpen, onClose, groupId, groupAdmins }) => {
                     key={member._id}
                     onClick={() => {
                       onClose();
-                      navigate(`/profile/${member._id}`);
+                      navigate(`/profile/${member.slug || member._id}`);
                     }}
                     className="flex items-center gap-3 px-4 py-3 border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer transition-colors group"
                   >

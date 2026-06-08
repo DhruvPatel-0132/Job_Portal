@@ -27,6 +27,7 @@ exports.getUserConnections = async (req, res) => {
       const profile = profiles.find(p => p.userId && p.userId.toString() === user._id.toString());
       return {
         _id: user._id,
+        slug: user.slug,
         name: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : "Unknown",
         avatar: user.avatar || profile?.avatar || "/avatar.svg",
         banner: profile?.banner || "",
