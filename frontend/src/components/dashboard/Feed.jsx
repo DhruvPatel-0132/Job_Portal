@@ -68,7 +68,7 @@ const Feed = () => {
       <div className="bg-white rounded-lg border border-gray-200 mb-4 p-4 shadow-sm">
         <div className="flex space-x-3">
           <img
-            src={profile?.avatar || company?.logo || "/avatar.svg"}
+            src={role === "company" ? (company?.logo || profile?.avatar || "/avatar.svg") : (profile?.avatar || company?.logo || "/avatar.svg")}
             alt="Current User"
             referrerPolicy="no-referrer"
             onError={(e) => {

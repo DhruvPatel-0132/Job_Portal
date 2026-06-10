@@ -79,7 +79,9 @@ const Navbar = () => {
       : profile?.fullName ||
       `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
       "User",
-    avatar: profile?.avatar || company?.logo || "/avatar.svg",
+    avatar: isCompany
+      ? company?.logo || profile?.avatar || "/avatar.svg"
+      : profile?.avatar || company?.logo || "/avatar.svg",
     headline: isCompany
       ? profile?.headline || company?.industry || "Company Account"
       : profile?.headline || "Welcome to your profile",
