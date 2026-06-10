@@ -16,6 +16,7 @@ import SavedPosts from "./pages/SavedPosts";
 import MyJobPosts from "./pages/hiring/MyJobPosts";
 import Applications from "./pages/hiring/Applications";
 import Candidates from "./pages/hiring/Candidates";
+import AIListing from "./pages/hiring/AIListing";
 
 /* ✅ USE ZUSTAND */
 import { useAuthStore } from "./store/authStore";
@@ -100,6 +101,7 @@ export default function App() {
         <Route path="/hiring/job-posts" element={<HiringRouteWrapper><MyJobPosts /></HiringRouteWrapper>} />
         <Route path="/hiring/applications" element={<HiringRouteWrapper><Applications /></HiringRouteWrapper>} />
         <Route path="/hiring/candidates" element={<HiringRouteWrapper><Candidates /></HiringRouteWrapper>} />
+        <Route path="/hiring/ai-listing" element={<HiringRouteWrapper><AIListing /></HiringRouteWrapper>} />
       </Route>
     </Routes>
   );

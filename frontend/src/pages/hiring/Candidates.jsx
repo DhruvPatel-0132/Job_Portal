@@ -1,175 +1,183 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { UserCheck, Search, Sparkles, MapPin, Briefcase, Mail } from "lucide-react";
+import { UserCheck, MapPin, Briefcase, Mail, GripVertical } from "lucide-react";
 
-const headerVariants = {
-  hidden: { opacity: 0, y: -20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { type: "spring", stiffness: 200, damping: 20 },
-  },
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 24, scale: 0.97 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { type: "spring", stiffness: 260, damping: 24 },
-  },
-};
-
-const DUMMY_CANDIDATES = [
-  {
-    id: "cand1",
-    name: "David Smith",
-    avatar: "https://i.pravatar.cc/150?u=david",
-    role: "Full Stack Engineer",
-    location: "Remote",
-    experience: "6 years",
-    skills: ["React", "Node.js", "MongoDB", "AWS"],
-    status: "Shortlisted",
-  },
-  {
-    id: "cand2",
-    name: "Emily Davis",
-    avatar: "https://i.pravatar.cc/150?u=emily",
-    role: "UX/UI Designer",
-    location: "London, UK",
-    experience: "3 years",
-    skills: ["Figma", "Sketch", "Prototyping"],
-    status: "Interviewing",
-  },
-  {
-    id: "cand3",
-    name: "James Wilson",
-    avatar: "https://i.pravatar.cc/150?u=james",
-    role: "DevOps Engineer",
-    location: "Berlin, DE",
-    experience: "8 years",
-    skills: ["Docker", "Kubernetes", "CI/CD"],
-    status: "New",
-  }
+const STAGES = [
+  { id: "applied", label: "Applied", color: "bg-gray-100 text-gray-700 border-gray-200" },
+  { id: "screening", label: "Resume Screening", color: "bg-blue-50 text-blue-700 border-blue-200" },
+  { id: "technical", label: "Technical Round", color: "bg-purple-50 text-purple-700 border-purple-200" },
+  { id: "hr", label: "HR Round", color: "bg-amber-50 text-amber-700 border-amber-200" },
+  { id: "offer", label: "Offer", color: "bg-indigo-50 text-indigo-700 border-indigo-200" },
+  { id: "hired", label: "Hired", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
 ];
 
-const STATUS_COLORS = {
-  "New": "bg-blue-50 text-blue-600 ring-blue-200/50",
-  "Shortlisted": "bg-purple-50 text-purple-600 ring-purple-200/50",
-  "Interviewing": "bg-amber-50 text-amber-600 ring-amber-200/50",
-  "Hired": "bg-emerald-50 text-emerald-600 ring-emerald-200/50",
-};
+const INITIAL_CANDIDATES = [
+  // Applied Stage
+  { id: "cand1", name: "David Smith", avatar: "https://i.pravatar.cc/150?u=david", role: "Full Stack Engineer", location: "Remote", experience: "6 yrs", stage: "applied" },
+  { id: "cand7", name: "Chris Evans", avatar: "https://i.pravatar.cc/150?u=chris", role: "Frontend Dev", location: "Remote", experience: "2 yrs", stage: "applied" },
+  { id: "cand8", name: "Jessica Alba", avatar: "https://i.pravatar.cc/150?u=jess", role: "React Developer", location: "Austin, TX", experience: "3 yrs", stage: "applied" },
+  { id: "cand9", name: "Tom Holland", avatar: "https://i.pravatar.cc/150?u=tom", role: "Junior QA Engineer", location: "London, UK", experience: "1 yr", stage: "applied" },
+  { id: "cand10", name: "Zendaya", avatar: "https://i.pravatar.cc/150?u=zendaya", role: "UI/UX Intern", location: "San Francisco, CA", experience: "Fresher", stage: "applied" },
+  
+  // Screening Stage
+  { id: "cand2", name: "Emily Davis", avatar: "https://i.pravatar.cc/150?u=emily", role: "UX/UI Designer", location: "London, UK", experience: "3 yrs", stage: "screening" },
+  { id: "cand11", name: "Mark Ruffalo", avatar: "https://i.pravatar.cc/150?u=mark", role: "Backend Engineer", location: "New York, NY", experience: "5 yrs", stage: "screening" },
+  { id: "cand12", name: "Scarlett J.", avatar: "https://i.pravatar.cc/150?u=scarlett", role: "Product Designer", location: "Remote", experience: "4 yrs", stage: "screening" },
+  { id: "cand13", name: "Paul Rudd", avatar: "https://i.pravatar.cc/150?u=paul", role: "Marketing Manager", location: "Chicago, IL", experience: "7 yrs", stage: "screening" },
+  
+  // Technical Round
+  { id: "cand3", name: "James Wilson", avatar: "https://i.pravatar.cc/150?u=james", role: "DevOps Engineer", location: "Berlin, DE", experience: "8 yrs", stage: "technical" },
+  { id: "cand14", name: "Chadwick B.", avatar: "https://i.pravatar.cc/150?u=chad", role: "System Architect", location: "Seattle, WA", experience: "10 yrs", stage: "technical" },
+  { id: "cand15", name: "Brie Larson", avatar: "https://i.pravatar.cc/150?u=brie", role: "Security Analyst", location: "Remote", experience: "6 yrs", stage: "technical" },
 
-const Candidates = () => {
-  const [candidates, setCandidates] = useState(DUMMY_CANDIDATES);
+  // HR Round
+  { id: "cand4", name: "Sarah Parker", avatar: "https://i.pravatar.cc/150?u=sarah", role: "Product Manager", location: "New York, NY", experience: "5 yrs", stage: "hr" },
+  { id: "cand16", name: "Chris H.", avatar: "https://i.pravatar.cc/150?u=chrish", role: "Project Manager", location: "Sydney, AU", experience: "9 yrs", stage: "hr" },
+
+  // Offer Stage
+  { id: "cand5", name: "Michael Chen", avatar: "https://i.pravatar.cc/150?u=michael", role: "Backend Dev", location: "Austin, TX", experience: "4 yrs", stage: "offer" },
+  { id: "cand17", name: "Elizabeth O.", avatar: "https://i.pravatar.cc/150?u=elizabeth", role: "Data Analyst", location: "Boston, MA", experience: "3 yrs", stage: "offer" },
+  { id: "cand18", name: "Benedict C.", avatar: "https://i.pravatar.cc/150?u=ben", role: "Machine Learning Eng", location: "London, UK", experience: "6 yrs", stage: "offer" },
+
+  // Hired Stage
+  { id: "cand6", name: "Anna Lee", avatar: "https://i.pravatar.cc/150?u=anna", role: "Data Scientist", location: "San Francisco, CA", experience: "7 yrs", stage: "hired" },
+  { id: "cand19", name: "Robert Downey", avatar: "https://i.pravatar.cc/150?u=robert", role: "CTO", location: "Los Angeles, CA", experience: "15 yrs", stage: "hired" },
+  { id: "cand20", name: "Gwyneth P.", avatar: "https://i.pravatar.cc/150?u=gwyneth", role: "VP of Engineering", location: "Remote", experience: "12 yrs", stage: "hired" }
+];
+
+const CandidatesATS = () => {
+  const [candidates, setCandidates] = useState(INITIAL_CANDIDATES);
+  const [draggedCandId, setDraggedCandId] = useState(null);
+
+  const handleDragStart = (e, id) => {
+    setDraggedCandId(id);
+    e.dataTransfer.effectAllowed = "move";
+    // For firefox compatibility
+    e.dataTransfer.setData("text/plain", id);
+    // Make it look slightly transparent while dragging
+    setTimeout(() => {
+      e.target.style.opacity = "0.5";
+    }, 0);
+  };
+
+  const handleDragEnd = (e) => {
+    setDraggedCandId(null);
+    e.target.style.opacity = "1";
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault(); // Necessary to allow dropping
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = (e, targetStageId) => {
+    e.preventDefault();
+    if (!draggedCandId) return;
+
+    setCandidates((prev) =>
+      prev.map((c) =>
+        c.id === draggedCandId ? { ...c, stage: targetStageId } : c
+      )
+    );
+    setDraggedCandId(null);
+  };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10">
+    <div className="max-w-[1400px] mx-auto px-4 py-8 h-[calc(100vh-80px)] flex flex-col">
       {/* Header */}
-      <motion.div
-        variants={headerVariants}
-        initial="hidden"
-        animate="visible"
-        className="mb-8"
-      >
+      <div className="mb-6 shrink-0">
         <div className="flex items-center gap-3 mb-1">
-          <motion.div
-            className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-200/50"
-            whileHover={{ rotate: [0, -8, 8, 0], scale: 1.05 }}
-            transition={{ duration: 0.4 }}
-          >
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-200/50">
             <UserCheck className="h-5 w-5 text-white" />
-          </motion.div>
+          </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Candidates</h1>
+            <h1 className="text-2xl font-bold text-gray-900">ATS Pipeline</h1>
             <p className="text-sm text-gray-500">
-              Browse and manage your candidate pipeline
+              Drag and drop candidates across hiring stages
             </p>
           </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Candidates List */}
-      <motion.div 
-        className="space-y-4"
-        initial="hidden"
-        animate="visible"
-        variants={{
-          hidden: { opacity: 0 },
-          visible: {
-            opacity: 1,
-            transition: { staggerChildren: 0.1 },
-          },
-        }}
-      >
-        {candidates.length > 0 ? (
-          candidates.map((cand) => (
-            <motion.div
-              key={cand.id}
-              variants={cardVariants}
-              whileHover={{ y: -2, boxShadow: "0 8px 30px -12px rgba(0,0,0,0.12)" }}
-              className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 cursor-pointer flex flex-col md:flex-row items-start md:items-center justify-between group gap-4"
-            >
-              <div className="flex items-center gap-4">
-                <img src={cand.avatar} alt={cand.name} className="w-14 h-14 rounded-full object-cover" />
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-base font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">
-                      {cand.name}
-                    </h3>
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ring-1 ${STATUS_COLORS[cand.status] || STATUS_COLORS["New"]}`}>
-                      {cand.status}
-                    </span>
-                  </div>
-                  <div className="text-sm font-medium text-gray-700 mt-0.5">{cand.role}</div>
-                  <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-500">
-                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{cand.location}</span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1"><Briefcase className="h-3 w-3" />{cand.experience}</span>
-                  </div>
+      {/* Kanban Board */}
+      <div className="flex-1 overflow-x-auto pb-4 custom-scrollbar">
+        <div className="flex gap-4 h-full min-w-max items-start">
+          {STAGES.map((stage) => {
+            const stageCandidates = candidates.filter((c) => c.stage === stage.id);
+            return (
+              <div
+                key={stage.id}
+                className="w-80 flex flex-col h-full bg-gray-50/50 rounded-2xl border border-gray-100 p-3"
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, stage.id)}
+              >
+                {/* Stage Header */}
+                <div className={`mb-3 px-3 py-2 rounded-xl border ${stage.color} flex items-center justify-between shadow-sm`}>
+                  <h3 className="font-bold text-sm">{stage.label}</h3>
+                  <span className="bg-white/50 px-2 py-0.5 rounded-md text-xs font-bold">
+                    {stageCandidates.length}
+                  </span>
                 </div>
-              </div>
-              
-              <div className="flex flex-col items-start md:items-end gap-3 w-full md:w-auto">
-                <div className="flex flex-wrap gap-1.5 justify-start md:justify-end">
-                  {cand.skills.map((skill, i) => (
-                    <span key={i} className="text-[10px] font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-md">
-                      {skill}
-                    </span>
+
+                {/* Candidate Cards Container */}
+                <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-1 pb-2">
+                  {stageCandidates.map((cand) => (
+                    <motion.div
+                      key={cand.id}
+                      layoutId={cand.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, cand.id)}
+                      onDragEnd={handleDragEnd}
+                      className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow group relative"
+                    >
+                      <div className="flex items-start gap-3">
+                        <img
+                          src={cand.avatar}
+                          alt={cand.name}
+                          className="w-10 h-10 rounded-full object-cover border border-gray-100"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-sm text-gray-900 truncate">
+                            {cand.name}
+                          </h4>
+                          <p className="text-xs font-medium text-gray-600 truncate mt-0.5">
+                            {cand.role}
+                          </p>
+                          <div className="flex items-center gap-2 mt-2 text-[10px] text-gray-400 font-medium">
+                            <span className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3" /> {cand.location}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Briefcase className="h-3 w-3" /> {cand.experience}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 pt-3 border-t border-gray-50 flex items-center justify-between">
+                        <button className="text-[10px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-md transition-colors flex items-center gap-1">
+                          <Mail className="h-3 w-3" /> Message
+                        </button>
+                        <GripVertical className="h-4 w-4 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    </motion.div>
                   ))}
+                  
+                  {stageCandidates.length === 0 && (
+                    <div className="h-full flex items-center justify-center p-4">
+                      <div className="border-2 border-dashed border-gray-200 rounded-xl w-full h-24 flex items-center justify-center text-xs font-medium text-gray-400 text-center px-4">
+                        Drop candidate here
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <button className="text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 px-4 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors">
-                  <Mail className="h-3 w-3" /> Contact
-                </button>
               </div>
-            </motion.div>
-          ))
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            className="bg-white rounded-2xl border border-gray-100 shadow-sm p-14 flex flex-col items-center justify-center text-center"
-          >
-            <motion.div
-              className="w-20 h-20 bg-gradient-to-br from-emerald-50 to-teal-100 rounded-2xl flex items-center justify-center mb-5"
-              animate={{ rotate: [0, 3, -3, 0], scale: [1, 1.02, 1] }}
-              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-            >
-              <Search className="h-10 w-10 text-emerald-600" />
-            </motion.div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
-              No candidates yet
-            </h3>
-            <p className="text-sm text-gray-500 max-w-sm leading-relaxed">
-              Candidates who match your job requirements will show up here. Start by
-              posting a job to attract talent.
-            </p>
-          </motion.div>
-        )}
-      </motion.div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 };
 
-export default Candidates;
+export default CandidatesATS;

@@ -12,6 +12,7 @@ import {
   ClipboardList,
   FileText,
   UserCheck,
+  Sparkles,
 } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import { useProfileStore } from "../store/profileStore";
@@ -168,7 +169,7 @@ const Navbar = () => {
                 <button
                   className={`flex flex-col items-center justify-center px-4 border-b-2 transition-colors h-full
                     ${
-                      ['/hiring/job-posts', '/hiring/applications', '/hiring/candidates'].includes(location.pathname)
+                      ['/hiring/job-posts', '/hiring/applications', '/hiring/candidates', '/hiring/ai-listing'].includes(location.pathname)
                         ? 'border-gray-900 text-gray-900'
                         : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-900'
                     }`}
@@ -217,6 +218,14 @@ const Navbar = () => {
                     >
                       <UserCheck className="h-4 w-4 text-emerald-600" />
                       Candidates
+                    </Link>
+                    <Link
+                      to="/hiring/ai-listing"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      onClick={() => setIsHiringDropdownOpen(false)}
+                    >
+                      <Sparkles className="h-4 w-4 text-indigo-600" />
+                      AI Listing
                     </Link>
                   </div>
                 )}
