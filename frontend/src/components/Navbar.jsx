@@ -8,6 +8,10 @@ import {
   Bell,
   MessageSquare,
   Grid,
+  Building2,
+  ClipboardList,
+  FileText,
+  UserCheck,
 } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import { useProfileStore } from "../store/profileStore";
@@ -17,7 +21,9 @@ import { useMessageStore } from "../store/messageStore";
 
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isHiringDropdownOpen, setIsHiringDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const hiringDropdownRef = useRef(null);
   const location = useLocation();
 
   const { user, company, profile: authProfile, token } = useAuthStore();
@@ -71,8 +77,8 @@ const Navbar = () => {
     name: isCompany
       ? company?.name || profile?.fullName || "Company"
       : profile?.fullName ||
-        `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
-        "User",
+      `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
+      "User",
     avatar: profile?.avatar || company?.logo || "/avatar.svg",
     headline: isCompany
       ? profile?.headline || company?.industry || "Company Account"
@@ -84,6 +90,9 @@ const Navbar = () => {
     const handler = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setIsDropdownOpen(false);
+      }
+      if (hiringDropdownRef.current && !hiringDropdownRef.current.contains(e.target)) {
+        setIsHiringDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -142,12 +151,76 @@ const Navbar = () => {
                 badgeCount={pendingIncomingCount}
               />
             )}
-            <NavItem
-              icon={<Briefcase className="h-5 w-5" />}
-              label="Jobs"
-              to="/jobs"
-              active={location.pathname === "/jobs"}
-            />
+            {!isCompany && (
+              <NavItem
+                icon={<Briefcase className="h-5 w-5" />}
+                label="Jobs"
+                to="/jobs"
+                active={location.pathname === "/jobs"}
+              />
+            )}
+
+            {/* ── Hiring Dropdown (Company only) ── */}
+            {isCompany && (
+              <div className="relative flex items-stretch" ref={hiringDropdownRef}>
+                <button
+                  className={`flex flex-col items-center justify-center px-4 border-b-2 transition-colors h-full
+                    ${
+                      ['/hiring/job-posts', '/hiring/applications', '/hiring/candidates'].includes(location.pathname)
+                        ? 'border-gray-900 text-gray-900'
+                        : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-900'
+                    }`}
+                  onClick={() => setIsHiringDropdownOpen((o) => !o)}
+                >
+                  <Building2 className="h-5 w-5" />
+                  <div className="flex items-center mt-0.5">
+                    <span className="text-xs hidden md:block">Hiring</span>
+                    <svg
+                      className={`ml-0.5 h-3 w-3 hidden md:block transition-transform duration-200 ${isHiringDropdownOpen ? 'rotate-180' : ''}`}
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                </button>
+
+                {/* Hiring Dropdown Menu */}
+                {isHiringDropdownOpen && (
+                  <div className="absolute top-full right-0 mt-1 w-52 rounded-lg shadow-xl bg-white ring-1 ring-black/10 z-50 overflow-hidden py-1">
+                    <Link
+                      to="/hiring/job-posts"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      onClick={() => setIsHiringDropdownOpen(false)}
+                    >
+                      <FileText className="h-4 w-4 text-blue-600" />
+                      My Job Posts
+                    </Link>
+                    <Link
+                      to="/hiring/applications"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      onClick={() => setIsHiringDropdownOpen(false)}
+                    >
+                      <ClipboardList className="h-4 w-4 text-amber-600" />
+                      Applications
+                    </Link>
+                    <Link
+                      to="/hiring/candidates"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      onClick={() => setIsHiringDropdownOpen(false)}
+                    >
+                      <UserCheck className="h-4 w-4 text-emerald-600" />
+                      Candidates
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+
             <NavItem
               icon={<Bell className="h-5 w-5" />}
               label="Notifications"
@@ -269,10 +342,9 @@ const NavItem = ({ icon, label, to, active, badgeCount = 0 }) => (
   <Link
     to={to}
     className={`flex flex-col items-center justify-center px-4 border-b-2 transition-colors
-      ${
-        active
-          ? "border-gray-900 text-gray-900"
-          : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-900"
+      ${active
+        ? "border-gray-900 text-gray-900"
+        : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-900"
       }`}
   >
     <div className="relative">

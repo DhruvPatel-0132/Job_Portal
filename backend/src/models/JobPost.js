@@ -37,7 +37,8 @@ const jobPostSchema = new mongoose.Schema(
     salary: {
       min: Number,
       max: Number,
-      currency: { type: String, default: "INR" },
+      currency: { type: String, enum: ["INR", "USD", "EUR", "GBP", "AED"], default: "INR" },
+      period: { type: String, enum: ["monthly", "hourly", "yearly"], default: "yearly" },
       isNegotiable: { type: Boolean, default: false },
       hideSalary: { type: Boolean, default: false },
     },

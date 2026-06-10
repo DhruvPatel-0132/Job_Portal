@@ -105,22 +105,54 @@ const JobForm = ({
           value={jobData.educationLevel}
           onChange={(e) => setJobData({ ...jobData, educationLevel: e.target.value })}
         />
-        <div className="flex gap-2">
-          <input
-            type="number"
-            className="w-1/2 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none"
-            placeholder="Min Salary"
-            value={jobData.salaryMin}
-            onChange={(e) => setJobData({ ...jobData, salaryMin: e.target.value })}
-          />
-          <input
-            type="number"
-            className="w-1/2 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none"
-            placeholder="Max Salary"
-            value={jobData.salaryMax}
-            onChange={(e) => setJobData({ ...jobData, salaryMax: e.target.value })}
-          />
+        <div className="flex flex-col gap-1">
+          <div className="flex gap-2">
+            <select
+              className="w-1/4 px-2 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none bg-white appearance-none text-xs"
+              value={jobData.salaryCurrency}
+              onChange={(e) => setJobData({ ...jobData, salaryCurrency: e.target.value })}
+            >
+              <option value="INR">INR (₹)</option>
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="GBP">GBP (£)</option>
+              <option value="AED">AED</option>
+            </select>
+            <input
+              type="number"
+              className="w-[30%] px-2 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none text-xs"
+              placeholder={jobData.salaryPeriod === 'yearly' ? (jobData.salaryCurrency === 'INR' ? 'Min (LPA)' : 'Min (K)') : jobData.salaryPeriod === 'monthly' ? 'Min (K)' : 'Min'}
+              value={jobData.salaryMin}
+              onChange={(e) => setJobData({ ...jobData, salaryMin: e.target.value })}
+            />
+            <input
+              type="number"
+              className="w-[30%] px-2 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none text-xs"
+              placeholder={jobData.salaryPeriod === 'yearly' ? (jobData.salaryCurrency === 'INR' ? 'Max (LPA)' : 'Max (K)') : jobData.salaryPeriod === 'monthly' ? 'Max (K)' : 'Max'}
+              value={jobData.salaryMax}
+              onChange={(e) => setJobData({ ...jobData, salaryMax: e.target.value })}
+            />
+          </div>
+          <span className="text-[10px] text-gray-400 ml-1">
+            {jobData.salaryPeriod === 'yearly'
+              ? (jobData.salaryCurrency === 'INR' ? 'e.g. 10 = ₹10,00,000/yr' : `e.g. 100 = ${jobData.salaryCurrency === 'USD' ? '$' : jobData.salaryCurrency === 'EUR' ? '€' : jobData.salaryCurrency === 'GBP' ? '£' : ''}100,000/yr`)
+              : jobData.salaryPeriod === 'monthly'
+              ? `e.g. 50 = ${jobData.salaryCurrency === 'INR' ? '₹' : jobData.salaryCurrency === 'USD' ? '$' : jobData.salaryCurrency === 'EUR' ? '€' : jobData.salaryCurrency === 'GBP' ? '£' : ''}50,000/mo`
+              : 'Enter exact hourly rate'}
+          </span>
         </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div />
+        <select
+          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none bg-white appearance-none text-sm"
+          value={jobData.salaryPeriod}
+          onChange={(e) => setJobData({ ...jobData, salaryPeriod: e.target.value })}
+        >
+          <option value="yearly">Per Year (LPA/K)</option>
+          <option value="monthly">Per Month (K)</option>
+          <option value="hourly">Per Hour</option>
+        </select>
       </div>
 
       <div className="flex items-center gap-4 px-1">

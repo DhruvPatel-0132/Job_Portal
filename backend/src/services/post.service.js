@@ -43,6 +43,8 @@ const createPost = async (userId, userRole, postData) => {
         salary: {
           min: Number(postData.jobData.salaryMin) || 0,
           max: Number(postData.jobData.salaryMax) || 0,
+          currency: postData.jobData.salaryCurrency || "INR",
+          period: postData.jobData.salaryPeriod || "yearly",
           isNegotiable: postData.jobData.isNegotiable || false,
           hideSalary: postData.jobData.hideSalary || false,
         },
@@ -514,6 +516,8 @@ const updatePost = async (postId, userId, postData) => {
           salary: {
             min: Number(postData.jobData.salaryMin) || 0,
             max: Number(postData.jobData.salaryMax) || 0,
+            currency: postData.jobData.salaryCurrency || "INR",
+            period: postData.jobData.salaryPeriod || "yearly",
             isNegotiable: postData.jobData.isNegotiable || false,
             hideSalary: postData.jobData.hideSalary || false,
           },
@@ -812,6 +816,48 @@ const getRecommendedJobs = async () => {
   }
 };
 
+const getMyJobPosts = async (userId) => {
+  try {
+    const company = await Company.findOne({ createdBy: userId });
+    let authorQuery = { author: userId };
+
+    if (company) {
+      authorQuery = { author: { $in: [userId, company._id] } };
+    }
+
+    const posts = await Post.find({
+      ...authorQuery,
+      postType: "job_post",
+      isDeleted: { $ne: true },
+    })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "author",
+        select: "firstName lastName name logo avatar createdBy",
+      })
+      .populate("referenceId")
+      .lean();
+
+    return {
+      status: 200,
+      response: {
+        success: true,
+        posts,
+      },
+    };
+  } catch (error) {
+    console.error("Get My Job Posts Service Error:", error);
+    return {
+      status: 500,
+      response: {
+        success: false,
+        message: "Failed to fetch job posts",
+        error: error.message,
+      },
+    };
+  }
+};
+
 module.exports = {
   createPost,
   getPosts,
@@ -824,4 +870,5 @@ module.exports = {
   toggleReaction,
   toggleSavePost,
   getRecommendedJobs,
+  getMyJobPosts,
 };

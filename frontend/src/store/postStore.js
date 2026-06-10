@@ -6,8 +6,20 @@ const usePostStore = create((set, get) => ({
   posts: [],
   userPosts: [],
   savedPosts: [],
+  myJobPosts: [],
   loading: false,
   error: null,
+
+  fetchMyJobPosts: async () => {
+    set({ loading: true });
+    try {
+      const response = await api.get("/posts/my-job-posts");
+      set({ myJobPosts: response.data.posts, loading: false });
+    } catch (error) {
+      set({ error: error.response?.data?.message || "Failed to fetch job posts", loading: false });
+    }
+  },
+
 
   fetchPosts: async () => {
     set({ loading: true });

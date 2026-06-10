@@ -87,8 +87,24 @@ const PostDetailModal = ({ isOpen, onClose, post }) => {
                 </div>
               </div>
               {job.salary && !job.salary.hideSalary && (
-                <div className="mt-4 p-3 bg-green-100/50 rounded-xl inline-block text-green-700 font-bold">
-                  ₹ {job.salary.min.toLocaleString()} - {job.salary.max.toLocaleString()} per year
+                <div className="flex items-center gap-2 text-sm text-gray-600 bg-green-50 px-3 py-1.5 rounded-lg border border-green-100">
+                  <span className="font-bold text-green-700">
+                    {(() => {
+                      const { min, max, currency, period } = job.salary;
+                      const getSymbol = (c) => ({ USD: '$', EUR: '€', GBP: '£', AED: 'AED' }[c] || '₹');
+                      const formatNum = (amt) => {
+                        if (!amt) return "0";
+                        if (period === 'yearly') {
+                          return currency === 'INR' ? `${(amt / 100000).toFixed(amt % 100000 === 0 ? 0 : 1)} LPA` : `${(amt / 1000).toFixed(amt % 1000 === 0 ? 0 : 1)}K`;
+                        }
+                        if (period === 'monthly') {
+                          return `${(amt / 1000).toFixed(amt % 1000 === 0 ? 0 : 1)}K`;
+                        }
+                        return amt.toLocaleString();
+                      };
+                      return `${getSymbol(currency)} ${formatNum(min)} - ${formatNum(max)} ${period === 'hourly' ? 'per hour' : ''}`;
+                    })()}
+                  </span>
                 </div>
               )}
             </div>

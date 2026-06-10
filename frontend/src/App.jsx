@@ -13,6 +13,9 @@ import Onboarding from "./pages/Onboarding";
 import MainLayout from "./components/MainLayout";
 import ManagePosts from "./pages/ManagePosts";
 import SavedPosts from "./pages/SavedPosts";
+import MyJobPosts from "./pages/hiring/MyJobPosts";
+import Applications from "./pages/hiring/Applications";
+import Candidates from "./pages/hiring/Candidates";
 
 /* ✅ USE ZUSTAND */
 import { useAuthStore } from "./store/authStore";
@@ -45,6 +48,15 @@ function NetworkRouteWrapper() {
     return <Navigate to="/dashboard" replace />;
   }
   return <MyNetwork />;
+}
+
+// Wrapper for Hiring Routes to restrict to company users only
+function HiringRouteWrapper({ children }) {
+  const user = useAuthStore((state) => state.user);
+  if (user?.role !== "company") {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return children;
 }
 
 export default function App() {
@@ -85,6 +97,9 @@ export default function App() {
         <Route path="/manage-posts" element={<ManagePosts />} />
         <Route path="/saved-posts" element={<SavedPosts />} />
         <Route path="/settings-privacy" element={<SettingsPrivacy />} />
+        <Route path="/hiring/job-posts" element={<HiringRouteWrapper><MyJobPosts /></HiringRouteWrapper>} />
+        <Route path="/hiring/applications" element={<HiringRouteWrapper><Applications /></HiringRouteWrapper>} />
+        <Route path="/hiring/candidates" element={<HiringRouteWrapper><Candidates /></HiringRouteWrapper>} />
       </Route>
     </Routes>
   );

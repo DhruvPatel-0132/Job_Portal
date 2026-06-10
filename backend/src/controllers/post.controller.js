@@ -10,6 +10,7 @@ const {
   toggleReaction,
   toggleSavePost,
   getRecommendedJobs,
+  getMyJobPosts,
 } = require("../services/post.service");
 
 const createPostController = async (req, res) => {
@@ -187,6 +188,20 @@ const getRecommendedJobsController = async (req, res) => {
   }
 };
 
+const getMyJobPostsController = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { status, response } = await getMyJobPosts(userId);
+    return res.status(status).json(response);
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createPostController,
   getPostsController,
@@ -199,4 +214,5 @@ module.exports = {
   toggleReactionController,
   toggleSavePostController,
   getRecommendedJobsController,
+  getMyJobPostsController,
 };

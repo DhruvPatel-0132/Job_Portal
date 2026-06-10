@@ -20,7 +20,7 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
 
   const [jobData, setJobData] = useState({
     title: "", location: "", type: "full_time", workMode: "on_site",
-    experienceLevel: "fresher", salaryMin: "", salaryMax: "", description: "", skills: [],
+    experienceLevel: "fresher", salaryMin: "", salaryMax: "", salaryCurrency: "INR", salaryPeriod: "yearly", description: "", skills: [],
     industry: "", category: "", educationLevel: "", isNegotiable: false, hideSalary: false,
     applicationUrl: "", applicationDeadline: "", benefits: ""
   });
@@ -52,14 +52,27 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
 
         if (editingPost.postType === "job_post" && editingPost.referenceId) {
           const job = editingPost.referenceId;
+          let minVal = job.salary?.min || "";
+          let maxVal = job.salary?.max || "";
+          let multiplier = 1;
+          if (job.salary?.period === 'yearly') {
+            multiplier = job.salary?.currency === 'INR' ? 100000 : 1000;
+          } else if (job.salary?.period === 'monthly') {
+            multiplier = 1000;
+          }
+          if (minVal) minVal = minVal / multiplier;
+          if (maxVal) maxVal = maxVal / multiplier;
+
           setJobData({
             title: job.title || "",
             location: job.location || "",
             type: job.employmentType || "full_time",
             workMode: job.workMode || "on_site",
             experienceLevel: job.experienceLevel || "fresher",
-            salaryMin: job.salary?.min || "",
-            salaryMax: job.salary?.max || "",
+            salaryMin: minVal,
+            salaryMax: maxVal,
+            salaryCurrency: job.salary?.currency || "INR",
+            salaryPeriod: job.salary?.period || "yearly",
             description: job.description || "",
             skills: job.skillsRequired || [],
             industry: job.industry || "",
@@ -175,12 +188,24 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
 
       setUploadProgress(95);
 
+      let finalJobData = { ...jobData };
+      if (postType === "job_post") {
+        let multiplier = 1;
+        if (jobData.salaryPeriod === 'yearly') {
+          multiplier = jobData.salaryCurrency === 'INR' ? 100000 : 1000;
+        } else if (jobData.salaryPeriod === 'monthly') {
+          multiplier = 1000;
+        }
+        finalJobData.salaryMin = jobData.salaryMin ? Number(jobData.salaryMin) * multiplier : "";
+        finalJobData.salaryMax = jobData.salaryMax ? Number(jobData.salaryMax) * multiplier : "";
+      }
+
       const postData = {
         _id: finalObjectId,
         postType: postType === "project" ? "showcase_project" : postType,
         content,
         media: uploadedMedia,
-        jobData: postType === "job_post" ? jobData : null,
+        jobData: postType === "job_post" ? finalJobData : null,
         projectData: (postType === "project" || postType === "showcase_project") ? { ...projectData, images: uploadedProjectImages } : null,
         articleData: postType === "article" ? { ...articleData, coverImage: uploadedArticleCover } : null,
         achievementData: postType === "achievement" ? achievementData : null,

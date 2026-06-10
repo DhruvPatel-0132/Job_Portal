@@ -15,6 +15,7 @@ import {
   Trash2,
   Archive,
   Bookmark,
+  DollarSign,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router-dom";
@@ -209,11 +210,24 @@ const PostCard = ({ post, onOpen }) => {
                   </span>
                   {post.referenceId.salary &&
                     !post.referenceId.salary.hideSalary && (
-                      <span className="flex items-center gap-1.5 bg-green-100/50 text-green-700 px-2 py-1 rounded-md">
-                        <span className="font-bold">₹</span>{" "}
-                        {post.referenceId.salary.min.toLocaleString()} -{" "}
-                        {post.referenceId.salary.max.toLocaleString()}
-                      </span>
+                      <div className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-bold w-fit shadow-sm border border-green-100">
+                        <DollarSign className="w-3.5 h-3.5" />
+                        {(() => {
+                          const { min, max, currency, period } = post.referenceId.salary;
+                          const getSymbol = (c) => ({ USD: '$', EUR: '€', GBP: '£', AED: 'AED' }[c] || '₹');
+                          const formatNum = (amt) => {
+                            if (!amt) return "0";
+                            if (period === 'yearly') {
+                              return currency === 'INR' ? `${(amt / 100000).toFixed(amt % 100000 === 0 ? 0 : 1)} LPA` : `${(amt / 1000).toFixed(amt % 1000 === 0 ? 0 : 1)}K`;
+                            }
+                            if (period === 'monthly') {
+                              return `${(amt / 1000).toFixed(amt % 1000 === 0 ? 0 : 1)}K`;
+                            }
+                            return amt.toLocaleString();
+                          };
+                          return `${getSymbol(currency)} ${formatNum(min)} - ${formatNum(max)} ${period === 'hourly' ? 'per hour' : ''}`;
+                        })()}
+                      </div>
                     )}
                 </div>
                 {post.referenceId.description && (

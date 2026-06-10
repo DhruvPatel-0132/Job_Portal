@@ -12,6 +12,7 @@ const {
   toggleReactionController,
   toggleSavePostController,
   getRecommendedJobsController,
+  getMyJobPostsController,
 } = require("../controllers/post.controller");
 const authMiddleware = require("../middleware/auth.middleware");
 
@@ -29,6 +30,9 @@ router.get("/me", authMiddleware, getUserPostsController);
 
 // Get my saved posts
 router.get("/saved", authMiddleware, getSavedPostsController);
+
+// Get my job posts (company)
+router.get("/my-job-posts", authMiddleware, getMyJobPostsController);
 
 // Edit a post
 router.put("/:id", authMiddleware, updatePostController);
