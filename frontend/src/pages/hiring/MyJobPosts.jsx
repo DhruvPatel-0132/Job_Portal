@@ -250,13 +250,17 @@ const JobCard = ({ post, index }) => {
 
           {/* Status + Expand */}
           <div className="flex items-center gap-2 shrink-0">
-            <motion.span
+            <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider ${
+              onClick={(e) => {
+                e.stopPropagation();
+                usePostStore.getState().toggleJobStatus(post._id);
+              }}
+              className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider transition-colors ${
                 isActive
-                  ? "text-emerald-700 bg-emerald-50 ring-1 ring-emerald-200/50"
-                  : "text-gray-500 bg-gray-100 ring-1 ring-gray-200/50"
+                  ? "text-emerald-700 bg-emerald-50 ring-1 ring-emerald-200/50 hover:bg-emerald-100 hover:text-emerald-800"
+                  : "text-gray-500 bg-gray-100 ring-1 ring-gray-200/50 hover:bg-gray-200 hover:text-gray-700"
               }`}
             >
               <motion.span
@@ -265,7 +269,7 @@ const JobCard = ({ post, index }) => {
                 transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
               />
               {isActive ? "Active" : "Closed"}
-            </motion.span>
+            </motion.button>
 
             <motion.div
               animate={{ rotate: isExpanded ? 180 : 0 }}

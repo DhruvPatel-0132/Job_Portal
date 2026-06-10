@@ -858,6 +858,45 @@ const getMyJobPosts = async (userId) => {
   }
 };
 
+const toggleJobStatus = async (postId, userId) => {
+  try {
+    const post = await Post.findById(postId).populate("referenceId");
+    if (!post) {
+      return { status: 404, response: { success: false, message: "Post not found" } };
+    }
+
+    const company = await Company.findOne({ createdBy: userId });
+    const isAuthorized = post.author.toString() === userId || (company && post.author.toString() === company._id.toString());
+
+    if (!isAuthorized) {
+      return { status: 403, response: { success: false, message: "Unauthorized to modify this post" } };
+    }
+
+    if (post.referenceModel !== "JobPost" || !post.referenceId) {
+      return { status: 400, response: { success: false, message: "Post is not a job post" } };
+    }
+
+    const job = await JobPost.findById(post.referenceId._id);
+    job.isActive = !job.isActive;
+    await job.save();
+
+    return {
+      status: 200,
+      response: {
+        success: true,
+        message: job.isActive ? "Job post activated" : "Job post deactivated",
+        isActive: job.isActive,
+      },
+    };
+  } catch (error) {
+    console.error("Toggle Job Status Service Error:", error);
+    return {
+      status: 500,
+      response: { success: false, message: "Failed to toggle job status", error: error.message },
+    };
+  }
+};
+
 module.exports = {
   createPost,
   getPosts,
@@ -871,4 +910,5 @@ module.exports = {
   toggleSavePost,
   getRecommendedJobs,
   getMyJobPosts,
+  toggleJobStatus,
 };

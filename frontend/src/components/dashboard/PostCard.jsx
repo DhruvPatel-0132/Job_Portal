@@ -249,14 +249,16 @@ const PostCard = ({ post, onOpen }) => {
                     </div>
                   )}
               </div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={(e) => e.stopPropagation()}
-                className="px-4 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-full shadow-lg shadow-blue-200"
-              >
-                Apply
-              </motion.button>
+              {post.referenceId.isActive !== false && (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="px-4 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-full shadow-lg shadow-blue-200"
+                >
+                  Apply
+                </motion.button>
+              )}
             </div>
           </motion.div>
         );

@@ -140,9 +140,11 @@ const PostDetailModal = ({ isOpen, onClose, post }) => {
               </div>
             )}
 
-            <button className="w-full py-4 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition-colors mt-4">
-              Apply Now
-            </button>
+            {job.isActive !== false && (
+              <button className="w-full py-4 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition-colors mt-4">
+                Apply Now
+              </button>
+            )}
           </div>
         );
 

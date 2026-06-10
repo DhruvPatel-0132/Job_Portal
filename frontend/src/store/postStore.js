@@ -333,6 +333,55 @@ const usePostStore = create((set, get) => ({
     }
   },
 
+  toggleJobStatus: async (postId) => {
+    try {
+      const response = await api.patch(`/posts/${postId}/job-status`);
+      if (response.data.success) {
+        set((state) => ({
+          myJobPosts: state.myJobPosts.map((post) =>
+            post._id === postId && post.referenceId
+              ? { ...post, referenceId: { ...post.referenceId, isActive: response.data.isActive } }
+              : post
+          ),
+          posts: state.posts.map((post) =>
+            post._id === postId && post.referenceId
+              ? { ...post, referenceId: { ...post.referenceId, isActive: response.data.isActive } }
+              : post
+          ),
+          userPosts: state.userPosts.map((post) =>
+            post._id === postId && post.referenceId
+              ? { ...post, referenceId: { ...post.referenceId, isActive: response.data.isActive } }
+              : post
+          ),
+          savedPosts: state.savedPosts.map((post) =>
+            post._id === postId && post.referenceId
+              ? { ...post, referenceId: { ...post.referenceId, isActive: response.data.isActive } }
+              : post
+          ),
+        }));
+        
+        queryClient.setQueryData(["feedPosts"], (oldData) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page) => ({
+              ...page,
+              posts: page.posts.map((post) =>
+                post._id === postId && post.referenceId
+                  ? { ...post, referenceId: { ...post.referenceId, isActive: response.data.isActive } }
+                  : post
+              ),
+            })),
+          };
+        });
+      }
+      return response.data;
+    } catch (error) {
+      console.error("Failed to toggle job status:", error);
+      return { success: false };
+    }
+  },
+
   updateReactionLocally: (postId, likesCount, likedBy) => {
     // Update Zustand store
     set((state) => ({

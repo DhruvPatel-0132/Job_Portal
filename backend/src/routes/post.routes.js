@@ -13,6 +13,7 @@ const {
   toggleSavePostController,
   getRecommendedJobsController,
   getMyJobPostsController,
+  toggleJobStatusController,
 } = require("../controllers/post.controller");
 const authMiddleware = require("../middleware/auth.middleware");
 
@@ -42,6 +43,9 @@ router.delete("/:id", authMiddleware, deletePostController);
 
 // Archive a post
 router.patch("/:id/archive", authMiddleware, archivePostController);
+
+// Toggle Job Post Status
+router.patch("/:id/job-status", authMiddleware, toggleJobStatusController);
 
 // Increment post views
 router.patch("/:id/view", authMiddleware, incrementPostViewsController);

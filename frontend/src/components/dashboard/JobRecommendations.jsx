@@ -141,13 +141,15 @@ const JobRecommendations = () => {
                     </h3>
                     <p className="text-xs text-gray-500 truncate">{uploaderName}</p>
                     <p className="text-[11px] text-gray-400 mt-0.5">{location}</p>
-                    <motion.button 
-                      whileHover={{ scale: 1.02, backgroundColor: "#eff6ff" }}
-                      whileTap={{ scale: 0.98 }}
-                      className="mt-2 text-blue-600 border border-blue-600 rounded-full px-5 py-1 text-[11px] font-bold hover:border-blue-700 transition-all duration-200 shadow-sm hover:shadow"
-                    >
-                      Apply
-                    </motion.button>
+                    {jobData?.isActive !== false && (
+                      <motion.button 
+                        whileHover={{ scale: 1.02, backgroundColor: "#eff6ff" }}
+                        whileTap={{ scale: 0.98 }}
+                        className="mt-2 text-blue-600 border border-blue-600 rounded-full px-5 py-1 text-[11px] font-bold hover:border-blue-700 transition-all duration-200 shadow-sm hover:shadow"
+                      >
+                        Apply
+                      </motion.button>
+                    )}
                   </div>
                 </motion.div>
               );
