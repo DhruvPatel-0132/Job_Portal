@@ -58,7 +58,7 @@ const SidebarCompanyProfile = () => {
             referrerPolicy="no-referrer"
             onClick={() => navigate("/profile")}
             onError={(e) => {
-              e.target.onerror = null; 
+              e.target.onerror = null;
               e.target.src = "/avatar.svg";
             }}
             className="w-16 h-16 rounded-2xl border-4 border-white object-cover shadow-sm cursor-pointer bg-white"
@@ -163,6 +163,36 @@ const SidebarCompanyProfile = () => {
       {/* Bottom Action */}
       <motion.div
         whileHover={{ backgroundColor: "rgba(249, 250, 251, 1)" }}
+        onClick={() => navigate("/saved-posts")}
+        className="px-4 py-3.5 cursor-pointer transition-all flex items-center justify-between group border-b border-gray-50"
+      >
+        <span className="text-[12px] text-gray-700 font-bold flex items-center group-hover:text-black">
+          <svg
+            className="w-4 h-4 mr-2.5 text-gray-400 group-hover:text-gray-600 transition-colors"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+          </svg>
+          My items
+        </span>
+        <svg
+          className="w-3.5 h-3.5 text-gray-300 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={3}
+            d="M9 5l7 7-7 7"
+          />
+        </svg>
+      </motion.div>
+
+      {/* <motion.div
+        whileHover={{ backgroundColor: "rgba(249, 250, 251, 1)" }}
         onClick={() => navigate("/dashboard")}
         className="px-4 py-3.5 cursor-pointer transition-all flex items-center justify-between group border-b border-gray-50"
       >
@@ -189,7 +219,7 @@ const SidebarCompanyProfile = () => {
             d="M9 5l7 7-7 7"
           />
         </svg>
-      </motion.div>
+      </motion.div> */}
 
       <motion.div
         whileHover={{ backgroundColor: "rgba(249, 250, 251, 1)" }}

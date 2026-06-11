@@ -361,7 +361,7 @@ const PostModal = ({ isOpen, onClose, role, profile, company, initialType = "reg
   };
 
   const name = role === "company" ? company?.name : profile?.fullName || "User";
-  const avatar = profile?.avatar || company?.logo || "/avatar.svg";
+  const avatar = role === "company" ?  company?.logo : profile?.avatar || "/avatar.svg";
 
   return (
     <AnimatePresence>
