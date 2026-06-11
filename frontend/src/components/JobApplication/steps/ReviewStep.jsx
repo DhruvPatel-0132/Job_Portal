@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
@@ -154,18 +155,21 @@ const ReviewStep = ({ formData, job, onEdit, onNext, onBack }) => {
                 </div>
               </motion.div>
 
-              <motion.button
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1 }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => window.history.back()}
-                className="mt-6 w-full max-w-sm px-8 py-3.5 bg-gray-900 text-white rounded-xl text-sm font-bold shadow-lg shadow-gray-200/50 hover:shadow-xl hover:bg-gray-800 transition-all flex items-center justify-center gap-2"
-              >
-                <ArrowLeft size={16} />
-                Back to Jobs
-              </motion.button>
+              <div className="flex gap-4 mt-8 w-full max-w-sm">
+                <Link
+                  to="/jobs"
+                  className="flex-1 py-3.5 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-bold shadow-sm hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+                >
+                  <ArrowLeft size={16} />
+                  More Jobs
+                </Link>
+                <Link
+                  to="/my-applications"
+                  className="flex-1 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-200/50 hover:shadow-xl hover:bg-indigo-600 transition-all flex items-center justify-center gap-2"
+                >
+                  Track Application
+                </Link>
+              </div>
             </div>
           </div>
         </div>

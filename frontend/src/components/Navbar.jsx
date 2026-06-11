@@ -324,6 +324,14 @@ const Navbar = () => {
                     >
                       Manage Posts
                     </Link>
+                    {!isCompany && (
+                      <Link
+                        to="/my-applications"
+                        className="block px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        My Applications
+                      </Link>
+                    )}
                     <a
                       href="#"
                       className="block px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
