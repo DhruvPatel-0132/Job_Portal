@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { uploadResume, getLatestResume } from "../services/resumeApi";
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const JOBS_DATA = [
   {
@@ -58,6 +59,7 @@ const Jobs = () => {
   const [summary, setSummary] = useState(null);
   const [userSkills, setUserSkills] = useState([]);
   const [expandedJobs, setExpandedJobs] = useState([]);
+  const navigate = useNavigate();
 
   const toggleJob = (id) => {
     setExpandedJobs(prev => 
@@ -306,6 +308,10 @@ const Jobs = () => {
                             <motion.button 
                               whileHover={{ scale: 1, backgroundColor: "#1d4ed8" }}
                               whileTap={{ scale: 0.98 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/jobs/apply/${job.id}`, { state: { job } });
+                              }}
                               className="flex-1 bg-blue-600 text-white py-2.5 rounded-xl text-xs font-bold transition-colors shadow-sm"
                             >
                               Apply Now
