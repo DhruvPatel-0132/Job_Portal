@@ -1,5 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useNavigate } from "react-router-dom";
 import { X, ThumbsUp, MessageSquare, Send, Briefcase, Award, Code, FileText, ExternalLink, Clock, MapPin, Calendar, Globe, User } from "lucide-react";
 
 import { useAuthStore } from "../../store/authStore";
@@ -10,6 +11,7 @@ const PostDetailModal = ({ isOpen, onClose, post }) => {
   const [showReactions, setShowReactions] = React.useState(false);
   const [showComments, setShowComments] = React.useState(false);
   const reactionTimeoutRef = React.useRef(null);
+  const navigate = useNavigate();
 
   const { user } = useAuthStore();
   const { toggleReaction } = usePostStore();
@@ -141,7 +143,12 @@ const PostDetailModal = ({ isOpen, onClose, post }) => {
             )}
 
             {job.isActive !== false && (
-              <button className="w-full py-4 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition-colors mt-4">
+              <button 
+                onClick={() => {
+                  onClose();
+                  navigate(`/jobs/apply/${post._id}`, { state: { job } });
+                }}
+                className="w-full py-4 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition-colors mt-4">
                 Apply Now
               </button>
             )}

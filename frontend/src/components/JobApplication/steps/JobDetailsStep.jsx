@@ -57,10 +57,27 @@ const JobDetailsStep = ({ job, onNext }) => {
 
           {/* Tags row */}
           <div className="flex flex-wrap gap-2 mt-6">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold">
-              <DollarSign size={12} />
-              {job.salary}
-            </span>
+            {job.salary && (!job.salary.hideSalary) && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold">
+                <DollarSign size={12} />
+                {(() => {
+                  if (typeof job.salary === 'string') return job.salary;
+                  const { min, max, currency, period } = job.salary;
+                  const getSymbol = (c) => ({ USD: '$', EUR: '€', GBP: '£', AED: 'AED' }[c] || '₹');
+                  const formatNum = (amt) => {
+                    if (!amt) return "0";
+                    if (period === 'yearly') {
+                      return currency === 'INR' ? `${(amt / 100000).toFixed(amt % 100000 === 0 ? 0 : 1)} LPA` : `${(amt / 1000).toFixed(amt % 1000 === 0 ? 0 : 1)}K`;
+                    }
+                    if (period === 'monthly') {
+                      return `${(amt / 1000).toFixed(amt % 1000 === 0 ? 0 : 1)}K`;
+                    }
+                    return amt.toLocaleString();
+                  };
+                  return `${getSymbol(currency)} ${formatNum(min)} - ${formatNum(max)} ${period === 'hourly' ? 'per hour' : ''}`;
+                })()}
+              </span>
+            )}
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-bold">
               <Briefcase size={12} />
               {job.type}

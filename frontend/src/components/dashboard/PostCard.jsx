@@ -157,7 +157,7 @@ const PostCard = ({ post, onOpen }) => {
     if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
     return date.toLocaleDateString();
   };
-  
+
   const formatLabel = (key) => {
     const labels = {
       full_time: "Full-time",
@@ -253,7 +253,10 @@ const PostCard = ({ post, onOpen }) => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/jobs/apply/${post._id}`, { state: { job: post.referenceId } });
+                  }}
                   className="px-4 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-full shadow-lg shadow-blue-200"
                 >
                   Apply

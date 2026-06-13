@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import Footer from "./Footer";
 import api from "../../api/axios";
 
 const JobRecommendations = () => {
   const [jobs, setJobs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -39,7 +41,7 @@ const JobRecommendations = () => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial="hidden"
       animate="visible"
       variants={containerVariants}
@@ -119,8 +121,8 @@ const JobRecommendations = () => {
               }
 
               return (
-                <motion.div 
-                  key={job._id} 
+                <motion.div
+                  key={job._id}
                   variants={itemVariants}
                   whileHover={{ x: 4 }}
                   className="flex items-start group"
@@ -142,9 +144,10 @@ const JobRecommendations = () => {
                     <p className="text-xs text-gray-500 truncate">{uploaderName}</p>
                     <p className="text-[11px] text-gray-400 mt-0.5">{location}</p>
                     {jobData?.isActive !== false && (
-                      <motion.button 
+                      <motion.button
                         whileHover={{ scale: 1.02, backgroundColor: "#eff6ff" }}
                         whileTap={{ scale: 0.98 }}
+                        onClick={() => navigate(`/jobs/apply/${job._id}`, { state: { job: jobData } })}
                         className="mt-2 text-blue-600 border border-blue-600 rounded-full px-5 py-1 text-[11px] font-bold hover:border-blue-700 transition-all duration-200 shadow-sm hover:shadow"
                       >
                         Apply
@@ -158,7 +161,7 @@ const JobRecommendations = () => {
         </div>
 
         <div className="mt-5 pt-3 border-t border-gray-100">
-          <motion.button 
+          <motion.button
             variants={{
               hovered: { scale: 1.01, backgroundColor: "#f9fafb" }
             }}
@@ -169,9 +172,9 @@ const JobRecommendations = () => {
             Show all
             <motion.svg
               variants={{
-                hovered: { 
+                hovered: {
                   x: [0, 4, 0],
-                  transition: { repeat: Infinity, duration: 1.5, ease: "easeInOut" } 
+                  transition: { repeat: Infinity, duration: 1.5, ease: "easeInOut" }
                 }
               }}
               className="w-4 h-4"

@@ -1,6 +1,7 @@
 const {
   createPost,
   getPosts,
+  getPostById,
   getUserPosts,
   getSavedPosts,
   incrementPostViews,
@@ -38,6 +39,22 @@ const getPostsController = async (req, res) => {
     const cursor = req.query.cursor || null;
 
     const { status, response } = await getPosts({}, userId, limit, cursor);
+    return res.status(status).json(response);
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
+const getPostByIdController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id || null;
+
+    const { status, response } = await getPostById(id, userId);
     return res.status(status).json(response);
   } catch (error) {
     return res.status(500).json({
@@ -178,7 +195,8 @@ const toggleSavePostController = async (req, res) => {
 
 const getRecommendedJobsController = async (req, res) => {
   try {
-    const { status, response } = await getRecommendedJobs();
+    const userId = req.user?.id || null;
+    const { status, response } = await getRecommendedJobs(userId);
     return res.status(status).json(response);
   } catch (error) {
     return res.status(500).json({
@@ -222,6 +240,7 @@ const toggleJobStatusController = async (req, res) => {
 module.exports = {
   createPostController,
   getPostsController,
+  getPostByIdController,
   getUserPostsController,
   getSavedPostsController,
   incrementPostViewsController,

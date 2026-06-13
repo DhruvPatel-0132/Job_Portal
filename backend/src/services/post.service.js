@@ -250,6 +250,63 @@ const getPosts = async (query = {}, userId = null, limit = 15, cursor = null) =>
   }
 };
 
+const getPostById = async (postId, userId = null) => {
+  try {
+    const post = await Post.findById(postId)
+      .populate({
+        path: "author",
+        select: "firstName lastName name logo avatar createdBy",
+      })
+      .populate("referenceId")
+      .lean();
+
+    if (!post) {
+      return {
+        status: 404,
+        response: { success: false, message: "Post not found" },
+      };
+    }
+
+    if (userId) {
+      const [reaction, savedPost] = await Promise.all([
+        Reaction.findOne({ post: postId, user: userId }).select("reactionType"),
+        SavedPost.findOne({ post: postId, user: userId }).select("_id")
+      ]);
+      post.stats = post.stats || {};
+      post.stats.userReaction = reaction ? reaction.reactionType : null;
+      post.stats.isSaved = !!savedPost;
+    }
+
+    if (post.author) {
+      const aUserId = post.authorModel === "Company" ? post.author.createdBy?.toString() : post.author._id?.toString();
+      if (aUserId) {
+        const authorProfile = await Profile.findOne({ userId: aUserId }).select("slug");
+        if (authorProfile) {
+           post.author.slug = authorProfile.slug;
+        }
+      }
+    }
+
+    return {
+      status: 200,
+      response: {
+        success: true,
+        post,
+      },
+    };
+  } catch (error) {
+    console.error("Get Post By Id Service Error:", error);
+    return {
+      status: 500,
+      response: {
+        success: false,
+        message: "Failed to fetch post",
+        error: error.message,
+      },
+    };
+  }
+};
+
 const getUserPosts = async (userId, requestingUserId = null) => {
   try {
     const company = await Company.findOne({ createdBy: userId });
@@ -776,7 +833,7 @@ const toggleSavePost = async (postId, userId) => {
   }
 };
 
-const getRecommendedJobs = async () => {
+const getRecommendedJobs = async (userId = null) => {
   try {
     const jobs = await Post.find({
       postType: "job_post",
@@ -795,6 +852,17 @@ const getRecommendedJobs = async () => {
       })
       .populate("referenceId")
       .lean();
+
+    // Attach isSaved for the requesting user
+    if (userId && jobs.length > 0) {
+      const postIds = jobs.map(j => j._id);
+      const savedPosts = await SavedPost.find({ post: { $in: postIds }, user: userId }).select("post");
+      const savedSet = new Set(savedPosts.map(s => s.post.toString()));
+      jobs.forEach(j => {
+        j.stats = j.stats || {};
+        j.stats.isSaved = savedSet.has(j._id.toString());
+      });
+    }
 
     return {
       status: 200,
@@ -900,6 +968,7 @@ const toggleJobStatus = async (postId, userId) => {
 module.exports = {
   createPost,
   getPosts,
+  getPostById,
   getUserPosts,
   getSavedPosts,
   incrementPostViews,

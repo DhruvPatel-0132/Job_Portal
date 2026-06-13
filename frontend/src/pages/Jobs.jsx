@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   FileText, 
@@ -10,46 +10,11 @@ import {
   DollarSign,
   ChevronDown,
   ChevronUp,
+  Bookmark,
 } from "lucide-react";
 import { uploadResume, getLatestResume } from "../services/resumeApi";
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
-const JOBS_DATA = [
-  {
-    id: 1,
-    title: "Senior Full Stack Developer",
-    company: "Google",
-    location: "Mountain View, CA",
-    salary: "$150k - $220k",
-    type: "Full-time",
-    logo: "https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png",
-    description: "We are looking for an experienced Full Stack Developer to build scalable web applications. You will work across the entire stack, from frontend UI in React to backend services in Node.js and Python. Strong problem-solving skills and system design experience are required.",
-    skills: ["react", "node", "javascript", "python", "api", "sql"]
-  },
-  {
-    id: 2,
-    title: "Product Designer",
-    company: "Meta",
-    location: "Remote",
-    salary: "$130k - $190k",
-    type: "Contract",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Meta_Platforms_Inc._logo.svg",
-    description: "Join our core product team to design intuitive and engaging user experiences. You will collaborate closely with product managers and engineers to take features from concept to launch. A strong portfolio demonstrating UI/UX principles and interaction design is a must.",
-    skills: ["figma", "ui", "ux", "design", "prototyping"]
-  },
-  {
-    id: 3,
-    title: "Data Scientist",
-    company: "Amazon",
-    location: "Seattle, WA",
-    salary: "$140k - $210k",
-    type: "Full-time",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg",
-    description: "Seeking a Data Scientist to analyze complex datasets and build predictive models. You will help drive business decisions through data insights and machine learning algorithms. Experience with SQL, Python, and statistical modeling is required.",
-    skills: ["python", "sql", "data analysis", "machine learning", "statistics"]
-  }
-];
+import api from "../api/axios";
 
 const Jobs = () => {
   const [isUploading, setIsUploading] = useState(false);
@@ -59,12 +24,39 @@ const Jobs = () => {
   const [summary, setSummary] = useState(null);
   const [userSkills, setUserSkills] = useState([]);
   const [expandedJobs, setExpandedJobs] = useState([]);
+  const [jobs, setJobs] = useState([]);
+  const [isLoadingJobs, setIsLoadingJobs] = useState(true);
+  const [savedJobs, setSavedJobs] = useState({});
+  const [savingJobs, setSavingJobs] = useState({});
   const navigate = useNavigate();
 
   const toggleJob = (id) => {
     setExpandedJobs(prev => 
       prev.includes(id) ? prev.filter(jobId => jobId !== id) : [...prev, id]
     );
+  };
+
+  const handleSaveJob = async (e, postId) => {
+    e.stopPropagation();
+    if (savingJobs[postId]) return; // prevent double-click
+
+    setSavingJobs(prev => ({ ...prev, [postId]: true }));
+    // Optimistic toggle
+    setSavedJobs(prev => ({ ...prev, [postId]: !prev[postId] }));
+
+    try {
+      const res = await api.post(`/posts/${postId}/save`);
+      if (res.data.success) {
+        // Confirm state from server response (isSaved boolean)
+        setSavedJobs(prev => ({ ...prev, [postId]: res.data.isSaved }));
+      }
+    } catch (err) {
+      console.error("Failed to save job:", err);
+      // Revert optimistic update on error
+      setSavedJobs(prev => ({ ...prev, [postId]: !prev[postId] }));
+    } finally {
+      setSavingJobs(prev => ({ ...prev, [postId]: false }));
+    }
   };
 
   useEffect(() => {
@@ -82,7 +74,29 @@ const Jobs = () => {
         console.log("No previous resume found or error fetching");
       }
     };
+
+    const fetchJobs = async () => {
+      try {
+        const res = await api.get("/posts/jobs/recommended");
+        if (res.data.success) {
+          const fetchedJobs = res.data.jobs || [];
+          setJobs(fetchedJobs);
+          // Seed saved state from server
+          const initialSaved = {};
+          fetchedJobs.forEach(j => {
+            if (j.stats?.isSaved) initialSaved[j._id] = true;
+          });
+          setSavedJobs(initialSaved);
+        }
+      } catch (err) {
+        console.error("Error fetching jobs:", err);
+      } finally {
+        setIsLoadingJobs(false);
+      }
+    };
+
     fetchResume();
+    fetchJobs();
   }, []);
 
   const handleFileUpload = async (e) => {
@@ -219,38 +233,58 @@ const Jobs = () => {
           <section className="space-y-6">
             <div className="flex items-center justify-between pb-4 border-b border-gray-100">
               <h2 className="text-xl font-bold text-gray-900">Recommended Jobs</h2>
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">{JOBS_DATA.length} Opportunities</span>
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">{jobs.length} Opportunities</span>
             </div>
 
             <div className="space-y-4">
-              {JOBS_DATA.map((job, index) => {
-                const isExpanded = expandedJobs.includes(job.id);
-                return (
-                <motion.div
-                  key={job.id}
+              {isLoadingJobs ? (
+                <div className="text-center text-gray-500 py-10">Loading jobs...</div>
+              ) : jobs.length === 0 ? (
+                <div className="text-center text-gray-500 py-10">No jobs found</div>
+              ) : (
+                jobs.map((job, index) => {
+                  const jobData = job.referenceId || {};
+                  const isExpanded = expandedJobs.includes(job._id);
+                  const authorName = job.author?.name || (job.author?.firstName ? `${job.author.firstName} ${job.author.lastName}` : "Unknown Company");
+                  const authorLogo = job.author?.logo || job.author?.avatar || "https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg";
+                  
+                  // Format salary
+                  let salaryDisplay = "Not Disclosed";
+                  if (jobData.salary && !jobData.salary.hideSalary && jobData.salary.min) {
+                     salaryDisplay = `${jobData.salary.currency || "$"} ${jobData.salary.min.toLocaleString()} - ${jobData.salary.max?.toLocaleString() || ""} / ${jobData.salary.period || "yr"}`;
+                  }
+                  
+                  const jobSkills = jobData.skillsRequired || [];
+                  const matchPercentage = jobSkills.length > 0 && userSkills.length > 0
+                    ? Math.round((jobSkills.filter(s => userSkills.map(us=>us.toLowerCase()).includes(s.toLowerCase())).length / jobSkills.length) * 100)
+                    : 0;
+
+                  return (
+                  <motion.div
+                    key={job._id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   whileHover={{ y: -4, shadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" }}
                   transition={{ delay: index * 0.1 }}
                   className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm transition-all group relative overflow-hidden"
                 >
-                  <div className="flex items-center gap-5 cursor-pointer" onClick={() => toggleJob(job.id)}>
+                  <div className="flex items-center gap-5 cursor-pointer" onClick={() => toggleJob(job._id)}>
                     <motion.div 
                       whileHover={{ scale: 1.05 }}
                       className="w-12 h-12 rounded-xl bg-gray-50 p-2 flex items-center justify-center border border-gray-100 group-hover:bg-white transition-colors shrink-0"
                     >
-                      <img src={job.logo} alt={job.company} className="w-full h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-300" />
+                      <img src={authorLogo} alt={authorName} className="w-full h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-300" />
                     </motion.div>
                     
                     <div className="flex-1">
                       <div className="flex justify-between items-start">
                         <div>
                           <h3 className="text-md font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                            {job.title}
+                            {jobData.title}
                           </h3>
                           <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-500 font-medium">
                             <Building2 size={12} />
-                            <span>{job.company}</span>
+                            <span>{authorName}</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -261,7 +295,7 @@ const Jobs = () => {
                               className="flex items-center gap-2"
                             >
                               <div className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter">
-                                {Math.round((job.skills.filter(s => userSkills.includes(s)).length / job.skills.length) * 100) || 0}% Match
+                                {matchPercentage}% Match
                               </div>
                             </motion.div>
                           )}
@@ -277,15 +311,15 @@ const Jobs = () => {
                       <div className="flex items-center gap-4 mt-3 text-[11px] text-gray-400">
                         <div className="flex items-center gap-1.5 group-hover:text-gray-600 transition-colors">
                           <MapPin size={12} />
-                          {job.location}
+                          {jobData.location || "Remote"}
                         </div>
                         <div className="flex items-center gap-1.5 font-bold text-emerald-600">
                           <DollarSign size={12} />
-                          {job.salary}
+                          {salaryDisplay}
                         </div>
                         <div className="flex items-center gap-1.5 group-hover:text-gray-600 transition-colors">
                           <Briefcase size={12} />
-                          {job.type}
+                          {jobData.employmentType?.replace("_", "-") || "Full-time"}
                         </div>
                       </div>
                     </div>
@@ -302,7 +336,7 @@ const Jobs = () => {
                         <div className="pt-4 mt-4 border-t border-gray-100">
                           <h4 className="text-xs font-bold text-gray-900 mb-2">Job Description</h4>
                           <p className="text-sm text-gray-600 leading-relaxed">
-                            {job.description}
+                            {jobData.description}
                           </p>
                           <div className="mt-4 flex gap-3">
                             <motion.button 
@@ -310,18 +344,30 @@ const Jobs = () => {
                               whileTap={{ scale: 0.98 }}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                navigate(`/jobs/apply/${job.id}`, { state: { job } });
+                                navigate(`/jobs/apply/${job._id}`, { state: { job } });
                               }}
                               className="flex-1 bg-blue-600 text-white py-2.5 rounded-xl text-xs font-bold transition-colors shadow-sm"
                             >
                               Apply Now
                             </motion.button>
                             <motion.button 
-                              whileHover={{ scale: 1.02, backgroundColor: "#f9fafb" }}
+                              whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
-                              className="px-6 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl text-xs font-bold transition-colors"
+                              onClick={(e) => handleSaveJob(e, job._id)}
+                              disabled={savingJobs[job._id]}
+                              className={`px-6 py-2.5 border rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                                savedJobs[job._id]
+                                  ? "bg-blue-50 border-blue-200 text-blue-600"
+                                  : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                              } ${savingJobs[job._id] ? "opacity-60 cursor-not-allowed" : ""}`}
                             >
-                              Save
+                              <Bookmark
+                                size={13}
+                                className={`transition-all ${
+                                  savedJobs[job._id] ? "fill-blue-600 text-blue-600" : "text-gray-400"
+                                }`}
+                              />
+                              {savingJobs[job._id] ? "Saving..." : savedJobs[job._id] ? "Saved" : "Save"}
                             </motion.button>
                           </div>
                         </div>
@@ -329,7 +375,9 @@ const Jobs = () => {
                     )}
                   </AnimatePresence>
                 </motion.div>
-              )})}
+                );
+              })
+              )}
             </div>
 
             <motion.button 

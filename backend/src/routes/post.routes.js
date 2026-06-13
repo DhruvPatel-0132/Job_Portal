@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   createPostController,
   getPostsController,
+  getPostByIdController,
   getUserPostsController,
   getSavedPostsController,
   incrementPostViewsController,
@@ -34,6 +35,9 @@ router.get("/saved", authMiddleware, getSavedPostsController);
 
 // Get my job posts (company)
 router.get("/my-job-posts", authMiddleware, getMyJobPostsController);
+
+// Get post by ID
+router.get("/:id", authMiddleware, getPostByIdController);
 
 // Edit a post
 router.put("/:id", authMiddleware, updatePostController);
